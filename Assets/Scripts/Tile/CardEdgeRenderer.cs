@@ -2,7 +2,6 @@ using DG.Tweening;
 using Sirenix.OdinInspector;
 using StampJourney.Core;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace StampJourney.Tile
 {
@@ -16,19 +15,19 @@ namespace StampJourney.Tile
     ///   - Animate từng cạnh độc lập (fade in/out khi stamp ghép)
     ///   - Code rõ ràng, dễ debug
     /// </summary>
-    public class TileEdgeRenderer : SerializedMonoBehaviour
+    public class CardEdgeRenderer : SerializedMonoBehaviour
     {
         // ---- Edge Images (4 cạnh riêng biệt) ----
         [BoxGroup("Edge Images")]
-        [InfoBox("Mỗi Image là 1 dải perforation. Cùng dùng 1 sprite, chỉ xoay khác nhau.\n" +
+        [InfoBox("Mỗi SpriteRenderer là 1 dải perforation. Cùng dùng 1 sprite, chỉ xoay khác nhau.\n" +
                  "Top=0°, Right=90°, Bottom=180°, Left=270°")]
-        [Required] public Image edgeTop;
+        [Required] public SpriteRenderer edgeTop;
         [BoxGroup("Edge Images")]
-        [Required] public Image edgeRight;
+        [Required] public SpriteRenderer edgeRight;
         [BoxGroup("Edge Images")]
-        [Required] public Image edgeBottom;
+        [Required] public SpriteRenderer edgeBottom;
         [BoxGroup("Edge Images")]
-        [Required] public Image edgeLeft;
+        [Required] public SpriteRenderer edgeLeft;
 
         [BoxGroup("Settings")]
         [LabelText("Animate Edge Transitions")]
@@ -72,9 +71,9 @@ namespace StampJourney.Tile
         /// Show edge nếu cạnh này là biên ngoài (không kết nối với tile cùng stamp).
         /// Hide edge nếu cạnh này chung với tile cùng stamp đúng thứ tự.
         /// </summary>
-        private void SetEdge(Image edgeImage, bool isConnected)
+        private void SetEdge(SpriteRenderer edgeRenderer, bool isConnected)
         {
-            if (edgeImage == null) return;
+            if (edgeRenderer == null) return;
 
             bool shouldShow = !isConnected; // Có răng cưa = KHÔNG kết nối
 
@@ -82,43 +81,51 @@ namespace StampJourney.Tile
             {
                 // Fade alpha thay vì SetActive để animation mượt hơn
                 float targetAlpha = shouldShow ? 1f : 0f;
-                if (!Mathf.Approximately(edgeImage.color.a, targetAlpha))
+                if (!Mathf.Approximately(edgeRenderer.color.a, targetAlpha))
                 {
-                    // Dùng coroutine đơn giản hoặc DOTween nếu có
 #if DOTWEEN
-                    edgeImage.DOFade(targetAlpha, transitionDuration);
+                    edgeRenderer.DOFade(targetAlpha, transitionDuration);
 #else
-                    var c = edgeImage.color;
+                    var c = edgeRenderer.color;
                     c.a = targetAlpha;
-                    edgeImage.color = c;
+                    edgeRenderer.color = c;
 #endif
                 }
             }
             else
             {
-                edgeImage.gameObject.SetActive(shouldShow);
+                edgeRenderer.gameObject.SetActive(shouldShow);
             }
         }
 
+        public void AddSortingOrder(int order)
+        {
+            if (edgeTop) edgeTop.sortingOrder += order;
+            if (edgeBottom) edgeBottom.sortingOrder = order;
+            if (edgeLeft) edgeLeft.sortingOrder = order;
+            if (edgeRight) edgeRight.sortingOrder = order;
+        }
+
         /// <summary>
-        /// Kiểm tra tile lân cận (offset board: dCol, dRow) có phải
-        /// piece lân cận đúng (offset piece: dPieceCol, dPieceRow) của cùng stamp không.
+        /// Kiểm tra cạnh này có kết nối với tile cùng group không.
+        /// Connected = cùng group + đúng piece offset.
+        /// Chỉ ẩn viền khi tile thực sự thuộc cùng group (đã "dính").
         /// </summary>
         private bool IsConnected(int dBoardCol, int dBoardRow, int dPieceCol, int dPieceRow)
         {
-            if (_board == null) return false;
+            if (_model.Group == null) return false;
 
-            var neighbor = _board.GetTile(
-                _model.BoardCol + dBoardCol,
-                _model.BoardRow + dBoardRow
-            );
+            int targetPieceCol = _model.PieceCol + dPieceCol;
+            int targetPieceRow = _model.PieceRow + dPieceRow;
 
-            if (neighbor == null) return false;
-            if (neighbor.Stamp.stampId != _model.Stamp.stampId) return false;
-            if (neighbor.PieceCol != _model.PieceCol + dPieceCol) return false;
-            if (neighbor.PieceRow != _model.PieceRow + dPieceRow) return false;
-
-            return true;
+            foreach (var member in _model.Group.Members)
+            {
+                if (member == _model) continue;
+                if (member.PieceCol == targetPieceCol &&
+                    member.PieceRow == targetPieceRow)
+                    return true;
+            }
+            return false;
         }
     }
 }

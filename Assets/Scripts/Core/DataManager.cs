@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class DataManager : PersistentSingletonMonoBehaviour<DataManager>
+public class DataManager : SingletonMonoBehaviour<DataManager>
 {
     protected override void OnSingletonInitialized() { }
     public int CurrentLevel

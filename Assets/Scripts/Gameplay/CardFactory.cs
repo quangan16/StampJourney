@@ -9,7 +9,7 @@ namespace StampJourney.Core
     /// <summary>
     /// Factory: tạo, hủy và điều khiển GameObject của tile.
     /// Duy trì pool TileView để tối ưu hiệu năng.
-    /// Tiles là UI Image → phải spawn vào boardContainer (RectTransform trong Canvas).
+    /// Tiles được spawn trực tiếp vào Gameboard (World Space).
     /// </summary>
     public class CardFactory : SerializedMonoBehaviour
     {
@@ -41,14 +41,12 @@ namespace StampJourney.Core
         }
 
         /// <summary>Spawn tile ngay tại vị trí board của nó.</summary>
-        public void SpawnTile(CardModel model)
+        public void SpawnCard(CardModel model)
         {
             var view = GetFromPool();
-            var rt = view.GetComponent<RectTransform>();
 
-            // Dùng anchoredPosition — đơn vị UI pixels, tương đối với boardContainer
-            Vector2 anchoredPos = gameboard.GetWorldPosition(model.BoardCol, model.BoardRow);
-            rt.anchoredPosition = anchoredPos;
+            Vector2 worldPos = gameboard.GetWorldPosition(model.BoardCol, model.BoardRow);
+            view.transform.position = worldPos;
 
             view.Init(model, gameboard);
             _activeCards[model.TileId] = view;
@@ -57,17 +55,21 @@ namespace StampJourney.Core
         /// <summary>Spawn tile từ phía trên board, rơi xuống vị trí target.</summary>
         public void SpawnTileFromAbove(CardModel model)
         {
-            var view = GetFromPool();
-            var rt = view.GetComponent<RectTransform>();
-            Vector2 targetPos = gameboard.GetWorldPosition(model.BoardCol, model.BoardRow);
-            Vector2 spawnPos = targetPos + Vector2.up * spawnAboveOffset;
 
-            rt.anchoredPosition = spawnPos;
+            var view = GetFromPool();
+            Vector2 targetPos = gameboard.GetWorldPosition(model.BoardCol, model.BoardRow);
+
+            // Tính toán offset dựa trên pixelsPerUnit
+
+            float offsetInUnits = (spawnAboveOffset * GameManager.Instance.GameConfig.cardHeight);
+            Vector2 spawnPos = targetPos + Vector2.up * offsetInUnits;
+
+            view.transform.position = spawnPos;
             view.Init(model, gameboard);
             _activeCards[model.TileId] = view;
 
             float duration = dropEaseTime + model.BoardRow * 0.03f;
-            rt.DOAnchorPos(targetPos, duration).SetEase(Ease.InBounce);
+            view.transform.DOMove(targetPos, duration).SetEase(Ease.InBounce);
         }
 
         /// <summary>Hủy tile (trả về pool) và play animation clear.</summary>
@@ -110,11 +112,10 @@ namespace StampJourney.Core
 
 
         /// <summary>Animate tile rơi xuống vị trí mới (gọi bởi GravitySystem).</summary>
-        public void AnimateTileDrop(CardModel model, Vector2 targetAnchoredPos, float duration)
+        public void AnimateTileDrop(CardModel model, Vector2 targetWorldPos, float duration)
         {
             if (!_activeCards.TryGetValue(model.TileId, out var view)) return;
-            var rt = view.GetComponent<RectTransform>();
-            rt.DOAnchorPos(targetAnchoredPos, duration).SetEase(Ease.InQuad);
+            view.transform.DOMove(targetWorldPos, duration).SetEase(Ease.InQuad);
         }
 
         /// <summary>Lấy TileView theo TileId.</summary>
@@ -129,11 +130,10 @@ namespace StampJourney.Core
             {
                 var v = _pool.Dequeue();
                 v.gameObject.SetActive(true);
-                // Phải set lại parent về boardContainer khi lấy từ pool
                 v.transform.SetParent(gameboard.transform, false);
                 return v;
             }
-            // Spawn vào boardContainer (RectTransform trong Canvas)
+            // Spawn vào Gameboard (World Space)
             return Instantiate(tilePrefab, gameboard.transform);
         }
 

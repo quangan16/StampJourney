@@ -10,7 +10,7 @@ namespace StampJourney.UI
     /// <summary>
     /// Quản lý toàn bộ UI trong game: HUD, win screen, lose screen, combo popup.
     /// </summary>
-    public class UIManager : PersistentSingletonMonoBehaviour<UIManager>
+    public class UIManager : SingletonMonoBehaviour<UIManager>
     {
         public IScreen currentActiveScreen;
         protected override void OnSingletonInitialized()

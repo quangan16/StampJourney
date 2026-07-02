@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using StampJourney.Data;
+using StampJourney.Tile;
 using UnityEngine;
 
 namespace StampJourney.Core
@@ -21,14 +23,12 @@ namespace StampJourney.Core
         public GravitySystem gravitySystem;
         [BoxGroup("References")]
         public CardFactory cardFactory;
+        [BoxGroup("References")]
+        public GroupManager groupManager;
 
         [BoxGroup("Settings")]
-        [LabelText("Tile Size (pixels)")]
-        public float tileSize = 100f;   // Đơn vị: pixels trong Canvas (không phải world units)
-
-        [BoxGroup("Settings")]
-        [LabelText("Tile Gap (pixels)")]
-        public float tileGap = 4f;      // Khoảng cách giữa các tile
+        [LabelText("Pixels Per Unit")]
+        public float pixelsPerUnit = 100f; // Hệ số chuyển đổi pixel -> world unit
 
         // ---- Grid Data ----
         /// <summary>Grid[col, row] — null nếu ô trống.</summary>
@@ -51,15 +51,16 @@ namespace StampJourney.Core
         /// <summary>Khởi tạo board với LevelData. Tự động clear tile cũ nếu có.</summary>
         public void Init(LevelData levelData)
         {
-            Debug.Log($"[BoardControl] InitBoard called — cols={levelData.boardCols} rows={levelData.boardRows}");
+            Debug.Log($"[BoardControl] InitBoard called — cols={levelData.levelConfig.boardCols} rows={levelData.levelConfig.boardRows}");
             _levelData = levelData;
-            _cols = levelData.boardCols;
-            _rows = levelData.boardRows;
+            _cols = levelData.levelConfig.boardCols;
+            _rows = levelData.levelConfig.boardRows;
             _grid = new CardModel[_cols, _rows];
 
             stampDetector.Init(this);
             gravitySystem.Init(this);
             cardFactory.Init(this);
+            groupManager.Init(this);
             Setup();
         }
 
@@ -67,6 +68,10 @@ namespace StampJourney.Core
         {
             cardFactory.DespawnAll();
             FillBoardInitial();
+
+            // Rebuild groups + edges sau khi fill xong
+            groupManager.RebuildGroups();
+            UpdateAllEdges();
         }
 
         /// <summary>Lấy TileModel tại (col, row). Trả null nếu trống hoặc out-of-bounds.</summary>
@@ -97,59 +102,122 @@ namespace StampJourney.Core
             OnSwapCompleted?.Invoke(tileA, tileB);
 
             // Chờ animation swap xong (~0.25s)
-            await UniTask.Delay(TimeSpan.FromSeconds(0.3f));
+            // await UniTask.Delay(TimeSpan.FromSeconds(0.3f));
 
             tileA.IsAnimating = false;
             tileB.IsAnimating = false;
+
+            // Rebuild groups sau swap
+            groupManager.RebuildGroups();
+            UpdateAllEdges();
 
             // Kiểm tra stamp sau swap
             await CheckAndClearAsync();
         }
 
         /// <summary>
-        /// Vị trí anchoredPosition của tâm ô (col, row) trong boardContainer.
-        /// Điểm gốc (0,0) là tâm của boardContainer, tự động căn giữa.
+        /// Swap cả group theo delta. Gọi bởi CardView khi drag group.
+        /// </summary>
+        public async UniTask TrySwapGroupAsync(CardGroup group, int deltaCol, int deltaRow)
+        {
+            if (group == null) return;
+
+            // ⚠️ Cache members TRƯỚC khi RebuildGroups — vì Rebuild sẽ Disband group cũ
+            var cachedMembers = new List<CardModel>(group.Members);
+
+            // Mark tất cả members animating
+            foreach (var member in cachedMembers)
+                member.IsAnimating = true;
+
+            // Trả card views về board root trước khi swap (vì parent sẽ bị destroy)
+            groupManager.UnparentGroupCards(group);
+
+            bool success = groupManager.TrySwapGroup(group, deltaCol, deltaRow);
+
+            if (success)
+            {
+                // Animate tất cả tiles về vị trí mới
+                AnimateAllTilesToGridPositions(0.25f);
+
+                // await UniTask.Delay(TimeSpan.FromSeconds(0.3f));
+
+                // Rebuild groups sau swap (sẽ tạo parent objects mới)
+                groupManager.RebuildGroups();
+                UpdateAllEdges();
+
+                // Kiểm tra stamp
+                await CheckAndClearAsync();
+            }
+            else
+            {
+                // Snap back tất cả members
+                AnimateAllTilesToGridPositions(0.18f);
+                // await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
+
+                // Rebuild lại groups
+                groupManager.RebuildGroups();
+                UpdateAllEdges();
+            }
+
+            // Unmark animating — dùng cachedMembers vì group.Members đã bị clear
+            foreach (var member in cachedMembers)
+                member.IsAnimating = false;
+        }
+
+        /// <summary>
+        /// Vị trí transform.position của tâm ô (col, row) trong world space.
+        /// Tính toán dựa trên pixel settings chia cho PixelsPerUnit.
         /// </summary>
         public Vector2 GetWorldPosition(int col, int row)
         {
-            // Tính stride = size + gap
-            float stride = tileSize + tileGap;
+            var config = GameManager.Instance.GameConfig;
+            var cardWidth = config.cardWidth;
+            var cardHeight = config.cardHeight;
+            var cardGap = config.cardGap;
+            float strideX = (cardWidth + cardGap);
+            float strideY = (cardHeight + cardGap);
 
-            // Tổng chiều rộng và cao của board
-            float boardWidth = _cols * stride - tileGap;
-            float boardHeight = _rows * stride - tileGap;
+            float boardWidth = (_cols * (cardWidth + cardGap));
+            float boardHeight = (_rows * (cardHeight + cardGap));
 
-            // Điểm bắt đầu (góc trên-trái) relative to boardContainer center
-            float startX = -boardWidth / 2f + tileSize / 2f;
-            float startY = boardHeight / 2f - tileSize / 2f;
+            // Lấy vị trí trung tâm của gameboard GameObject làm mốc (thường là 0,0,0)
+            Vector2 boardCenter = transform.position;
+
+            float startX = boardCenter.x - boardWidth / 2f + (cardWidth) / 2f;
+            float startY = boardCenter.y + boardHeight / 2f - (cardHeight) / 2f;
 
             return new Vector2(
-                startX + col * stride,
-                startY - row * stride  // row 0 = trên cùng, nên trừ xuống
+                startX + col * strideX,
+                startY - row * strideY
             );
         }
 
-        /// <summary>Chuyển anchoredPosition → chỉ số grid. Trả (-1,-1) nếu ngoài bounds.</summary>
-        public Vector2Int WorldToGrid(Vector2 anchoredPos)
-        {
-            float stride = tileSize + tileGap;
-            float boardWidth = _cols * stride - tileGap;
-            float boardHeight = _rows * stride - tileGap;
-            float startX = -boardWidth / 2f + tileSize / 2f;
-            float startY = boardHeight / 2f - tileSize / 2f;
+        /// <summary>Chuyển world position → chỉ số grid. Trả (-1,-1) nếu ngoài bounds.</summary>
+        // public Vector2Int WorldToGrid(Vector2 worldPos)
+        // {
+        //     float strideX = (tileWidth + tileGap) / pixelsPerUnit;
+        //     float strideY = (tileHeight + tileGap) / pixelsPerUnit;
 
-            int col = Mathf.RoundToInt((anchoredPos.x - startX) / stride);
-            int row = Mathf.RoundToInt((startY - anchoredPos.y) / stride);
+        //     float boardWidth = (_cols * (tileWidth + tileGap) - tileGap) / pixelsPerUnit;
+        //     float boardHeight = (_rows * (tileHeight + tileGap) - tileGap) / pixelsPerUnit;
 
-            if (!IsInBounds(col, row)) return new Vector2Int(-1, -1);
-            return new Vector2Int(col, row);
-        }
+        //     Vector2 boardCenter = transform.position;
+
+        //     float startX = boardCenter.x - boardWidth / 2f + (tileWidth / pixelsPerUnit) / 2f;
+        //     float startY = boardCenter.y + boardHeight / 2f - (tileHeight / pixelsPerUnit) / 2f;
+
+        //     int col = Mathf.RoundToInt((worldPos.x - startX) / strideX);
+        //     int row = Mathf.RoundToInt((startY - worldPos.y) / strideY);
+
+        //     if (!IsInBounds(col, row)) return new Vector2Int(-1, -1);
+        //     return new Vector2Int(col, row);
+        // }
 
         // ---- Internal ----
 
         private void FillBoardInitial()
         {
-            if (_levelData.fillStrategy == FillStrategy.BalancedDistribution)
+            if (_levelData.levelConfig.fillStrategy == FillStrategy.BalancedDistribution)
                 FillBalanced();
             else
                 FillRandom();
@@ -157,7 +225,7 @@ namespace StampJourney.Core
 
         private void FillRandom()
         {
-            var stamps = _levelData.stamps;
+            var stamps = _levelData.levelConfig.stamps;
             for (int r = 0; r < _rows; r++)
                 for (int c = 0; c < _cols; c++)
                 {
@@ -166,7 +234,7 @@ namespace StampJourney.Core
                     int pr = UnityEngine.Random.Range(0, stamp.rows);
                     var model = new CardModel(stamp, pc, pr, c, r);
                     _grid[c, r] = model;
-                    cardFactory.SpawnTile(model);
+                    cardFactory.SpawnCard(model);
                 }
         }
 
@@ -174,7 +242,7 @@ namespace StampJourney.Core
         {
             // Tạo pool đảm bảo mỗi loại stamp xuất hiện đủ mảnh
             var pool = new List<(StampData stamp, int pc, int pr)>();
-            var stamps = _levelData.stamps;
+            var stamps = _levelData.levelConfig.stamps;
             int total = _cols * _rows;
 
             while (pool.Count < total)
@@ -200,7 +268,7 @@ namespace StampJourney.Core
                     var (stamp, pc, pr) = pool[idx];
                     var model = new CardModel(stamp, pc, pr, c, r);
                     _grid[c, r] = model;
-                    cardFactory.SpawnTile(model);
+                    cardFactory.SpawnCard(model);
                 }
         }
 
@@ -243,7 +311,7 @@ namespace StampJourney.Core
 
         private async UniTask FillEmptyCellsAsync()
         {
-            var stamps = _levelData.stamps;
+            var stamps = _levelData.levelConfig.stamps;
             for (int c = 0; c < _cols; c++)
                 for (int r = 0; r < _rows; r++)
                 {
@@ -257,7 +325,11 @@ namespace StampJourney.Core
                         cardFactory.SpawnTileFromAbove(model);
                     }
                 }
-            await UniTask.Delay(TimeSpan.FromSeconds(0.3f));
+            // await UniTask.Delay(TimeSpan.FromSeconds(0.3f));
+
+            // Rebuild groups cho tile mới spawn
+            groupManager.RebuildGroups();
+            UpdateAllEdges();
         }
 
         // ---- Helpers ----
@@ -292,6 +364,44 @@ namespace StampJourney.Core
         /// <summary>Kiểm tra ô có trống không.</summary>
         public bool IsEmpty(int col, int row) =>
             IsInBounds(col, row) && _grid[col, row] == null;
+
+        /// <summary>
+        /// Cập nhật edges cho tất cả active tiles trên board.
+        /// Gọi sau mỗi lần group thay đổi.
+        /// </summary>
+        public void UpdateAllEdges()
+        {
+            for (int c = 0; c < _cols; c++)
+                for (int r = 0; r < _rows; r++)
+                {
+                    var tile = _grid[c, r];
+                    if (tile == null) continue;
+                    var view = cardFactory.GetView(tile.TileId);
+                    if (view == null) continue;
+                    view.cardEdgeRenderer?.UpdateEdges();
+                }
+        }
+
+        /// <summary>
+        /// Animate tất cả tiles về đúng vị trí grid của chúng.
+        /// Dùng sau group swap khi nhiều tile bị dịch chuyển.
+        /// </summary>
+        public void AnimateAllTilesToGridPositions(float duration)
+        {
+            for (int c = 0; c < _cols; c++)
+                for (int r = 0; r < _rows; r++)
+                {
+                    var tile = _grid[c, r];
+                    if (tile == null) continue;
+                    var view = cardFactory.GetView(tile.TileId);
+                    if (view == null) continue;
+                    var targetPos = GetWorldPosition(c, r);
+                    view.transform.DOMove(targetPos, duration).SetEase(Ease.OutCubic);
+                }
+        }
+
+        /// <summary>GroupManager accessor cho CardView.</summary>
+        public GroupManager GroupManager => groupManager;
 
         /// <summary>Board settled sau chain reaction → kiểm tra win/lose.</summary>
         // private void HandleBoardSettled()

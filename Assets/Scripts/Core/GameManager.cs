@@ -13,20 +13,16 @@ namespace StampJourney.Core
     /// <summary>
     /// Singleton quản lý trạng thái game toàn cục: start, win, lose, scoring.
     /// </summary>
-    public class GameManager : PersistentSingletonMonoBehaviour<GameManager>
+    public class GameManager : SingletonMonoBehaviour<GameManager>
     {
         // ---- Inspector ----
         [BoxGroup("References")]
         [field: SerializeField, Required] public LevelSystem LevelSystem { get; set; }
-        // ---- Score & Moves ----
-
-
-
-        // ---- State ----
+        public Action<SceneType> OnSceneLoadedSuccess;
 
         [ShowInInspector, ReadOnly] private GameState _state = GameState.Idle;
 
-
+        [field: SerializeField, Required] public GameConfig GameConfig { get; set; }
 
         // ---- Constants ----
 
@@ -38,6 +34,11 @@ namespace StampJourney.Core
 
         protected override void OnSingletonInitialized()
         {
+        }
+
+        public void Start()
+        {
+            StartGameplayLevel(1);
         }
 
 
@@ -54,9 +55,9 @@ namespace StampJourney.Core
 
 
 
-        public void GoToGameplay()
+        public void StartGameplayLevel(int level)
         {
-            LevelSystem.StartLevel(0);
+            LevelSystem.StartLevel(level);
         }
 
         public void GoToMainMenu()
@@ -70,7 +71,27 @@ namespace StampJourney.Core
         #region Event Handlers
 
 
+        public async UniTask LoadSceneAsync(string sceneName)
+        {
+            AsyncOperation loadSceneAsync = SceneManager.LoadSceneAsync(sceneName);
+            while (!loadSceneAsync.isDone)
+            {
+                await UniTask.Yield();
+            }
 
+            OnSceneLoadedSuccess?.Invoke(Enum.Parse<SceneType>(sceneName));
+        }
+
+        public async UniTask LoadSceneAsync(SceneType sceneType)
+        {
+            AsyncOperation loadSceneAsync = SceneManager.LoadSceneAsync(sceneType.ToString());
+            while (!loadSceneAsync.isDone)
+            {
+                await UniTask.Yield();
+            }
+
+            OnSceneLoadedSuccess?.Invoke(sceneType);
+        }
 
 
 
@@ -84,5 +105,6 @@ namespace StampJourney.Core
     }
 
     public enum GameState { Idle, Playing, Won, Lost, Paused }
+    public enum SceneType { MainMenu, Gameplay }
 }
 

@@ -26,6 +26,23 @@ namespace StampJourney.Core
             // Theo dõi các ô đã nằm trong match để không đếm trùng
             bool[,] used = new bool[boardCols, boardRows];
 
+            // ---- Shortcut: kiểm tra group hoàn chỉnh trước ----
+            // Nếu 1 group có đủ members == stamp.TotalPieces → stamp hoàn chỉnh
+            if (gameboard.GroupManager != null)
+            {
+                foreach (var group in gameboard.GroupManager.AllGroups.Values)
+                {
+                    if (group.IsStampComplete)
+                    {
+                        var match = new List<CardModel>(group.Members);
+                        results.Add(match);
+                        foreach (var t in match)
+                            used[t.BoardCol, t.BoardRow] = true;
+                    }
+                }
+            }
+
+            // ---- Grid scan bình thường (cho trường hợp tile chưa thuộc group) ----
             for (int r = 0; r < boardRows; r++)
                 for (int c = 0; c < boardCols; c++)
                 {

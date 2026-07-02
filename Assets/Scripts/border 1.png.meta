@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 49bd3a8ea25039b44a75205a183b140e
+guid: d90a5dad0c473b34da055353f7c5be4e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8283620988547500454
-    second: elephant_0
+      213: -5638408413501186520
+    second: border 1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,18 +37,18 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
-    wrapU: 1
-    wrapV: 1
-    wrapW: 1
+    wrapU: 0
+    wrapV: 0
+    wrapW: 0
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
@@ -126,23 +126,89 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: elephant_0
+      name: border 1_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 504
-        height: 428
+        width: 24
+        height: 364
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a56f7a3799aaa0d80800000000000000
-      internalID: -8283620988547500454
+      spriteID: 82e10b6eb6950c1b0800000000000000
+      internalID: -5638408413501186520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: border 1_1
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 341
+        width: 297
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 050108793fddaef4bbe2b51c374c65f4
+      internalID: 525229823
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: border 1_2
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 0
+        width: 25
+        height: 364
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 707f2abe6d863e94baa4a6fb809cc808
+      internalID: -18608750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: border 1_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 297
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d406b20a9c3fd0344a71bcfb875f5f58
+      internalID: 1358241484
       vertices: []
       indices: 
       edges: []
@@ -151,7 +217,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: eea63b97ca073044d8935bbc1951458d
     internalID: 0
     vertices: []
     indices: 
@@ -161,7 +227,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      elephant_0: -8283620988547500454
+      border 1_0: -5638408413501186520
+      border 1_1: 525229823
+      border 1_2: -18608750
+      border 1_3: 1358241484
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

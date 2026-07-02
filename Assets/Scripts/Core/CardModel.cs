@@ -12,10 +12,10 @@ namespace StampJourney.Core
         /// <summary>Dữ liệu của tem mà tile này thuộc về.</summary>
         public readonly StampData Stamp;
 
-        /// <summary>Vị trí cột của tile này trong stamp (0-based).</summary>
+        /// <summary>Vị trí cột của card này trong stamp (0-based).</summary>
         public readonly int PieceCol;
 
-        /// <summary>Vị trí hàng của tile này trong stamp (0-based).</summary>
+        /// <summary>Vị trí hàng của card này trong stamp (0-based).</summary>
         public readonly int PieceRow;
 
         // ---- Board position (mutable) ----
@@ -28,6 +28,9 @@ namespace StampJourney.Core
         // ---- State ----
         /// <summary>True nếu tile đang trong animation và chưa thể tương tác.</summary>
         public bool IsAnimating { get; set; }
+
+        /// <summary>Group mà tile này thuộc về. Null nếu đứng riêng lẻ.</summary>
+        public CardGroup Group { get; set; }
 
         // ---- Unique ID ----
         private static int _nextId;

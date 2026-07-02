@@ -9,7 +9,8 @@ using UnityEngine;
 public class GameplayControl : MonoBehaviour
 {
 
-    LevelData _levelData;
+    private LevelData _levelData;
+    [SerializeField] private Gameboard gameboard;
     [ShowInInspector, ReadOnly] private int _score;
     [ShowInInspector, ReadOnly] private int _remainingMoves;
     [ShowInInspector, ReadOnly] private int _combo;
@@ -20,22 +21,63 @@ public class GameplayControl : MonoBehaviour
     public event Action OnGameWon;
     public event Action OnGameLost;
 
+
+    public void Awake()
+    {
+        GameManager.Instance.OnSceneLoadedSuccess += OnGameplaySceneLoaded;
+    }
+
+
+    public void OnDestroy()
+    {
+        GameManager.Instance.OnSceneLoadedSuccess -= OnGameplaySceneLoaded;
+    }
+
     public void Init(LevelData levelData)
     {
+        if (levelData == null)
+        {
+            AndyUtil.Logger.LogError("Level data is null!");
+            return;
+        }
         _levelData = levelData;
+        gameboard.Init(_levelData);
+
     }
 
 
 
     public void Setup()
     {
+        if (_levelData == null)
+        {
+            AndyUtil.Logger.LogError("Level data is null!");
+            return;
+        }
+        if (gameboard == null)
+        {
+            AndyUtil.Logger.LogError("Gameboard is null!");
+            return;
+        }
+
+
+
         _score = 0;
-        _remainingMoves = _levelData.maxMoves;
+        _remainingMoves = _levelData.levelConfig.maxMoves;
         _combo = 0;
         GameManager.Instance.State = GameState.Playing;
-
+        gameboard.Setup();
         OnScoreChanged?.Invoke(_score);
         OnMovesChanged?.Invoke(_remainingMoves);
+        Debug.Log("Gameplay done setup");
+    }
+
+    public void OnGameplaySceneLoaded(SceneType sceneType)
+    {
+        if (sceneType != SceneType.Gameplay) return;
+        var levelData = GameManager.Instance.LevelSystem.CachedLevelData;
+        Init(levelData);
+        Setup();
     }
 
     private void TriggerWin()

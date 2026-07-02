@@ -30,6 +30,8 @@ namespace StampJourney.Core
 
 
 
+        [ShowInInspector, ReadOnly] private LevelData _cachedLevelData;
+        public LevelData CachedLevelData => _cachedLevelData;
 
         private void Awake()
         {
@@ -71,7 +73,7 @@ namespace StampJourney.Core
             }
 
 
-            Debug.Log($"[LevelManager] → Calling GameManager.Loaded level data ({targetLevelData.levelTitle})");
+            Debug.Log($"[LevelManager] → Calling GameManager.Loaded level data ({targetLevelData.levelConfig.levelID})");
             return targetLevelData;
 
         }
@@ -105,16 +107,20 @@ namespace StampJourney.Core
                 return;
             }
 
-            var levelData = LoadLevelData(targetLevel);
-            if (levelData == null)
+            _cachedLevelData = LoadLevelData(targetLevel);
+            if (_cachedLevelData == null)
             {
                 AndyUtil.Logger.LogError("Level data is null!");
                 return;
             }
-            await SceneManager.LoadSceneAsync("Gameplay");
+            await GameManager.Instance.LoadSceneAsync(SceneType.Gameplay);
 
-            Debug.Log($"[GameManager] Started level {targetLevel}: {levelData.levelTitle}");
+
+
+            Debug.Log($"[GameManager] Started level {targetLevel}: {_cachedLevelData.levelConfig.levelID}");
         }
+
+
 
         public void RestartLevel() => StartLevel(CurrentLevel);
 
