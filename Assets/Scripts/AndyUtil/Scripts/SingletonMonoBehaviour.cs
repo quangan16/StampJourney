@@ -11,7 +11,7 @@ public abstract class SingletonMonoBehaviour<T> : SerializedMonoBehaviour where 
         {
             if (_instance == null)
             {
-                _instance = FindObjectOfType<T>();
+                _instance = FindFirstObjectByType<T>();
             }
 
             return _instance;
@@ -52,8 +52,8 @@ public abstract class PersistentSingletonMonoBehaviour<T> : MonoBehaviour where 
         {
             if (_instance == null)
             {
-                _instance = FindObjectOfType<T>();
-              
+                _instance = FindFirstObjectByType<T>();
+
             }
 
             return _instance;

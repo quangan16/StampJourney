@@ -3,7 +3,7 @@ using System.Linq;
 using StampJourney.Data;
 using UnityEngine;
 
-namespace StampJourney.Core
+namespace StampJourney.Card
 {
     /// <summary>
     /// Nhóm các tile cùng stamp đã "dính" lại với nhau trên board.

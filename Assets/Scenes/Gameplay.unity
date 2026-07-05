@@ -1333,9 +1333,8 @@ GameObject:
   m_Component:
   - component: {fileID: 506723100}
   - component: {fileID: 506723101}
-  - component: {fileID: 506723104}
   - component: {fileID: 506723103}
-  - component: {fileID: 506723102}
+  - component: {fileID: 506723104}
   - component: {fileID: 506723105}
   m_Layer: 0
   m_Name: Gameboard
@@ -1382,33 +1381,9 @@ MonoBehaviour:
     SerializationNodes: []
   stampDetector: {fileID: 506723104}
   gravitySystem: {fileID: 506723103}
-  cardFactory: {fileID: 506723102}
-  groupManager: {fileID: 506723105}
+  cardFactory: {fileID: 506723105}
+  tilePrefab: {fileID: 7070226932243602147, guid: 36a16ab14fd52564d83b79c236cae372, type: 3}
   pixelsPerUnit: 100
---- !u!114 &506723102
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 506723099}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c802989729bfb984893bef5f61dee838, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Core.TileFactory
-  serializationData:
-    SerializedFormat: 2
-    SerializedBytes: 
-    ReferencedUnityObjects: []
-    SerializedBytesString: 
-    Prefab: {fileID: 0}
-    PrefabModificationsReferencedUnityObjects: []
-    PrefabModifications: []
-    SerializationNodes: []
-  tilePrefab: {fileID: 1028197431994264165, guid: b56b061c95357b9438af9281025b1613, type: 3}
-  spawnAboveOffset: 3
-  dropEaseTime: 0.35
 --- !u!114 &506723103
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1440,21 +1415,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 506723099}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8634cc2cc0e33d34fa408ff237de32f3, type: 3}
+  m_Script: {fileID: 11500000, guid: 06242b0c4de8a254c8f00b4e32e74a6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Core.StampDetector
---- !u!114 &506723105
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 506723099}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c7e52de046eb694c8362c656aa28d7b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Core.GroupManager
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -1464,6 +1427,30 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
+--- !u!114 &506723105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506723099}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 034f451cd43e4bb4cbde86a611f0f395, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Core.CardFactory
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  cardPrefab: {fileID: 4172016964222623668, guid: b56b061c95357b9438af9281025b1613, type: 3}
+  spawnAboveOffset: 3
+  dropEaseTime: 0.35
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -3961,7 +3948,6 @@ Transform:
   m_Children:
   - {fileID: 334719495}
   - {fileID: 460074140}
-  - {fileID: 1625862424}
   - {fileID: 1384229487}
   - {fileID: 541042765}
   m_Father: {fileID: 0}
@@ -4188,37 +4174,6 @@ Sprite:
   m_Bones: []
   m_ScriptableObjects: []
   m_SpriteID: 
---- !u!1 &1625862423
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1625862424}
-  m_Layer: 0
-  m_Name: StampDetector
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1625862424
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1625862423}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1437108097}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1723089536
 GameObject:
   m_ObjectHideFlags: 0

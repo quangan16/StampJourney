@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
+using StampJourney.Card;
 using UnityEngine;
 
-namespace StampJourney.Core
+namespace StampJourney.Gameplay
 {
     /// <summary>
     /// Hệ thống trọng lực: sau khi xóa tile, các tile phía trên rơi xuống.
@@ -71,7 +72,7 @@ namespace StampJourney.Core
             {
                 for (int c = 0; c < gameboard.Cols; c++)
                 {
-                    var tile = gameboard.GetTile(c, r);
+                    var tile = gameboard.GetCard(c, r);
                     if (tile == null || tile.Group == null) continue;
 
                     var group = tile.Group;
@@ -117,7 +118,7 @@ namespace StampJourney.Core
                 int freeBelow = 0;
                 for (int r = bottomRow + 1; r < gameboard.Rows; r++)
                 {
-                    var tileAtPos = gameboard.GetTile(col, r);
+                    var tileAtPos = gameboard.GetCard(col, r);
                     // Ô trống hoặc ô thuộc chính group này (sẽ di chuyển cùng)
                     if (tileAtPos == null)
                         freeBelow++;
@@ -187,7 +188,7 @@ namespace StampJourney.Core
 
             for (int readRow = gameboard.Rows - 1; readRow >= 0; readRow--)
             {
-                var tile = gameboard.GetTile(col, readRow);
+                var tile = gameboard.GetCard(col, readRow);
                 if (tile == null) continue;
 
                 // Skip tiles thuộc group — chúng đã được xử lý trong DropGroups
@@ -202,7 +203,7 @@ namespace StampJourney.Core
                 // Tìm vị trí writeRow tiếp theo mà không bị chiếm bởi group tile
                 while (writeRow >= 0)
                 {
-                    var tileAtWrite = gameboard.GetTile(col, writeRow);
+                    var tileAtWrite = gameboard.GetCard(col, writeRow);
                     if (tileAtWrite == null) break; // Ô trống — có thể đặt vào
                     if (tileAtWrite.Group != null)
                     {

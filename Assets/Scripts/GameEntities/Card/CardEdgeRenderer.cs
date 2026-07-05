@@ -1,9 +1,11 @@
 using DG.Tweening;
 using Sirenix.OdinInspector;
+using StampJourney.Card;
 using StampJourney.Core;
+using StampJourney.Gameplay;
 using UnityEngine;
 
-namespace StampJourney.Tile
+namespace StampJourney.Card
 {
     /// <summary>
     /// Render khung răng cưa (postage stamp perforations) cho tile.

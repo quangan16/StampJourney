@@ -10,6 +10,7 @@
     "com.unity.2d.tilemap.extras": "6.0.2",
     "com.unity.2d.tooling": "1.0.3",
     "com.unity.addressables": "2.9.1",
+    "com.unity.ai.assistant": "2.13.0-pre.2",
     "com.unity.collab-proxy": "2.12.4",
     "com.unity.ide.antigravity": "https://github.com/HarineshS/com.unity.ide.antigravity.git",
     "com.unity.ide.rider": "3.0.40",

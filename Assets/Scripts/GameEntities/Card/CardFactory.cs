@@ -1,22 +1,23 @@
 using System.Collections.Generic;
 using DG.Tweening;
 using Sirenix.OdinInspector;
-using StampJourney.Tile;
+using StampJourney.Core;
+using StampJourney.Gameplay;
 using UnityEngine;
 
-namespace StampJourney.Core
+namespace StampJourney.Card
 {
     /// <summary>
     /// Factory: tạo, hủy và điều khiển GameObject của tile.
     /// Duy trì pool TileView để tối ưu hiệu năng.
     /// Tiles được spawn trực tiếp vào Gameboard (World Space).
     /// </summary>
-    public class CardFactory : SerializedMonoBehaviour
+    public class CardFactory : MonoBehaviour
     {
         Gameboard gameboard;
 
         [BoxGroup("References")]
-        [Required] public CardView tilePrefab;
+        public CardView cardPrefab;
 
 
 
@@ -55,12 +56,10 @@ namespace StampJourney.Core
         /// <summary>Spawn tile từ phía trên board, rơi xuống vị trí target.</summary>
         public void SpawnTileFromAbove(CardModel model)
         {
-
             var view = GetFromPool();
             Vector2 targetPos = gameboard.GetWorldPosition(model.BoardCol, model.BoardRow);
 
             // Tính toán offset dựa trên pixelsPerUnit
-
             float offsetInUnits = (spawnAboveOffset * GameManager.Instance.GameConfig.cardHeight);
             Vector2 spawnPos = targetPos + Vector2.up * offsetInUnits;
 
@@ -115,6 +114,7 @@ namespace StampJourney.Core
         public void AnimateTileDrop(CardModel model, Vector2 targetWorldPos, float duration)
         {
             if (!_activeCards.TryGetValue(model.TileId, out var view)) return;
+            
             view.transform.DOMove(targetWorldPos, duration).SetEase(Ease.InQuad);
         }
 
@@ -133,8 +133,8 @@ namespace StampJourney.Core
                 v.transform.SetParent(gameboard.transform, false);
                 return v;
             }
-            // Spawn vào Gameboard (World Space)
-            return Instantiate(tilePrefab, gameboard.transform);
+
+            return Instantiate(cardPrefab, gameboard.transform);
         }
 
         private void ReturnToPool(CardView view)
