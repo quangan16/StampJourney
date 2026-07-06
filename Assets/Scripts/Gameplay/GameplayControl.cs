@@ -33,6 +33,12 @@ public class GameplayControl : MonoBehaviour
     public void OnDestroy()
     {
         GameManager.Instance.OnSceneLoadedSuccess -= OnGameplaySceneLoaded;
+        if (gameboard != null)
+        {
+            gameboard.OnSwapCompleted -= HandleSwapCompleted;
+            gameboard.OnStampCleared -= HandleStampCleared;
+            gameboard.OnBoardSettled -= HandleBoardSettled;
+        }
     }
 
     public void Init(LevelData levelData)
@@ -69,6 +75,16 @@ public class GameplayControl : MonoBehaviour
         _combo = 0;
         GameManager.Instance.State = GameState.Playing;
         gameboard.Setup();
+
+        gameboard.OnSwapCompleted -= HandleSwapCompleted;
+        gameboard.OnSwapCompleted += HandleSwapCompleted;
+        
+        gameboard.OnStampCleared -= HandleStampCleared;
+        gameboard.OnStampCleared += HandleStampCleared;
+        
+        gameboard.OnBoardSettled -= HandleBoardSettled;
+        gameboard.OnBoardSettled += HandleBoardSettled;
+
         OnScoreChanged?.Invoke(_score);
         OnMovesChanged?.Invoke(_remainingMoves);
         Debug.Log("Gameplay done setup");
@@ -107,6 +123,26 @@ public class GameplayControl : MonoBehaviour
 
         // Reset combo vì đây là swap mới
         _combo = 0;
+    }
+
+    private void HandleBoardSettled()
+    {
+        if (GameManager.Instance.State != GameState.Playing) return;
+
+        if (gameboard.IsBoardAndQueuesEmpty())
+        {
+            TriggerWin();
+            var gameplayUI = UIManager.Instance.currentActiveScreen as GameplayUI;
+            gameplayUI?.ShowWinScreen(_score, _levelData.levelConfig.levelID);
+            UIManager.Instance.ShowToast("YOU WIN!");
+        }
+        else if (_remainingMoves <= 0)
+        {
+            TriggerLose();
+            var gameplayUI = UIManager.Instance.currentActiveScreen as GameplayUI;
+            gameplayUI?.ShowLoseScreen(_score);
+            UIManager.Instance.ShowToast("OUT OF MOVES!");
+        }
     }
 
     /// <summary>Mỗi nhóm stamp cleared → cộng điểm combo.</summary>

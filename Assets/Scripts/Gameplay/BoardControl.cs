@@ -31,10 +31,12 @@ namespace StampJourney.Gameplay
         [LabelText("Pixels Per Unit")]
         public float pixelsPerUnit = 100f; // Hệ số chuyển đổi pixel -> world unit
 
+        [BoxGroup("References")]
+        public QueueSystem queueSystem;
+
         // ---- Grid Data ----
         /// <summary>Grid[col, row] — chứa TileModel cố định.</summary>
         [ShowInInspector, ReadOnly]
-
         private Tile[,] tiles;
 
         private LevelData _levelData;
@@ -63,6 +65,7 @@ namespace StampJourney.Gameplay
             stampDetector.Init(this);
             gravitySystem.Init(this);
             cardFactory.Init(this);
+            queueSystem?.Init(this, _levelData);
             Setup();
 
 
@@ -73,7 +76,7 @@ namespace StampJourney.Gameplay
             cardFactory?.DespawnAll();
             SpawnTiles();
 
-
+            queueSystem?.SetupInitialQueues();
             FillBoardInitial();
 
             // Rebuild groups + edges sau khi fill xong
@@ -316,7 +319,7 @@ namespace StampJourney.Gameplay
                     }
 
                     // Chờ animation clear (~0.5s)
-                    await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
+                    // await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
 
                     // Gravity
                     await gravitySystem.ApplyGravityAsync();
@@ -333,21 +336,35 @@ namespace StampJourney.Gameplay
 
         private async UniTask FillEmptyCellsAsync()
         {
-            var stamps = _levelData.levelConfig.stamps;
+            bool spawnedAny = false;
             for (int c = 0; c < _cols; c++)
+            {
+                int emptyCount = 0;
                 for (int r = 0; r < _rows; r++)
                 {
-                    if (!tiles[c, r].IsOccupied)
+                    if (!tiles[c, r].IsOccupied && queueSystem.GetQueueCount(c) > 0)
                     {
-                        var stamp = stamps[UnityEngine.Random.Range(0, stamps.Length)];
-                        int pc = UnityEngine.Random.Range(0, stamp.cols);
-                        int pr = UnityEngine.Random.Range(0, stamp.rows);
-                        var model = new CardModel(stamp, pc, pr);
+                        var model = queueSystem.PopCard(c);
+
                         tiles[c, r].SetCard(model);
-                        cardFactory.SpawnTileFromAbove(model);
+                        cardFactory.AnimateDropAndFlip(model, c, r);
+
+                        emptyCount++;
+                        spawnedAny = true;
                     }
                 }
-            // await UniTask.Delay(TimeSpan.FromSeconds(0.3f));
+
+                if (emptyCount > 0 && queueSystem.GetQueueCount(c) > 0)
+                {
+                    for (int i = 0; i < queueSystem.GetQueueCount(c); i++)
+                    {
+                        var queuedModel = queueSystem.GetCardAt(c, i);
+                        cardFactory.AnimateQueueShift(queuedModel, c, i);
+                    }
+                }
+            }
+            if (spawnedAny)
+                await UniTask.Delay(TimeSpan.FromSeconds(0.4f));
 
             // Rebuild groups cho tile mới spawn
             stampDetector.RebuildGroups();
@@ -412,6 +429,20 @@ namespace StampJourney.Gameplay
                     var targetPos = GetWorldPosition(c, r);
                     view.transform.DOMove(targetPos, duration).SetEase(Ease.OutCubic);
                 }
+        }
+
+        public bool IsBoardAndQueuesEmpty()
+        {
+            if (tiles == null) return false;
+            if (queueSystem != null && !queueSystem.IsAllQueuesEmpty()) return false;
+            for (int c = 0; c < _cols; c++)
+            {
+                for (int r = 0; r < _rows; r++)
+                {
+                    if (tiles[c, r].IsOccupied) return false;
+                }
+            }
+            return true;
         }
     }
 }

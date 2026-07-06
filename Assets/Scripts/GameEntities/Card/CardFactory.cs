@@ -41,34 +41,53 @@ namespace StampJourney.Card
             this.gameboard = gameboard;
         }
 
-        /// <summary>Spawn tile ngay tại vị trí board của nó.</summary>
         public void SpawnCard(CardModel model)
         {
+            model.CanDrag = true;
             var view = GetFromPool();
 
             Vector2 worldPos = gameboard.GetWorldPosition(model.BoardCol, model.BoardRow);
             view.transform.position = worldPos;
 
             view.Init(model, gameboard);
+            view.PlayFlip(FlipState.Up, true);
             _activeCards[model.TileId] = view;
         }
 
-        /// <summary>Spawn tile từ phía trên board, rơi xuống vị trí target.</summary>
-        public void SpawnTileFromAbove(CardModel model)
+        public void SpawnCardInQueue(CardModel model, int col, int queueIndex)
         {
+            model.CanDrag = false;
             var view = GetFromPool();
-            Vector2 targetPos = gameboard.GetWorldPosition(model.BoardCol, model.BoardRow);
+            Vector2 worldPos = gameboard.queueSystem.GetQueueWorldPosition(col, queueIndex);
+            view.transform.position = worldPos;
 
-            // Tính toán offset dựa trên pixelsPerUnit
-            float offsetInUnits = (spawnAboveOffset * GameManager.Instance.GameConfig.cardHeight);
-            Vector2 spawnPos = targetPos + Vector2.up * offsetInUnits;
-
-            view.transform.position = spawnPos;
             view.Init(model, gameboard);
+            view.PlayFlip(FlipState.Down, true);
             _activeCards[model.TileId] = view;
+        }
 
-            float duration = dropEaseTime + model.BoardRow * 0.03f;
-            view.transform.DOMove(targetPos, duration).SetEase(Ease.InBounce);
+        public void AnimateDropAndFlip(CardModel model, int col, int row)
+        {
+            if (!_activeCards.TryGetValue(model.TileId, out var view)) return;
+            Vector2 targetPos = gameboard.GetWorldPosition(col, row);
+
+            float duration = dropEaseTime + row * 0.03f;
+            view.transform.DOMove(targetPos, duration).SetEase(Ease.InQuad)
+                .OnComplete(() => model.CanDrag = true);
+
+            // Lên lịch flip animation ở giữa chặng rơi
+            DOVirtual.DelayedCall(duration * 0.4f, () =>
+            {
+                if (view != null) view.PlayFlip(FlipState.Up, false);
+            });
+        }
+
+        public void AnimateQueueShift(CardModel model, int col, int queueIndex)
+        {
+            if (!_activeCards.TryGetValue(model.TileId, out var view)) return;
+            Vector2 targetPos = gameboard.queueSystem.GetQueueWorldPosition(col, queueIndex);
+
+            view.transform.DOMove(targetPos, dropEaseTime).SetEase(Ease.OutQuad);
         }
 
         /// <summary>Hủy tile (trả về pool) và play animation clear.</summary>
@@ -114,7 +133,7 @@ namespace StampJourney.Card
         public void AnimateTileDrop(CardModel model, Vector2 targetWorldPos, float duration)
         {
             if (!_activeCards.TryGetValue(model.TileId, out var view)) return;
-            
+
             view.transform.DOMove(targetWorldPos, duration).SetEase(Ease.InQuad);
         }
 

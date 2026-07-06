@@ -105,10 +105,16 @@ namespace StampJourney.Card
             if (instantly)
             {
                 this.transform.localEulerAngles = new Vector3(0f, targetState == FlipState.Up ? 0 : 180, 0f);
+                if (contentImg != null) contentImg.gameObject.SetActive(targetState == FlipState.Up);
             }
             else
             {
-                this.transform.DORotate(new Vector3(0f, targetState == FlipState.Up ? 0 : 180, 0f), 0.5f);
+                float duration = 0.4f;
+                this.transform.DORotate(new Vector3(0f, targetState == FlipState.Up ? 0 : 180, 0f), duration).SetEase(Ease.InOutSine);
+                DOVirtual.DelayedCall(duration / 2f, () =>
+                {
+                    if (contentImg != null) contentImg.gameObject.SetActive(targetState == FlipState.Up);
+                });
             }
         }
 
@@ -136,7 +142,7 @@ namespace StampJourney.Card
 
         private void OnMouseDown()
         {
-            if (_model == null || _model.IsAnimating || _isSnapping) return;
+            if (_model == null || _model.IsAnimating || _isSnapping || !_model.CanDrag) return;
             if (Core.GameManager.Instance.State != Core.GameState.Playing) return;
 
             // LỖI GLITCH LOCAL POSITION: Khi quick drag, animation DOMove của lần di chuyển/swap
@@ -227,7 +233,7 @@ namespace StampJourney.Card
             _prevDragPos = newPosition;
         }
 
-        private void OnMouseUp()
+        private async UniTaskVoid OnMouseUp()
         {
             if (!_isDragging || _isSnapping) return;
             _isDragging = false;
@@ -247,6 +253,16 @@ namespace StampJourney.Card
                 _dragGroup?.GroupTransform.DORotateQuaternion(Quaternion.identity, snapDuration).SetEase(Ease.OutBack);
 
                 var groupSorting = _dragGroup?.GroupTransform.GetComponent<SortingGroup>();
+
+
+                if (gridDelta.x != 0 || gridDelta.y != 0)
+                {
+                    await DoGroupSwapAsync(gridDelta);
+                }
+                else
+                {
+                    await SnapBackGroupAsync();
+                }
                 if (groupSorting != null)
                 {
                     groupSorting.sortingOrder = baseSortingOrder;
@@ -260,32 +276,24 @@ namespace StampJourney.Card
                             view.SetSortingOrder(baseSortingOrder);
                     }
                 }
-
-                if (gridDelta.x != 0 || gridDelta.y != 0)
-                {
-                    DoGroupSwapAsync(gridDelta).Forget();
-                }
-                else
-                {
-                    SnapBackGroupAsync().Forget();
-                }
             }
             else
             {
                 // ---- Single tile ----
                 transform.DOScale(1f, snapDuration);
                 transform.DORotateQuaternion(Quaternion.identity, snapDuration).SetEase(Ease.OutBack);
-                SetSortingOrder(baseSortingOrder);
+
 
                 var target = FindTargetTile();
                 if (target != null && target != this)
                 {
-                    DoSwapAsync(target).Forget();
+                    await DoSwapAsync(target);
                 }
                 else
                 {
-                    SnapBackSingleAsync().Forget();
+                    await SnapBackSingleAsync();
                 }
+                SetSortingOrder(baseSortingOrder);
             }
         }
 
@@ -296,7 +304,7 @@ namespace StampJourney.Card
         // ========================================================
         #region Swap Logic
 
-        private async UniTaskVoid DoSwapAsync(CardView targetView)
+        private async UniTask DoSwapAsync(CardView targetView)
         {
             _isSnapping = true;
             int colA = _model.BoardCol, rowA = _model.BoardRow;
@@ -314,7 +322,7 @@ namespace StampJourney.Card
             _dragGroup = null;
         }
 
-        private async UniTaskVoid DoGroupSwapAsync(Vector2Int gridDelta)
+        private async UniTask DoGroupSwapAsync(Vector2Int gridDelta)
         {
             var group = _dragGroup;
             _isSnapping = true;
@@ -323,7 +331,7 @@ namespace StampJourney.Card
             _isSnapping = false;
         }
 
-        private async UniTaskVoid SnapBackSingleAsync()
+        private async UniTask SnapBackSingleAsync()
         {
             _isSnapping = true;
             // Lấy đúng vị trí grid hiện tại từ board data
@@ -340,7 +348,7 @@ namespace StampJourney.Card
         /// Snap back group về lại vị trí ban đầu.
         /// Do các card vẫn đang là child của GroupTransform, ta chỉ cần di chuyển parent.
         /// </summary>
-        private async UniTaskVoid SnapBackGroupAsync()
+        private async UniTask SnapBackGroupAsync()
         {
             if (_dragGroup == null) return;
             _isSnapping = true;

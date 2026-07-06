@@ -428,7 +428,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 854}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &192604006
@@ -1336,6 +1336,7 @@ GameObject:
   - component: {fileID: 506723103}
   - component: {fileID: 506723104}
   - component: {fileID: 506723105}
+  - component: {fileID: 506723106}
   m_Layer: 0
   m_Name: Gameboard
   m_TagString: Untagged
@@ -1384,6 +1385,7 @@ MonoBehaviour:
   cardFactory: {fileID: 506723105}
   tilePrefab: {fileID: 7070226932243602147, guid: 36a16ab14fd52564d83b79c236cae372, type: 3}
   pixelsPerUnit: 100
+  queueSystem: {fileID: 506723106}
 --- !u!114 &506723103
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1439,6 +1441,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 034f451cd43e4bb4cbde86a611f0f395, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Core.CardFactory
+  cardPrefab: {fileID: 4172016964222623668, guid: b56b061c95357b9438af9281025b1613, type: 3}
+  spawnAboveOffset: 3
+  dropEaseTime: 0.35
+--- !u!114 &506723106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506723099}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d14495784a5cbf1408403e966e0733ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Gameplay.QueueSystem
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
@@ -1448,9 +1465,9 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
-  cardPrefab: {fileID: 4172016964222623668, guid: b56b061c95357b9438af9281025b1613, type: 3}
-  spawnAboveOffset: 3
-  dropEaseTime: 0.35
+  queueSize: 4
+  queueSpacing: 0.5
+  stackOffset: {x: 0, y: 0.15}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1676,7 +1693,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &555270367
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3200,7 +3217,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -387, y: 854}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1275193790
@@ -4191,7 +4208,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1723089537
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4508,7 +4525,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1834302561
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4584,7 +4601,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1854424270
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4618,7 +4635,7 @@ Canvas:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1854424269}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
   m_RenderMode: 1
   m_Camera: {fileID: 519420031}
@@ -4641,7 +4658,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1854424269}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
   m_Name: 
@@ -4658,7 +4675,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1854424269}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
@@ -4708,7 +4725,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 364, y: 854}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1874678485
@@ -4828,7 +4845,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1948162298
 RectTransform:
   m_ObjectHideFlags: 0

@@ -33,6 +33,8 @@ namespace StampJourney.Card
         /// <summary>True nếu tile đang trong animation và chưa thể tương tác.</summary>
         public bool IsAnimating { get; set; }
 
+        public bool CanDrag { get; set; } = true;
+
         public FlipState FlipState;
 
         /// <summary>Group mà tile này thuộc về. Null nếu đứng riêng lẻ.</summary>
