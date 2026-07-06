@@ -22,6 +22,8 @@ namespace StampJourney.Card
         [Required] public SpriteRenderer contentImg;
         [BoxGroup("Visuals")]
         public SpriteRenderer glowImg;
+        [BoxGroup("Visuals")]
+        public GameObject pressEffect;
         [BoxGroup("Visual")]
         public SpriteRenderer backGroundImg;
         [BoxGroup("Visuals")]
@@ -90,6 +92,7 @@ namespace StampJourney.Card
             if (_model == null) return;
             contentImg.sprite = _model.Stamp.GetPieceSprite(_model.PieceCol, _model.PieceRow);
             contentImg.color = Color.white;
+            pressEffect.SetActive(false);
             FitSpriteContent(1, 1);
         }
 
@@ -144,6 +147,9 @@ namespace StampJourney.Card
         {
             if (_model == null || _model.IsAnimating || _isSnapping || !_model.CanDrag) return;
             if (Core.GameManager.Instance.State != Core.GameState.Playing) return;
+
+            // Chặn kéo thả nếu cột này đang có bài rơi
+            if (_board != null && _board.IsColumnBusy(_model.BoardCol)) return;
 
             // LỖI GLITCH LOCAL POSITION: Khi quick drag, animation DOMove của lần di chuyển/swap
             // trước có thể vẫn đang chạy. Nếu ta kéo parent lúc này, DOMove trên các child sẽ
@@ -209,6 +215,7 @@ namespace StampJourney.Card
             }
 
             if (glowImg) glowImg.DOFade(1f, liftDuration);
+            if (pressEffect) pressEffect.SetActive(true);
         }
 
         private void OnMouseDrag()
@@ -239,6 +246,7 @@ namespace StampJourney.Card
             _isDragging = false;
 
             if (glowImg) glowImg.DOFade(0f, snapDuration);
+            if (pressEffect) pressEffect.SetActive(false);
 
             // Reset tilt về 0
             _currentTilt = 0f;
@@ -247,6 +255,7 @@ namespace StampJourney.Card
             {
                 // ---- Group: tính grid delta ----
                 var gridDelta = CalculateGroupGridDelta();
+                _dragGroup?.GroupTransform.DOKill(true);
 
                 // Hạ parent scale
                 _dragGroup?.GroupTransform.DOScale(1f, snapDuration);
@@ -269,11 +278,15 @@ namespace StampJourney.Card
                 }
                 else
                 {
-                    foreach (var member in _dragGroup.Members)
+                    if (_dragGroup != null && _dragGroup.Members.Count > 0)
                     {
-                        var view = _board.cardFactory.GetView(member.TileId);
-                        if (view != null)
-                            view.SetSortingOrder(baseSortingOrder);
+                        foreach (var member in _dragGroup.Members)
+                        {
+                            if (member == null) continue;
+                            var view = _board.cardFactory.GetView(member.TileId);
+                            if (view != null)
+                                view.SetSortingOrder(baseSortingOrder);
+                        }
                     }
                 }
             }
@@ -284,10 +297,11 @@ namespace StampJourney.Card
                 transform.DORotateQuaternion(Quaternion.identity, snapDuration).SetEase(Ease.OutBack);
 
 
-                var target = FindTargetTile();
-                if (target != null && target != this)
+                var gridDelta = CalculateSingleGridDelta();
+
+                if (gridDelta.x != 0 || gridDelta.y != 0)
                 {
-                    await DoSwapAsync(target);
+                    await DoSingleGridSwapAsync(gridDelta);
                 }
                 else
                 {
@@ -304,22 +318,11 @@ namespace StampJourney.Card
         // ========================================================
         #region Swap Logic
 
-        private async UniTask DoSwapAsync(CardView targetView)
+        private async UniTask DoSingleGridSwapAsync(Vector2Int gridDelta)
         {
             _isSnapping = true;
-            int colA = _model.BoardCol, rowA = _model.BoardRow;
-            int colB = targetView._model.BoardCol, rowB = targetView._model.BoardRow;
-
-            // Luôn lấy vị trí từ board grid — không dùng _originPos vì nó có thể bị stale
-            Vector2 posA = _board.GetWorldPosition(colA, rowA);
-            Vector2 posB = _board.GetWorldPosition(colB, rowB);
-
-            transform.DOMove(posB, snapDuration).SetEase(Ease.Linear);
-            targetView.transform.DOMove(posA, snapDuration).SetEase(Ease.Linear);
-
-            await _board.TrySwapAsync(colA, rowA, colB, rowB);
+            await _board.TrySwapSingleGridAsync(_model, gridDelta.x, gridDelta.y);
             _isSnapping = false;
-            _dragGroup = null;
         }
 
         private async UniTask DoGroupSwapAsync(Vector2Int gridDelta)
@@ -401,24 +404,18 @@ namespace StampJourney.Card
             return new Vector2Int(deltaCol, deltaRow);
         }
 
-        private CardView FindTargetTile()
-        {
-            Vector2 mousePos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, Vector2.zero);
 
-            foreach (var hit in hits)
-            {
-                var view = hit.collider.GetComponentInParent<CardView>();
-                if (view != null && view != this) return view;
-            }
-            return null;
-        }
-
-        public void PlayClearAnimation()
+        public void PlayRippleEffect(float delay)
         {
+            if (_model == null) return;
+
             var seq = DOTween.Sequence();
-            seq.Append(transform.DOScale(1.3f, 0.15f).SetEase(Ease.OutBack));
-            seq.Append(transform.DOScale(0f, 0.2f).SetEase(Ease.InBack));
+            seq.SetDelay(delay);
+            seq.Append(transform.DOScale(Vector3.one * 1.35f, 0.18f).SetEase(Ease.Linear));
+            seq.Append(transform.DOScale(Vector3.one * 1f, 0.2f).SetEase(Ease.OutQuad)).OnComplete(() =>
+            {
+                transform.localScale = Vector3.one;
+            });
         }
 
         #endregion

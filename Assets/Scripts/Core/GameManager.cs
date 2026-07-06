@@ -38,6 +38,7 @@ namespace StampJourney.Core
 
         public void Start()
         {
+            Application.targetFrameRate = 60;
             StartGameplayLevel(1);
         }
 

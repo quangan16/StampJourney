@@ -73,15 +73,16 @@ public class GameplayControl : MonoBehaviour
         _score = 0;
         _remainingMoves = _levelData.levelConfig.maxMoves;
         _combo = 0;
+
+        gameboard.SetupAsync();
         GameManager.Instance.State = GameState.Playing;
-        gameboard.Setup();
 
         gameboard.OnSwapCompleted -= HandleSwapCompleted;
         gameboard.OnSwapCompleted += HandleSwapCompleted;
-        
+
         gameboard.OnStampCleared -= HandleStampCleared;
         gameboard.OnStampCleared += HandleStampCleared;
-        
+
         gameboard.OnBoardSettled -= HandleBoardSettled;
         gameboard.OnBoardSettled += HandleBoardSettled;
 

@@ -10,25 +10,21 @@ namespace StampJourney.Card
     /// Khi drag 1 member, cả group di chuyển.
     /// Viền giữa các member trong group bị ẩn.
     /// </summary>
-    public class CardGroup
+    public class CardGroup : MonoBehaviour
     {
         // ---- Static ID counter ----
         private static int _nextGroupId;
 
         // ---- Identity ----
-        public readonly int GroupId;
-        public readonly StampData Stamp;
+        public int GroupId { get; private set; }
+        public StampData Stamp { get; private set; }
+
+        // ---- Runtime parent object ----
+        public Transform GroupTransform => transform;
 
         // ---- Members ----
         private readonly List<CardModel> _members = new();
         public IReadOnlyList<CardModel> Members => _members;
-
-        // ---- Runtime parent object ----
-        /// <summary>
-        /// GameObject cha tạo ra khi group hình thành.
-        /// Tâm = trung tâm bounding box, tất cả card views là children.
-        /// </summary>
-        public Transform GroupTransform { get; set; }
 
         // ---- Bounding box on board (computed) ----
         public int MinCol { get; private set; }
@@ -44,7 +40,7 @@ namespace StampJourney.Card
 
         // ---- Constructor ----
 
-        public CardGroup(StampData stamp)
+        public void Init(StampData stamp)
         {
             GroupId = _nextGroupId++;
             Stamp = stamp;
@@ -154,7 +150,7 @@ namespace StampJourney.Card
             return dBoardCol == dPieceCol && dBoardRow == dPieceRow;
         }
 
-        private void RecalculateBounds()
+        public void RecalculateBounds()
         {
             if (_members.Count == 0)
             {

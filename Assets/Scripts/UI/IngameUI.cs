@@ -45,6 +45,17 @@ public class GameplayUI : MonoBehaviour, IScreen
     [FoldoutGroup("Combo")]
     public float comboDuration = 1.2f;
 
+    public void Start()
+    {
+        var gameplayControl = FindObjectOfType<GameplayControl>();
+        if (gameplayControl == null)
+        {
+            AndyUtil.Logger.LogError("Gameplay controler not found!");
+            return;
+        }
+        Init(gameplayControl);
+    }
+
     public void Init(GameplayControl gameplayControl)
     {
         if (gameplayControl == null)
@@ -122,7 +133,7 @@ public class GameplayUI : MonoBehaviour, IScreen
 
     private void UpdateMoves(int moves)
     {
-        movesText.text = moves.ToString();
+        movesText.text = $"Move left: {moves}";
 
         // Đổi màu khi gần hết moves
         movesText.color = moves <= 5 ? Color.red : Color.white;

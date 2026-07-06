@@ -55,64 +55,104 @@ namespace StampJourney.Gameplay
                 }
             }
 
-            // 2. Duyệt grid (Union-Find)
+            // 2. Duyệt grid (Flood Fill)
+            var newLogicalGroups = new List<List<CardModel>>();
+            var visited = new HashSet<CardModel>();
+
             for (int r = 0; r < _board.Rows; r++)
             {
                 for (int c = 0; c < _board.Cols; c++)
                 {
                     var card = _board.GetCard(c, r);
-                    if (card == null) continue;
+                    if (card == null || visited.Contains(card)) continue;
 
-                    TryMerge(card, _board.GetCard(c, r - 1));
-                    TryMerge(card, _board.GetCard(c - 1, r));
+                    var groupMembers = new List<CardModel>();
+                    var q = new Queue<CardModel>();
+                    q.Enqueue(card);
+                    visited.Add(card);
+
+                    while (q.Count > 0)
+                    {
+                        var curr = q.Dequeue();
+                        groupMembers.Add(curr);
+
+                        var neighbors = new[] {
+                            _board.GetCard(curr.BoardCol, curr.BoardRow - 1),
+                            _board.GetCard(curr.BoardCol, curr.BoardRow + 1),
+                            _board.GetCard(curr.BoardCol - 1, curr.BoardRow),
+                            _board.GetCard(curr.BoardCol + 1, curr.BoardRow)
+                        };
+
+                        foreach (var n in neighbors)
+                        {
+                            if (n != null && !visited.Contains(n) && CardGroup.AreMatchingNeighbors(curr, n))
+                            {
+                                visited.Add(n);
+                                q.Enqueue(n);
+                            }
+                        }
+                    }
+
+                    if (groupMembers.Count > 1)
+                    {
+                        newLogicalGroups.Add(groupMembers);
+                    }
                 }
             }
 
-            // 3. Clean up: loại bỏ groups <= 1 member
-            var toRemove = _groups.Where(kvp => kvp.Value.Count <= 1).Select(kvp => kvp.Key).ToList();
-            foreach (var id in toRemove)
+            // 3. Đối chiếu old vs new
+            foreach (var logicalGroup in newLogicalGroups)
             {
-                _groups[id].Disband();
-                _groups.Remove(id);
-            }
-
-            // 4. Đối chiếu old vs new
-            foreach (var newGroup in _groups.Values)
-            {
-                // Tìm oldGroup khớp hoàn toàn (chỉ cần khớp members, không cần khớp bounds vì bounds có thể đổi do gravity/swap)
                 var matchedOld = oldGroups.FirstOrDefault(old =>
-                    old.Count == newGroup.Count &&
-                    !newGroup.Members.Except(old.Members).Any());
+                    old.Count == logicalGroup.Count &&
+                    !logicalGroup.Except(old.Members).Any());
 
-                if (matchedOld != null && matchedOld.GroupTransform != null)
+                if (matchedOld != null)
                 {
-                    // Tái sử dụng parent
-                    newGroup.GroupTransform = matchedOld.GroupTransform;
+                    // Giữ lại group cũ (tái sử dụng 100%, không tăng ID)
+                    _groups[matchedOld.GroupId] = matchedOld;
                     oldGroups.Remove(matchedOld);
+
+                    // Khôi phục tham chiếu
+                    foreach (var member in logicalGroup)
+                        member.Group = matchedOld;
+
+                    matchedOld.RecalculateBounds();
+                }
+                else
+                {
+                    // Tạo group mới
+                    var go = new GameObject();
+                    var newGroup = go.AddComponent<CardGroup>();
+                    newGroup.Init(logicalGroup[0].Stamp);
+                    foreach (var member in logicalGroup)
+                        newGroup.Add(member);
+
+                    _groups[newGroup.GroupId] = newGroup;
                 }
             }
 
             // 5. Destroy parent của những oldGroups bị phá vỡ
             foreach (var oldGroup in oldGroups)
             {
-                if (oldGroup.GroupTransform != null)
+                if (oldGroup != null && oldGroup.gameObject != null)
                 {
-                    // LỖI GLITCH ROTATION: Tương tự lúc reparent, nếu group cũ đang bị nghiêng/scale
-                    // do animation thả chuột mà bị phá vỡ (do merge), các child sẽ giữ nguyên
-                    // độ nghiêng đó khi unparent. Cần reset parent về chuẩn trước khi unparent.
-                    oldGroup.GroupTransform.DOKill();
-                    oldGroup.GroupTransform.localScale = Vector3.one;
-                    oldGroup.GroupTransform.rotation = Quaternion.identity;
+                    oldGroup.transform.DOKill();
+                    // oldGroup.transform.localScale = Vector3.one;
+                    oldGroup.transform.rotation = Quaternion.identity;
 
                     var children = new List<Transform>();
-                    for (int i = 0; i < oldGroup.GroupTransform.childCount; i++)
-                        children.Add(oldGroup.GroupTransform.GetChild(i));
+                    for (int i = 0; i < oldGroup.transform.childCount; i++)
+                        children.Add(oldGroup.transform.GetChild(i));
 
                     foreach (var child in children)
+                    {
                         child.SetParent(_board.transform, true);
+                        child.localScale = Vector3.one;
+                        child.localRotation = Quaternion.identity;
+                    }
 
-                    Destroy(oldGroup.GroupTransform.gameObject);
-                    oldGroup.GroupTransform = null;
+                    Destroy(oldGroup.gameObject);
                 }
             }
 
@@ -134,39 +174,35 @@ namespace StampJourney.Gameplay
             Vector2 maxPos = _board.GetWorldPosition(group.MaxCol, group.MinRow); // top-right
             Vector2 center = (minPos + maxPos) / 2f;
 
-            if (group.GroupTransform == null)
+            group.transform.SetParent(_board.transform, false);
+
+            // Sửa lỗi glitch local position
+            group.transform.DOKill();
+
+            // Phải tạm thời unparent các children ĐỂ khi dời group, children không bị dời theo!
+            var children = new List<Transform>();
+            for (int i = 0; i < group.transform.childCount; i++)
+                children.Add(group.transform.GetChild(i));
+
+            foreach (var child in children)
             {
-                // Tạo parent object mới
-                var parentGO = new GameObject($"Group_{group.GroupId}_{group.Stamp.stampName}");
-                parentGO.transform.SetParent(_board.transform, false);
-                parentGO.transform.position = center;
-
-
-                var sortingGroup = parentGO.AddComponent<UnityEngine.Rendering.SortingGroup>();
-                sortingGroup.sortingOrder = 10; // Default base order for tiles
-                group.GroupTransform = parentGO.transform;
+                child.SetParent(_board.transform, true);
+                child.localScale = Vector3.one;
+                child.localRotation = Quaternion.identity;
             }
-            else
+
+            group.transform.position = center;
+            group.transform.localScale = Vector3.one;
+            group.transform.rotation = Quaternion.identity;
+
+
+            group.gameObject.name = $"Group_{group.GroupId}_{group.Stamp.stampName}";
+
+            var sortingGroup = group.gameObject.GetComponent<UnityEngine.Rendering.SortingGroup>();
+            if (sortingGroup == null)
             {
-                // Cập nhật lại center cho parent cũ (nếu group bị di chuyển bởi gravity/swap)
-                
-                // Sửa lỗi glitch local position: Phải reset scale và rotation của parent về mặc định 
-                // TRƯỚC KHI reparent. Nếu parent đang bị scale/rotate bởi DOTween (vd: lift/tilt), 
-                // hàm SetParent(true) sẽ tính sai localPosition và làm lệch thẻ bài vĩnh viễn.
-                group.GroupTransform.DOKill();
-                group.GroupTransform.localScale = Vector3.one;
-                group.GroupTransform.rotation = Quaternion.identity;
-
-                // Phải tạm thời unparent các children để chúng không bị di chuyển theo khi parent nhảy về center mới
-                var children = new List<Transform>();
-                for (int i = 0; i < group.GroupTransform.childCount; i++)
-                    children.Add(group.GroupTransform.GetChild(i));
-
-                foreach (var child in children)
-                    child.SetParent(_board.transform, true);
-
-                group.GroupTransform.position = center;
-                group.GroupTransform.name = $"Group_{group.GroupId}_{group.Stamp.stampName}"; // Cập nhật tên
+                sortingGroup = group.gameObject.AddComponent<UnityEngine.Rendering.SortingGroup>();
+                sortingGroup.sortingOrder = 10;
             }
 
             // Reparent tất cả member views vào parent
@@ -175,33 +211,31 @@ namespace StampJourney.Gameplay
                 var view = _board.cardFactory.GetView(member.TileId);
                 if (view != null)
                 {
-                    view.transform.SetParent(group.GroupTransform, true); // worldPositionStays = true
+                    view.transform.SetParent(group.transform, true); // worldPositionStays = true
+                    view.transform.localScale = Vector3.one;
+                    view.transform.localRotation = Quaternion.identity;
                 }
             }
         }
 
         public void UnparentGroupCards(CardGroup group)
         {
-            if (group?.GroupTransform == null) return;
+            if (group == null || group.gameObject == null) return;
 
-            // Dừng mọi animation đang chạy trên parent trước khi destroy/unparent để tránh lỗi DOTween
-            group.GroupTransform.DOKill();
-
-            group.GroupTransform.localScale = Vector3.one;
-            group.GroupTransform.rotation = Quaternion.identity;
+            group.transform.DOKill();
+            group.transform.localScale = Vector3.one;
+            group.transform.rotation = Quaternion.identity;
 
             var children = new List<Transform>();
-            for (int i = 0; i < group.GroupTransform.childCount; i++)
-                children.Add(group.GroupTransform.GetChild(i));
+            for (int i = 0; i < group.transform.childCount; i++)
+                children.Add(group.transform.GetChild(i));
 
             foreach (var child in children)
             {
                 child.SetParent(_board.transform, true);
                 child.localScale = Vector3.one;
-                child.rotation = Quaternion.identity;
+                child.localRotation = Quaternion.identity;
             }
-
-            // KHÔNG destroy GroupTransform ở đây nữa. Để RebuildGroups tái sử dụng nó.
         }
 
         public bool TrySwapGroup(CardGroup group, int deltaCol, int deltaRow)
@@ -266,45 +300,7 @@ namespace StampJourney.Gameplay
 
         public IReadOnlyDictionary<int, CardGroup> AllGroups => _groups;
 
-        private bool TryMerge(CardModel tile, CardModel neighbor)
-        {
-            if (tile == null || neighbor == null) return false;
-            if (!CardGroup.AreMatchingNeighbors(tile, neighbor)) return false;
 
-            // Cả hai đã thuộc cùng group → skip
-            if (tile.Group != null && tile.Group == neighbor.Group) return true;
-
-            if (tile.Group != null && neighbor.Group != null)
-            {
-                // Cả hai đều có group → merge 2 group
-                var keepGroup = tile.Group;
-                var absorbGroup = neighbor.Group;
-                keepGroup.Absorb(absorbGroup);
-                _groups.Remove(absorbGroup.GroupId);
-                return true;
-            }
-
-            if (neighbor.Group != null)
-            {
-                // Neighbor có group, tile chưa → thêm tile vào group neighbor
-                neighbor.Group.Add(tile);
-                return true;
-            }
-
-            if (tile.Group != null)
-            {
-                // Tile có group, neighbor chưa → thêm neighbor vào group tile
-                tile.Group.Add(neighbor);
-                return true;
-            }
-
-            // Cả hai chưa có group → tạo group mới
-            var newGroup = new CardGroup(tile.Stamp);
-            newGroup.Add(neighbor);
-            newGroup.Add(tile);
-            _groups[newGroup.GroupId] = newGroup;
-            return true;
-        }
 
         private void PlaceDisplacedTiles(
             List<(CardModel tile, int origCol, int origRow)> displaced,
@@ -358,9 +354,9 @@ namespace StampJourney.Gameplay
         /// Quét toàn bộ grid, trả về danh sách các nhóm tile tạo thành tem hoàn chỉnh.
         /// Mỗi phần tử trong kết quả là danh sách tiles của 1 tem hoàn chỉnh.
         /// </summary>
-        public List<List<CardModel>> FindCompletedStamps(Tile[,] tiles, int boardCols, int boardRows)
+        public List<CardGroup> FindCompletedStamps(Tile[,] tiles, int boardCols, int boardRows)
         {
-            var results = new List<List<CardModel>>();
+            var results = new List<CardGroup>();
             // Theo dõi các ô đã nằm trong match để không đếm trùng
             bool[,] used = new bool[boardCols, boardRows];
 
@@ -370,9 +366,8 @@ namespace StampJourney.Gameplay
             {
                 if (group.IsStampComplete)
                 {
-                    var match = new List<CardModel>(group.Members);
-                    results.Add(match);
-                    foreach (var t in match)
+                    results.Add(group);
+                    foreach (var t in group.Members)
                         used[t.BoardCol, t.BoardRow] = true;
                 }
             }
@@ -394,7 +389,13 @@ namespace StampJourney.Gameplay
                     var match = TryMatchStamp(tiles, boardCols, boardRows, c, r, stamp, used);
                     if (match != null)
                     {
-                        results.Add(match);
+                        var go = new GameObject();
+                        var newGroup = go.AddComponent<CardGroup>();
+                        newGroup.Init(stamp);
+                        foreach (var t in match)
+                            newGroup.Add(t);
+
+                        results.Add(newGroup);
                         // Đánh dấu used
                         foreach (var t in match)
                             used[t.BoardCol, t.BoardRow] = true;

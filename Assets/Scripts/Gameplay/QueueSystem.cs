@@ -42,11 +42,28 @@ namespace StampJourney.Gameplay
             int cols = _levelData.levelConfig.boardCols;
             for (int c = 0; c < cols; c++)
             {
-                _columnQueues[c].Clear();
+                int startIndex = _columnQueues[c].Count;
                 for (int i = 0; i < queueSize; i++)
                 {
-                    _columnQueues[c].Add(CreateRandomCard(c, i));
+                    _columnQueues[c].Add(CreateRandomCard(c, startIndex + i));
                 }
+            }
+        }
+
+        public void AddCardToQueue(int col, CardModel model)
+        {
+            if (_columnQueues == null) return;
+            _columnQueues[col].Add(model);
+            int queueIndex = _columnQueues[col].Count - 1;
+            _gameboard.cardFactory.SpawnCardInQueue(model, col, queueIndex);
+        }
+
+        public void ClearAllQueues()
+        {
+            if (_columnQueues == null) return;
+            for (int c = 0; c < _columnQueues.Length; c++)
+            {
+                _columnQueues[c].Clear();
             }
         }
 

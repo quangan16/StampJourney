@@ -66,22 +66,24 @@ namespace StampJourney.Gameplay
             gravitySystem.Init(this);
             cardFactory.Init(this);
             queueSystem?.Init(this, _levelData);
-            Setup();
-
-
         }
 
-        public void Setup()
+        public async UniTask SetupAsync()
         {
             cardFactory?.DespawnAll();
             SpawnTiles();
 
-            queueSystem?.SetupInitialQueues();
+            queueSystem?.ClearAllQueues();
             FillBoardInitial();
+
+            queueSystem?.SetupInitialQueues();
+
+            await StartupEffectAsync();
 
             // Rebuild groups + edges sau khi fill xong
             stampDetector?.RebuildGroups();
             UpdateAllEdges();
+            await CheckAndClearAsync();
         }
 
         public void SpawnTiles()
@@ -174,6 +176,18 @@ namespace StampJourney.Gameplay
             // ⚠️ Cache members TRƯỚC khi RebuildGroups — vì Rebuild sẽ Disband group cũ
             var cachedMembers = new List<CardModel>(group.Members);
 
+            // Kiểm tra xem cột đích có đang busy (đang rơi bài) không
+            foreach (var member in cachedMembers)
+            {
+                int newCol = member.BoardCol + deltaCol;
+                if (IsColumnBusy(newCol))
+                {
+                    // Từ chối swap, tự động snap back
+                    AnimateAllTilesToGridPositions(0.18f);
+                    return;
+                }
+            }
+
             // Mark tất cả members animating
             foreach (var member in cachedMembers)
                 member.IsAnimating = true;
@@ -185,12 +199,17 @@ namespace StampJourney.Gameplay
                 // Animate tất cả tiles về vị trí mới
                 AnimateAllTilesToGridPositions(0.25f);
 
+                if (cachedMembers.Count > 0)
+                {
+                    OnSwapCompleted?.Invoke(cachedMembers[0], cachedMembers[0]); // Deduct move
+                }
+
                 // await UniTask.Delay(TimeSpan.FromSeconds(0.3f));
 
                 // Rebuild groups sau swap (sẽ tạo parent objects mới)
                 stampDetector.RebuildGroups();
                 UpdateAllEdges();
-
+                await UniTask.WaitForSeconds(0.2f);
                 // Kiểm tra stamp
                 await CheckAndClearAsync();
             }
@@ -208,6 +227,61 @@ namespace StampJourney.Gameplay
             // Unmark animating — dùng cachedMembers vì group.Members đã bị clear
             foreach (var member in cachedMembers)
                 member.IsAnimating = false;
+        }
+
+        public async UniTask TrySwapSingleGridAsync(CardModel card, int deltaCol, int deltaRow)
+        {
+            if (card == null || (deltaCol == 0 && deltaRow == 0)) return;
+
+            int newCol = card.BoardCol + deltaCol;
+            int newRow = card.BoardRow + deltaRow;
+
+            // Kiểm tra xem cột đích hoặc cột hiện tại có đang busy không
+            if (IsColumnBusy(newCol))
+            {
+                AnimateAllTilesToGridPositions(0.18f);
+                return;
+            }
+
+            card.IsAnimating = true;
+
+            if (!IsInBounds(newCol, newRow))
+            {
+                // Snap back
+                AnimateAllTilesToGridPositions(0.18f);
+                card.IsAnimating = false;
+                return;
+            }
+
+            var targetCard = GetCard(newCol, newRow);
+
+            // Swap in grid (handles null target gracefully)
+            int origCol = card.BoardCol;
+            int origRow = card.BoardRow;
+
+            SetTile(origCol, origRow, targetCard);
+            SetTile(newCol, newRow, card);
+
+            // Animate
+            AnimateAllTilesToGridPositions(0.25f);
+
+            if (targetCard != null)
+            {
+                OnSwapCompleted?.Invoke(card, targetCard);
+            }
+            else
+            {
+                OnSwapCompleted?.Invoke(card, card); // Deduct move
+            }
+
+            // Rebuild groups
+            stampDetector.RebuildGroups();
+            UpdateAllEdges();
+
+            card.IsAnimating = false;
+            await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
+            // Check
+            await CheckAndClearAsync();
         }
 
         /// <summary>
@@ -258,8 +332,7 @@ namespace StampJourney.Gameplay
                     int pc = UnityEngine.Random.Range(0, stamp.cols);
                     int pr = UnityEngine.Random.Range(0, stamp.rows);
                     var model = new CardModel(stamp, pc, pr);
-                    tiles[c, r].SetCard(model);
-                    cardFactory.SpawnCard(model);
+                    queueSystem.AddCardToQueue(c, model);
                 }
         }
 
@@ -292,9 +365,48 @@ namespace StampJourney.Gameplay
                     if (idx >= pool.Count) break;
                     var (stamp, pc, pr) = pool[idx];
                     var model = new CardModel(stamp, pc, pr);
-                    tiles[c, r].SetCard(model);
-                    cardFactory.SpawnCard(model);
+                    queueSystem.AddCardToQueue(c, model);
                 }
+        }
+
+        private async UniTask StartupEffectAsync()
+        {
+            List<CardModel> droppedCards = new List<CardModel>();
+
+            for (int r = _rows - 1; r >= 0; r--)
+            {
+                for (int c = 0; c < _cols; c++)
+                {
+                    if (queueSystem.GetQueueCount(c) > 0)
+                    {
+                        var model = queueSystem.PopCard(c);
+                        tiles[c, r].SetCard(model);
+                        cardFactory.AnimateDropOnly(model, c, r);
+                        droppedCards.Add(model);
+                    }
+                }
+                await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
+            }
+
+            for (int c = 0; c < _cols; c++)
+            {
+                for (int i = 0; i < queueSystem.GetQueueCount(c); i++)
+                {
+                    var queuedModel = queueSystem.GetCardAt(c, i);
+                    cardFactory.AnimateQueueShift(queuedModel, c, i);
+                }
+            }
+
+            await UniTask.Delay(TimeSpan.FromSeconds(cardFactory.dropEaseTime + 0.2f));
+
+            foreach (var model in droppedCards)
+            {
+                var view = cardFactory.GetView(model.TileId);
+                if (view != null) view.PlayFlip(FlipState.Up, false);
+                model.CanDrag = true;
+            }
+
+            await UniTask.Delay(TimeSpan.FromSeconds(0.4f));
         }
 
         private async UniTask CheckAndClearAsync()
@@ -310,25 +422,65 @@ namespace StampJourney.Gameplay
                     // Xóa tất cả matches
                     foreach (var group in matches)
                     {
-                        foreach (var tile in group)
+                        Vector2 gridCenter = Vector2.zero;
+                        Vector2 worldCenter = Vector2.zero;
+                        foreach (var tile in group.Members)
+                        {
+                            gridCenter += new Vector2(tile.BoardCol, tile.BoardRow);
+                            worldCenter += GetWorldPosition(tile.BoardCol, tile.BoardRow);
+                        }
+
+                        if (group.Members.Count > 0)
+                        {
+                            gridCenter /= group.Members.Count;
+                            worldCenter /= group.Members.Count;
+                        }
+
+                        // Ripple effect on other tiles
+                        for (int c = 0; c < _cols; c++)
+                        {
+                            for (int r = 0; r < _rows; r++)
+                            {
+                                var model = GetCard(c, r);
+                                if (model != null && !group.Members.Contains(model))
+                                {
+                                    // Bỏ qua các thẻ bài thuộc về các Stamp đã hoàn thành khác
+                                    if (model.Group != null && model.Group.IsStampComplete) continue;
+
+                                    var view = cardFactory.GetView(model.TileId);
+                                    if (view != null)
+                                    {
+                                        float distance = Vector2.Distance(new Vector2(c, r), gridCenter);
+                                        float delay = distance * 0.15f; // Grid distance is usually 1, 2, 3...
+                                        view.PlayRippleEffect(delay);
+                                    }
+                                }
+                            }
+                        }
+
+                        foreach (var tile in group.Members)
                         {
                             tiles[tile.BoardCol, tile.BoardRow].SetCard(null);
-                            cardFactory.DespawnTile(tile);
-                        }
-                        OnStampCleared?.Invoke(group);
+                        }  // Scale the whole group together
+                        await cardFactory.DespawnStampGroupAsync(group);
+
+                        OnStampCleared?.Invoke(group.Members.ToList());
+
+
                     }
 
                     // Chờ animation clear (~0.5s)
-                    // await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
 
-                    // Gravity
-                    await gravitySystem.ApplyGravityAsync();
 
-                    // Fill new tiles từ trên
-                    await FillEmptyCellsAsync();
 
-                    await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
                 }
+                // Gravity
+                gravitySystem.ApplyGravityAsync().Forget();
+                await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
+                // Fill new tiles từ trên
+                await FillEmptyCellsAsync();
+
             } while (anyCleared);
 
             OnBoardSettled?.Invoke();
@@ -340,7 +492,7 @@ namespace StampJourney.Gameplay
             for (int c = 0; c < _cols; c++)
             {
                 int emptyCount = 0;
-                for (int r = 0; r < _rows; r++)
+                for (int r = _rows - 1; r >= 0; r--)
                 {
                     if (!tiles[c, r].IsOccupied && queueSystem.GetQueueCount(c) > 0)
                     {
@@ -369,6 +521,29 @@ namespace StampJourney.Gameplay
             // Rebuild groups cho tile mới spawn
             stampDetector.RebuildGroups();
             UpdateAllEdges();
+        }
+
+        public bool IsColumnBusy(int col)
+        {
+            if (col < 0 || col >= _cols) return true;
+            for (int r = 0; r < _rows; r++)
+            {
+                var card = GetCard(col, r);
+                if (card != null && card.IsAnimating) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Swap 2 grid tiles cơ bản.
+        /// </summary>
+        private async UniTask TrySwapSingleGrid(int colA, int rowA, int colB, int rowB)
+        {
+            var cardA = GetCard(colA, rowA);
+            var cardB = GetCard(colB, rowB);
+
+            tiles[colA, rowA].SetCard(cardB);
+            tiles[colB, rowB].SetCard(cardA);
         }
 
         // ---- Helpers ----
