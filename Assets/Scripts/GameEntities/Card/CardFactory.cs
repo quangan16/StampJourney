@@ -159,8 +159,7 @@ namespace StampJourney.Card
             }
 
             var seq = DOTween.Sequence();
-            seq.Append(group.transform.DOScale(1.2f, 0.15f).SetEase(Ease.OutQuad));
-            seq.Append(group.transform.DOScale(0f, 0.2f).SetEase(Ease.InQuad));
+            seq.Append(group.transform.DOScale(0f, 0.3f).SetEase(Ease.InBack));
 
             // Đợi animation hoàn thành
             await seq.AsyncWaitForCompletion();

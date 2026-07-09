@@ -13,15 +13,30 @@ public class GameplayControl : MonoBehaviour
 
     private LevelData _levelData;
     [SerializeField] private Gameboard gameboard;
+    [SerializeField] private GameplayUI gameplayUI;
     [ShowInInspector, ReadOnly] private int _score;
     [ShowInInspector, ReadOnly] private int _remainingMoves;
     [ShowInInspector, ReadOnly] private int _combo;
+    [ShowInInspector, ReadOnly] private float _remainingTime;
+    private bool _hasTimeLimit;
+    private bool _hasMoveLimit;
+
+    // ---- Public Properties (read-only for UI) ----
+    public int Score => _score;
+    public int RemainingMoves => _remainingMoves;
+    public float RemainingTime => _remainingTime;
+    public bool HasTimeLimit => _hasTimeLimit;
+    public bool HasMoveLimit => _hasMoveLimit;
+    public LevelData LevelData => _levelData;
+
     // ---- Events ----
     public event Action<int> OnScoreChanged;
     public event Action<int> OnMovesChanged;
     public event Action<int> OnComboChanged;
+    public event Action<float> OnTimeChanged;
     public event Action OnGameWon;
     public event Action OnGameLost;
+    public event Action OnGameplaySetupFinish;
 
 
     public void Awake()
@@ -73,6 +88,9 @@ public class GameplayControl : MonoBehaviour
         _score = 0;
         _remainingMoves = _levelData.levelConfig.maxMoves;
         _combo = 0;
+        _hasTimeLimit = _levelData.levelConfig.timeLimitSeconds > 0;
+        _hasMoveLimit = _levelData.levelConfig.maxMoves > 0;
+        _remainingTime = _hasTimeLimit ? _levelData.levelConfig.timeLimitSeconds : 0f;
 
         gameboard.SetupAsync();
         GameManager.Instance.State = GameState.Playing;
@@ -87,8 +105,11 @@ public class GameplayControl : MonoBehaviour
         gameboard.OnBoardSettled += HandleBoardSettled;
 
         OnScoreChanged?.Invoke(_score);
-        OnMovesChanged?.Invoke(_remainingMoves);
-        Debug.Log("Gameplay done setup");
+        if (_hasMoveLimit) OnMovesChanged?.Invoke(_remainingMoves);
+        if (_hasTimeLimit) OnTimeChanged?.Invoke(_remainingTime);
+        // Init UI after everything is ready — deterministic order
+        if (gameplayUI != null) gameplayUI.Init(this);
+        OnGameplaySetupFinish?.Invoke();
     }
 
     public void OnGameplaySceneLoaded(SceneType sceneType)
@@ -97,6 +118,22 @@ public class GameplayControl : MonoBehaviour
         var levelData = GameManager.Instance.LevelSystem.CachedLevelData;
         Init(levelData);
         Setup();
+    }
+
+    private void Update()
+    {
+        if (!_hasTimeLimit) return;
+        if (GameManager.Instance.State != GameState.Playing) return;
+
+        _remainingTime -= Time.deltaTime;
+        if (_remainingTime <= 0f)
+        {
+            _remainingTime = 0f;
+            OnTimeChanged?.Invoke(_remainingTime);
+            TriggerLose();
+            return;
+        }
+        OnTimeChanged?.Invoke(_remainingTime);
     }
 
     private void TriggerWin()
@@ -118,8 +155,11 @@ public class GameplayControl : MonoBehaviour
     {
         if (GameManager.Instance.State != GameState.Playing) return;
 
-        _remainingMoves--;
-        OnMovesChanged?.Invoke(_remainingMoves);
+        if (_hasMoveLimit)
+        {
+            _remainingMoves--;
+            OnMovesChanged?.Invoke(_remainingMoves);
+        }
         AudioManager.Instance.PlaySwap();
 
         // Reset combo vì đây là swap mới
@@ -133,16 +173,10 @@ public class GameplayControl : MonoBehaviour
         if (gameboard.IsBoardAndQueuesEmpty())
         {
             TriggerWin();
-            var gameplayUI = UIManager.Instance.currentActiveScreen as GameplayUI;
-            gameplayUI?.ShowWinScreen(_score, _levelData.levelConfig.levelID);
-            UIManager.Instance.ShowToast("YOU WIN!");
         }
-        else if (_remainingMoves <= 0)
+        else if (_hasMoveLimit && _remainingMoves <= 0)
         {
             TriggerLose();
-            var gameplayUI = UIManager.Instance.currentActiveScreen as GameplayUI;
-            gameplayUI?.ShowLoseScreen(_score);
-            UIManager.Instance.ShowToast("OUT OF MOVES!");
         }
     }
 

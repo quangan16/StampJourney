@@ -15,9 +15,11 @@ public class GameplayUI : MonoBehaviour, IScreen
     [FoldoutGroup("HUD")]
     [Required] public TextMeshProUGUI scoreText;
     [FoldoutGroup("HUD")]
-    [Required] public TextMeshProUGUI movesText;
+    public TextMeshProUGUI movesText;
     [FoldoutGroup("HUD")]
     [Required] public TextMeshProUGUI levelText;
+    [FoldoutGroup("HUD")]
+    public TextMeshProUGUI timerText;
 
     // ---- Panels ----
     [FoldoutGroup("Panels")]
@@ -45,16 +47,7 @@ public class GameplayUI : MonoBehaviour, IScreen
     [FoldoutGroup("Combo")]
     public float comboDuration = 1.2f;
 
-    public void Start()
-    {
-        var gameplayControl = FindObjectOfType<GameplayControl>();
-        if (gameplayControl == null)
-        {
-            AndyUtil.Logger.LogError("Gameplay controler not found!");
-            return;
-        }
-        Init(gameplayControl);
-    }
+
 
     public void Init(GameplayControl gameplayControl)
     {
@@ -72,8 +65,16 @@ public class GameplayUI : MonoBehaviour, IScreen
 
     public void Setup()
     {
+        // Subscribe to data events
         _gameplayControl.OnScoreChanged += UpdateScore;
         _gameplayControl.OnMovesChanged += UpdateMoves;
+        _gameplayControl.OnTimeChanged += UpdateTimer;
+
+        // Subscribe to game flow events — UI reacts to these instead of being called directly
+        _gameplayControl.OnGameWon += HandleGameWon;
+        _gameplayControl.OnGameLost += HandleGameLost;
+        _gameplayControl.OnGameplaySetupFinish += HandleSetupFinish;
+
         Show();
     }
 
@@ -81,17 +82,51 @@ public class GameplayUI : MonoBehaviour, IScreen
     {
         ShowGameplay();
     }
-    // ---- Subscribe to events ----
-
-
 
     private void OnDestroy()
     {
+        if (_gameplayControl == null) return;
         _gameplayControl.OnScoreChanged -= UpdateScore;
         _gameplayControl.OnMovesChanged -= UpdateMoves;
+        _gameplayControl.OnTimeChanged -= UpdateTimer;
+        _gameplayControl.OnGameWon -= HandleGameWon;
+        _gameplayControl.OnGameLost -= HandleGameLost;
+        _gameplayControl.OnGameplaySetupFinish -= HandleSetupFinish;
     }
 
-    // ---- Panel control ----
+    // ========================================================
+    #region Game Flow Handlers
+
+    private void HandleSetupFinish()
+    {
+        // Show/hide HUD elements based on level config
+        if (movesText != null)
+            movesText.gameObject.SetActive(_gameplayControl.HasMoveLimit);
+        if (timerText != null)
+            timerText.gameObject.SetActive(_gameplayControl.HasTimeLimit);
+    }
+
+    private void HandleGameWon()
+    {
+        ShowWinScreen(_gameplayControl.Score, _gameplayControl.LevelData.levelConfig.levelID);
+        UIManager.Instance.ShowToast("YOU WIN!");
+    }
+
+    private void HandleGameLost()
+    {
+        ShowLoseScreen(_gameplayControl.Score);
+
+        // Show context-specific toast
+        if (_gameplayControl.HasTimeLimit && _gameplayControl.RemainingTime <= 0f)
+            UIManager.Instance.ShowToast("TIME'S UP!");
+        else if (_gameplayControl.HasMoveLimit && _gameplayControl.RemainingMoves <= 0)
+            UIManager.Instance.ShowToast("OUT OF MOVES!");
+    }
+
+    #endregion
+
+    // ========================================================
+    #region Panel Control
 
     public void ShowGameplay()
     {
@@ -123,7 +158,10 @@ public class GameplayUI : MonoBehaviour, IScreen
         losePanel.transform.DOScale(1f, 0.4f).SetEase(Ease.OutBack);
     }
 
-    // ---- HUD updates ----
+    #endregion
+
+    // ========================================================
+    #region HUD Updates
 
     private void UpdateScore(int score)
     {
@@ -133,6 +171,7 @@ public class GameplayUI : MonoBehaviour, IScreen
 
     private void UpdateMoves(int moves)
     {
+        if (movesText == null) return;
         movesText.text = $"Move left: {moves}";
 
         // Đổi màu khi gần hết moves
@@ -141,7 +180,38 @@ public class GameplayUI : MonoBehaviour, IScreen
             movesText.transform.DOPunchScale(Vector3.one * 0.3f, 0.25f, 5, 0.5f);
     }
 
-    // ---- Combo popup ----
+    private void UpdateTimer(float remainingTime)
+    {
+        if (timerText == null) return;
+
+        if (remainingTime <= 0f)
+        {
+            timerText.text = "00:00";
+            timerText.color = Color.red;
+            return;
+        }
+
+        int minutes = Mathf.FloorToInt(remainingTime / 60f);
+        int seconds = Mathf.FloorToInt(remainingTime % 60f);
+        timerText.text = $"{minutes:00}:{seconds:00}";
+
+        // Warning color when ≤ 10s
+        if (remainingTime <= 10f)
+        {
+            timerText.color = Color.red;
+            if (Mathf.FloorToInt(remainingTime + Time.deltaTime) != seconds)
+                timerText.transform.DOPunchScale(Vector3.one * 0.3f, 0.25f, 5, 0.5f);
+        }
+        else
+        {
+            timerText.color = Color.white;
+        }
+    }
+
+    #endregion
+
+    // ========================================================
+    #region Combo Popup
 
     public void ShowComboText(int combo, int points)
     {
@@ -166,7 +236,10 @@ public class GameplayUI : MonoBehaviour, IScreen
         });
     }
 
-    // ---- Button handlers (gán trong Inspector) ----
+    #endregion
+
+    // ========================================================
+    #region Button Handlers
 
     public void OnPauseClicked() => pausePanel.SetActive(true);
     public void OnResumeClicked() => pausePanel.SetActive(false);
@@ -180,4 +253,13 @@ public class GameplayUI : MonoBehaviour, IScreen
 
     public void OnNextLevelClicked() => GameManager.Instance.LevelSystem.GoToNextLevel();
     public void OnHomeClicked() => GameManager.Instance.GoToMainMenu();
+
+    #endregion
+}
+
+public struct UIGameplayData
+{
+    public int moveLeft;
+    public float timeLeft;
+    public int currentLevel;
 }

@@ -34,8 +34,17 @@ namespace StampJourney.Data
         [Range(4, 10)]
         public int boardRows = 7;
 
-        [MinValue(0)]
-        public int maxMoves = 20;
+        [MinValue(-1)]
+        public int maxMoves = -1;
+
+        [MinValue(-1)]
+        [InfoBox("Set to 0 to disable the timer.")]
+        public float timeLimitSeconds = -1f;
+
+        /// <summary>Whether this level has a time restriction.</summary>
+        public bool HasTimeLimit => timeLimitSeconds > 0f;
+
+        public bool HasMoveLimit => maxMoves > 0;
 
         public StampData[] stamps;
         [Range(1, 8)]

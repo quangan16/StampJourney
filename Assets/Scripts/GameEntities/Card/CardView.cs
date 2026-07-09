@@ -257,8 +257,8 @@ namespace StampJourney.Card
                 var gridDelta = CalculateGroupGridDelta();
                 _dragGroup?.GroupTransform.DOKill(true);
 
-                // Hạ parent scale
-                _dragGroup?.GroupTransform.DOScale(1f, snapDuration);
+                // Hạ parent scale ngay lập tức để tránh gap giữa các card
+                if (_dragGroup?.GroupTransform != null) _dragGroup.GroupTransform.localScale = Vector3.one;
                 _dragGroup?.GroupTransform.DORotateQuaternion(Quaternion.identity, snapDuration).SetEase(Ease.OutBack);
 
                 var groupSorting = _dragGroup?.GroupTransform.GetComponent<SortingGroup>();

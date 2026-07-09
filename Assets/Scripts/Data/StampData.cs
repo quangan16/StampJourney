@@ -72,14 +72,15 @@ namespace StampJourney.Data
             if (fullImage == null) { Debug.LogError("fullImage is null!"); return; }
             pieceSprites = new Sprite[TotalPieces];
             var tex = fullImage.texture;
-            float w = tex.width / (float)cols;
-            float h = tex.height / (float)rows;
+            Rect sourceRect = fullImage.rect;
+            float w = sourceRect.width / (float)cols;
+            float h = sourceRect.height / (float)rows;
             for (int r = 0; r < rows; r++)
             {
                 for (int c = 0; c < cols; c++)
                 {
-                    float x = c * w;
-                    float y = (rows - 1 - r) * h; // Unity UV bottom-up
+                    float x = sourceRect.x + c * w;
+                    float y = sourceRect.y + (rows - 1 - r) * h; // Unity UV bottom-up
                     var rect = new Rect(x, y, w, h);
                     var pivot = new Vector2(0.5f, 0.5f);
                     pieceSprites[c + r * cols] = Sprite.Create(tex, rect, pivot,
