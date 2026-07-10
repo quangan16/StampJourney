@@ -12,55 +12,62 @@ using UnityEngine;
 namespace StampJourney.Gameplay
 {
     /// <summary>
-    /// Quản lý toàn bộ trạng thái lưới (grid) của game.
-    /// Chịu trách nhiệm: khởi tạo board, swap tile, gravity, và thông báo sự kiện.
+    /// Manages the entire board grid state.
+    /// Responsible for: board initialization, tile swapping, gravity, and event broadcasting.
     /// </summary>
     public class Gameboard : SerializedMonoBehaviour
     {
-        // ---- Inspector ----
+        #region Inspector
+
         [BoxGroup("References")]
         public StampDetector stampDetector;
         [BoxGroup("References")]
         public GravitySystem gravitySystem;
         [BoxGroup("References")]
         public CardFactory cardFactory;
-        // [BoxGroup("References"), Required]
+        [BoxGroup("References")]
         public Tile tilePrefab;
-
-        [BoxGroup("Settings")]
-        [LabelText("Pixels Per Unit")]
-        public float pixelsPerUnit = 100f; // Hệ số chuyển đổi pixel -> world unit
-
         [BoxGroup("References")]
         public QueueSystem queueSystem;
 
-        // ---- Grid Data ----
-        /// <summary>Grid[col, row] — chứa TileModel cố định.</summary>
+        #endregion
+
+        #region Grid Data
+
+        /// <summary>Grid[col, row] — holds fixed Tile references.</summary>
         [ShowInInspector, ReadOnly]
-        private Tile[,] tiles;
+        private Tile[,] _tiles;
 
         private LevelData _levelData;
         private int _cols, _rows;
 
-        // ---- Events ----
+        #endregion
+
+        #region Events
+
         public event Action<CardModel, CardModel> OnSwapCompleted;
         public event Action<List<CardModel>> OnStampCleared;
         public event Action OnBoardSettled;
 
-        // ---- Public API ----
+        #endregion
+
+        #region Properties
 
         public int Cols => _cols;
         public int Rows => _rows;
 
-        /// <summary>Khởi tạo board với LevelData. Tự động clear tile cũ nếu có.</summary>
+        #endregion
+
+        #region Public API — Initialization
+
+        /// <summary>Initializes the board with LevelData. Clears old tiles if present.</summary>
         public void Init(LevelData levelData)
         {
-            Debug.Log($"[BoardControl] InitBoard called — cols={levelData.levelConfig.boardCols} rows={levelData.levelConfig.boardRows}");
-            _levelData = levelData;
-            _cols = levelData.levelConfig.boardCols;
-            _rows = levelData.levelConfig.boardRows;
-            // Clear old background tiles
+            Debug.Log($"[Gameboard] Init — cols={levelData.boardCols} rows={levelData.boardRows}");
 
+            _levelData = levelData;
+            _cols = levelData.boardCols;
+            _rows = levelData.boardRows;
 
             stampDetector.Init(this);
             gravitySystem.Init(this);
@@ -75,453 +82,47 @@ namespace StampJourney.Gameplay
 
             queueSystem?.ClearAllQueues();
             FillBoardInitial();
-
             queueSystem?.SetupInitialQueues();
 
             await StartupEffectAsync();
 
-            // Rebuild groups + edges sau khi fill xong
+            // Rebuild groups + edges after initial fill
             stampDetector?.RebuildGroups();
             UpdateAllEdges();
             await CheckAndClearAsync();
         }
 
-        public void SpawnTiles()
-        {
-            if (tiles != null && tiles.Length > 0)
-            {
-                foreach (var tile in tiles)
-                {
-                    if (tile != null) Destroy(tile.gameObject);
-                }
-            }
+        #endregion
 
+        #region Public API — Tile Access
 
-
-            tiles = new Tile[_cols, _rows];
-
-            for (int r = 0; r < _rows; r++)
-            {
-                for (int c = 0; c < _cols; c++)
-                {
-                    var newTile = Instantiate(tilePrefab, transform);
-                    newTile.gameObject.SetActive(true);
-
-                    newTile.Init(c, r, this);
-                    newTile.transform.position = GetWorldPosition(c, r);
-                    tiles[c, r] = newTile;
-                }
-            }
-        }
-
-        /// <summary>Lấy TileModel tại (col, row). Trả null nếu ngoài bounds.</summary>
+        /// <summary>Gets the Tile at (col, row). Returns null if out of bounds.</summary>
         public Tile GetTile(int col, int row)
         {
             if (!IsInBounds(col, row)) return null;
-            return tiles[col, row];
+            return _tiles[col, row];
         }
 
-
-
-
-
-        /// <summary>Lấy CardModel tại (col, row). Trả null nếu trống hoặc out-of-bounds.</summary>
+        /// <summary>Gets the CardModel at (col, row). Returns null if empty or out of bounds.</summary>
         public CardModel GetCard(int col, int row)
         {
             var tile = GetTile(col, row);
             return tile?.Card;
         }
 
-        /// <summary>Thực hiện swap hai tile theo vị trí board. Gọi bởi TileController.</summary>
-        public async UniTask TrySwapAsync(int colA, int rowA, int colB, int rowB)
+        /// <summary>Assigns a card to the grid cell (used by GravitySystem).</summary>
+        public void SetTile(int col, int row, CardModel card)
         {
-            if (!IsInBounds(colA, rowA) || !IsInBounds(colB, rowB)) return;
-
-            var tileA = GetCard(colA, rowA);
-            var tileB = GetCard(colB, rowB);
-
-            if (tileA == null || tileB == null) return;
-
-            // Đánh dấu animating để block input
-            tileA.IsAnimating = true;
-            tileB.IsAnimating = true;
-
-            // Swap trong data
-            SwapInGrid(colA, rowA, colB, rowB);
-
-            // Thông báo để View animate
-            OnSwapCompleted?.Invoke(tileA, tileB);
-
-            // Chờ animation swap xong (~0.25s)
-            // await UniTask.Delay(TimeSpan.FromSeconds(0.3f));
-
-            tileA.IsAnimating = false;
-            tileB.IsAnimating = false;
-
-            // Rebuild groups sau swap
-            stampDetector.RebuildGroups();
-            UpdateAllEdges();
-
-            // Kiểm tra stamp sau swap
-            await CheckAndClearAsync();
+            if (!IsInBounds(col, row)) return;
+            _tiles[col, row].SetCard(card);
         }
 
-        /// <summary>
-        /// Swap cả group theo delta. Gọi bởi CardView khi drag group.
-        /// </summary>
-        public async UniTask TrySwapGroupAsync(CardGroup group, int deltaCol, int deltaRow)
-        {
-            if (group == null) return;
+        public bool IsInBounds(int col, int row) =>
+            col >= 0 && col < _cols && row >= 0 && row < _rows;
 
-            // ⚠️ Cache members TRƯỚC khi RebuildGroups — vì Rebuild sẽ Disband group cũ
-            var cachedMembers = new List<CardModel>(group.Members);
-
-            // Kiểm tra xem cột đích có đang busy (đang rơi bài) không
-            foreach (var member in cachedMembers)
-            {
-                int newCol = member.BoardCol + deltaCol;
-                if (IsColumnBusy(newCol))
-                {
-                    // Từ chối swap, tự động snap back
-                    AnimateAllTilesToGridPositions(0.18f);
-                    return;
-                }
-            }
-
-            // Mark tất cả members animating
-            foreach (var member in cachedMembers)
-                member.IsAnimating = true;
-
-            bool success = stampDetector.TrySwapGroup(group, deltaCol, deltaRow);
-
-            if (success)
-            {
-                // Animate tất cả tiles về vị trí mới
-                AnimateAllTilesToGridPositions(0.25f);
-
-                if (cachedMembers.Count > 0)
-                {
-                    OnSwapCompleted?.Invoke(cachedMembers[0], cachedMembers[0]); // Deduct move
-                }
-
-                // await UniTask.Delay(TimeSpan.FromSeconds(0.3f));
-
-                // Rebuild groups sau swap (sẽ tạo parent objects mới)
-                stampDetector.RebuildGroups();
-                UpdateAllEdges();
-                await UniTask.WaitForSeconds(0.2f);
-                // Kiểm tra stamp
-                await CheckAndClearAsync();
-            }
-            else
-            {
-                // Snap back tất cả members
-                AnimateAllTilesToGridPositions(0.18f);
-                // await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
-
-                // Rebuild lại groups
-                stampDetector.RebuildGroups();
-                UpdateAllEdges();
-            }
-
-            // Unmark animating — dùng cachedMembers vì group.Members đã bị clear
-            foreach (var member in cachedMembers)
-                member.IsAnimating = false;
-        }
-
-        public async UniTask TrySwapSingleGridAsync(CardModel card, int deltaCol, int deltaRow)
-        {
-            if (card == null || (deltaCol == 0 && deltaRow == 0)) return;
-
-            int newCol = card.BoardCol + deltaCol;
-            int newRow = card.BoardRow + deltaRow;
-
-            // Kiểm tra xem cột đích hoặc cột hiện tại có đang busy không
-            if (IsColumnBusy(newCol))
-            {
-                AnimateAllTilesToGridPositions(0.18f);
-                return;
-            }
-
-            card.IsAnimating = true;
-
-            if (!IsInBounds(newCol, newRow))
-            {
-                // Snap back
-                AnimateAllTilesToGridPositions(0.18f);
-                card.IsAnimating = false;
-                return;
-            }
-
-            var targetCard = GetCard(newCol, newRow);
-
-            // Swap in grid (handles null target gracefully)
-            int origCol = card.BoardCol;
-            int origRow = card.BoardRow;
-
-            SetTile(origCol, origRow, targetCard);
-            SetTile(newCol, newRow, card);
-
-            // Animate
-            AnimateAllTilesToGridPositions(0.25f);
-
-            if (targetCard != null)
-            {
-                OnSwapCompleted?.Invoke(card, targetCard);
-            }
-            else
-            {
-                OnSwapCompleted?.Invoke(card, card); // Deduct move
-            }
-
-            // Rebuild groups
-            stampDetector.RebuildGroups();
-            UpdateAllEdges();
-
-            card.IsAnimating = false;
-            await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
-            // Check
-            await CheckAndClearAsync();
-        }
-
-        /// <summary>
-        /// Vị trí transform.position của tâm ô (col, row) trong world space.
-        /// Tính toán dựa trên pixel settings chia cho PixelsPerUnit.
-        /// </summary>
-        public Vector2 GetWorldPosition(int col, int row)
-        {
-            var config = GameManager.Instance.GameConfig;
-            var cardWidth = config.cardWidth;
-            var cardHeight = config.cardHeight;
-            var cardGap = config.cardGap;
-            float strideX = (cardWidth + cardGap);
-            float strideY = (cardHeight + cardGap);
-
-            float boardWidth = (_cols * (cardWidth + cardGap));
-            float boardHeight = (_rows * (cardHeight + cardGap));
-
-            // Lấy vị trí trung tâm của gameboard GameObject làm mốc (thường là 0,0,0)
-            Vector2 boardCenter = transform.position;
-
-            float startX = boardCenter.x - boardWidth / 2f + (cardWidth) / 2f;
-            float startY = boardCenter.y + boardHeight / 2f - (cardHeight) / 2f;
-
-            return new Vector2(
-                startX + col * strideX,
-                startY - row * strideY
-            );
-        }
-
-        // ---- Internal ----
-
-        private void FillBoardInitial()
-        {
-            if (_levelData.levelConfig.fillStrategy == FillStrategy.BalancedDistribution)
-                FillBalanced();
-            else
-                FillRandom();
-        }
-
-        private void FillRandom()
-        {
-            var stamps = _levelData.levelConfig.stamps;
-            for (int r = 0; r < _rows; r++)
-                for (int c = 0; c < _cols; c++)
-                {
-                    var stamp = stamps[UnityEngine.Random.Range(0, stamps.Length)];
-                    int pc = UnityEngine.Random.Range(0, stamp.cols);
-                    int pr = UnityEngine.Random.Range(0, stamp.rows);
-                    var model = new CardModel(stamp, pc, pr);
-                    queueSystem.AddCardToQueue(c, model);
-                }
-        }
-
-        private void FillBalanced()
-        {
-            // Tạo pool đảm bảo mỗi loại stamp xuất hiện đủ mảnh
-            var pool = new List<(StampData stamp, int pc, int pr)>();
-            var stamps = _levelData.levelConfig.stamps;
-            int total = _cols * _rows;
-
-            while (pool.Count < total)
-            {
-                foreach (var stamp in stamps)
-                    for (int pr = 0; pr < stamp.rows; pr++)
-                        for (int pc = 0; pc < stamp.cols; pc++)
-                            pool.Add((stamp, pc, pr));
-            }
-
-            // Shuffle
-            for (int i = pool.Count - 1; i > 0; i--)
-            {
-                int j = UnityEngine.Random.Range(0, i + 1);
-                (pool[i], pool[j]) = (pool[j], pool[i]);
-            }
-
-            for (int r = 0; r < _rows; r++)
-                for (int c = 0; c < _cols; c++)
-                {
-                    int idx = c + r * _cols;
-                    if (idx >= pool.Count) break;
-                    var (stamp, pc, pr) = pool[idx];
-                    var model = new CardModel(stamp, pc, pr);
-                    queueSystem.AddCardToQueue(c, model);
-                }
-        }
-
-        private async UniTask StartupEffectAsync()
-        {
-            List<CardModel> droppedCards = new List<CardModel>();
-
-            for (int r = _rows - 1; r >= 0; r--)
-            {
-                for (int c = 0; c < _cols; c++)
-                {
-                    if (queueSystem.GetQueueCount(c) > 0)
-                    {
-                        var model = queueSystem.PopCard(c);
-                        tiles[c, r].SetCard(model);
-                        cardFactory.AnimateDropOnly(model, c, r);
-                        droppedCards.Add(model);
-                    }
-                }
-                await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
-            }
-
-            for (int c = 0; c < _cols; c++)
-            {
-                for (int i = 0; i < queueSystem.GetQueueCount(c); i++)
-                {
-                    var queuedModel = queueSystem.GetCardAt(c, i);
-                    cardFactory.AnimateQueueShift(queuedModel, c, i);
-                }
-            }
-
-            await UniTask.Delay(TimeSpan.FromSeconds(cardFactory.dropEaseTime + 0.2f));
-
-            foreach (var model in droppedCards)
-            {
-                var view = cardFactory.GetView(model.TileId);
-                if (view != null) view.PlayFlip(FlipState.Up, false);
-                model.CanDrag = true;
-            }
-
-            await UniTask.Delay(TimeSpan.FromSeconds(0.4f));
-        }
-
-        private async UniTask CheckAndClearAsync()
-        {
-            bool anyCleared;
-            do
-            {
-                var matches = stampDetector.FindCompletedStamps(tiles, _cols, _rows);
-                anyCleared = matches.Count > 0;
-
-                if (anyCleared)
-                {
-                    // Xóa tất cả matches
-                    foreach (var group in matches)
-                    {
-                        Vector2 gridCenter = Vector2.zero;
-                        Vector2 worldCenter = Vector2.zero;
-                        foreach (var tile in group.Members)
-                        {
-                            gridCenter += new Vector2(tile.BoardCol, tile.BoardRow);
-                            worldCenter += GetWorldPosition(tile.BoardCol, tile.BoardRow);
-                        }
-
-                        if (group.Members.Count > 0)
-                        {
-                            gridCenter /= group.Members.Count;
-                            worldCenter /= group.Members.Count;
-                        }
-
-                        // Ripple effect on other tiles
-                        for (int c = 0; c < _cols; c++)
-                        {
-                            for (int r = 0; r < _rows; r++)
-                            {
-                                var model = GetCard(c, r);
-                                if (model != null && !group.Members.Contains(model))
-                                {
-                                    // Bỏ qua các thẻ bài thuộc về các Stamp đã hoàn thành khác
-                                    if (model.Group != null && model.Group.IsStampComplete) continue;
-
-                                    var view = cardFactory.GetView(model.TileId);
-                                    if (view != null)
-                                    {
-                                        float distance = Vector2.Distance(new Vector2(c, r), gridCenter);
-                                        float delay = distance * 0.15f; // Grid distance is usually 1, 2, 3...
-                                        view.PlayRippleEffect(delay);
-                                    }
-                                }
-                            }
-                        }
-
-                        foreach (var tile in group.Members)
-                        {
-                            tiles[tile.BoardCol, tile.BoardRow].SetCard(null);
-                        }  // Scale the whole group together
-                        await cardFactory.DespawnStampGroupAsync(group);
-
-                        OnStampCleared?.Invoke(group.Members.ToList());
-
-
-                    }
-
-                    // Chờ animation clear (~0.5s)
-                    await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
-
-
-
-                }
-                // Gravity
-                gravitySystem.ApplyGravityAsync().Forget();
-                await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
-                // Fill new tiles từ trên
-                await FillEmptyCellsAsync();
-
-            } while (anyCleared);
-
-            OnBoardSettled?.Invoke();
-        }
-
-        private async UniTask FillEmptyCellsAsync()
-        {
-            bool spawnedAny = false;
-            for (int c = 0; c < _cols; c++)
-            {
-                int emptyCount = 0;
-                for (int r = _rows - 1; r >= 0; r--)
-                {
-                    if (!tiles[c, r].IsOccupied && queueSystem.GetQueueCount(c) > 0)
-                    {
-                        var model = queueSystem.PopCard(c);
-
-                        tiles[c, r].SetCard(model);
-                        cardFactory.AnimateDropAndFlip(model, c, r);
-
-                        emptyCount++;
-                        spawnedAny = true;
-                    }
-                }
-
-                if (emptyCount > 0 && queueSystem.GetQueueCount(c) > 0)
-                {
-                    for (int i = 0; i < queueSystem.GetQueueCount(c); i++)
-                    {
-                        var queuedModel = queueSystem.GetCardAt(c, i);
-                        cardFactory.AnimateQueueShift(queuedModel, c, i);
-                    }
-                }
-            }
-            if (spawnedAny)
-                await UniTask.Delay(TimeSpan.FromSeconds(0.4f));
-
-            // Rebuild groups cho tile mới spawn
-            stampDetector.RebuildGroups();
-            UpdateAllEdges();
-        }
+        /// <summary>Whether the cell is empty.</summary>
+        public bool IsEmpty(int col, int row) =>
+            IsInBounds(col, row) && !_tiles[col, row].IsOccupied;
 
         public bool IsColumnBusy(int col)
         {
@@ -534,50 +135,182 @@ namespace StampJourney.Gameplay
             return false;
         }
 
-        /// <summary>
-        /// Swap 2 grid tiles cơ bản.
-        /// </summary>
-        private async UniTask TrySwapSingleGrid(int colA, int rowA, int colB, int rowB)
+        public bool IsBoardAndQueuesEmpty()
         {
+            if (_tiles == null) return false;
+            if (queueSystem != null && !queueSystem.IsAllQueuesEmpty()) return false;
+
+            for (int c = 0; c < _cols; c++)
+                for (int r = 0; r < _rows; r++)
+                    if (_tiles[c, r].IsOccupied) return false;
+
+            return true;
+        }
+
+        #endregion
+
+        #region Public API — Swap
+
+        /// <summary>Attempts to swap two tiles by board position.</summary>
+        public async UniTask TrySwapAsync(int colA, int rowA, int colB, int rowB)
+        {
+            if (!IsInBounds(colA, rowA) || !IsInBounds(colB, rowB)) return;
+
             var cardA = GetCard(colA, rowA);
             var cardB = GetCard(colB, rowB);
+            if (cardA == null || cardB == null) return;
 
-            tiles[colA, rowA].SetCard(cardB);
-            tiles[colB, rowB].SetCard(cardA);
+            // Mark animating to block input
+            cardA.IsAnimating = true;
+            cardB.IsAnimating = true;
+
+            SwapInGrid(colA, rowA, colB, rowB);
+            OnSwapCompleted?.Invoke(cardA, cardB);
+
+            cardA.IsAnimating = false;
+            cardB.IsAnimating = false;
+
+            // Rebuild groups after swap
+            stampDetector.RebuildGroups();
+            UpdateAllEdges();
+            await CheckAndClearAsync();
         }
 
-        // ---- Helpers ----
-
-        private void SwapInGrid(int colA, int rowA, int colB, int rowB)
+        /// <summary>Swaps an entire group by a grid delta. Called by CardView during group drag.</summary>
+        public async UniTask TrySwapGroupAsync(CardGroup group, int deltaCol, int deltaRow)
         {
-            var cardA = GetCard(colA, rowA);
-            var cardB = GetCard(colB, rowB);
+            if (group == null) return;
 
-            tiles[colA, rowA].SetCard(cardB);
-            tiles[colB, rowB].SetCard(cardA);
+            // Cache members BEFORE RebuildGroups — Rebuild will Disband the old group
+            var cachedMembers = new List<CardModel>(group.Members);
+
+            // Reject if any target column is busy (cards are dropping)
+            foreach (var member in cachedMembers)
+            {
+                int newCol = member.BoardCol + deltaCol;
+                if (IsColumnBusy(newCol))
+                {
+                    AnimateAllTilesToGridPositions(0.18f);
+                    return;
+                }
+            }
+
+            // Mark all members as animating
+            foreach (var member in cachedMembers)
+                member.IsAnimating = true;
+
+            bool success = stampDetector.TrySwapGroup(group, deltaCol, deltaRow);
+
+            if (success)
+            {
+                AnimateAllTilesToGridPositions(0.25f);
+
+                if (cachedMembers.Count > 0)
+                    OnSwapCompleted?.Invoke(cachedMembers[0], cachedMembers[0]);
+
+                stampDetector.RebuildGroups();
+                UpdateAllEdges();
+                await UniTask.WaitForSeconds(0.2f);
+                await CheckAndClearAsync();
+            }
+            else
+            {
+                // Snap back all members
+                AnimateAllTilesToGridPositions(0.18f);
+                stampDetector.RebuildGroups();
+                UpdateAllEdges();
+            }
+
+            // Unmark animating — use cachedMembers since group.Members has been cleared
+            foreach (var member in cachedMembers)
+                member.IsAnimating = false;
         }
 
-        public bool IsInBounds(int col, int row) =>
-            col >= 0 && col < _cols && row >= 0 && row < _rows;
-
-        /// <summary>Gán card vào grid (dùng bởi GravitySystem).</summary>
-        public void SetTile(int col, int row, CardModel card)
+        public async UniTask TrySwapSingleGridAsync(CardModel card, int deltaCol, int deltaRow)
         {
-            if (!IsInBounds(col, row)) return;
-            tiles[col, row].SetCard(card);
+            if (card == null || (deltaCol == 0 && deltaRow == 0)) return;
+
+            int newCol = card.BoardCol + deltaCol;
+            int newRow = card.BoardRow + deltaRow;
+
+            // Reject if target column is busy
+            if (IsColumnBusy(newCol))
+            {
+                AnimateAllTilesToGridPositions(0.18f);
+                return;
+            }
+
+            card.IsAnimating = true;
+
+            if (!IsInBounds(newCol, newRow))
+            {
+                AnimateAllTilesToGridPositions(0.18f);
+                card.IsAnimating = false;
+                return;
+            }
+
+            var targetCard = GetCard(newCol, newRow);
+            int origCol = card.BoardCol;
+            int origRow = card.BoardRow;
+
+            SetTile(origCol, origRow, targetCard);
+            SetTile(newCol, newRow, card);
+
+            AnimateAllTilesToGridPositions(0.25f);
+
+            if (targetCard != null)
+                OnSwapCompleted?.Invoke(card, targetCard);
+            else
+                OnSwapCompleted?.Invoke(card, card);
+
+            stampDetector.RebuildGroups();
+            UpdateAllEdges();
+
+            card.IsAnimating = false;
+            await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
+            await CheckAndClearAsync();
         }
 
-        /// <summary>Kiểm tra ô có trống không.</summary>
-        public bool IsEmpty(int col, int row) =>
-            IsInBounds(col, row) && !tiles[col, row].IsOccupied;
+        #endregion
+
+        #region Public API — World Position
 
         /// <summary>
-        /// Cập nhật edges cho tất cả active tiles trên board.
-        /// Gọi sau mỗi lần group thay đổi.
+        /// World position of the center of cell (col, row).
+        /// Computed from GameConfig card dimensions.
         /// </summary>
+        public Vector2 GetWorldPosition(int col, int row)
+        {
+            var config = GameManager.Instance.GameConfig;
+            float cardWidth = config.cardWidth;
+            float cardHeight = config.cardHeight;
+            float cardGap = config.cardGap;
+
+            float strideX = cardWidth + cardGap;
+            float strideY = cardHeight + cardGap;
+
+            float boardWidth = _cols * strideX;
+            float boardHeight = _rows * strideY;
+
+            Vector2 boardCenter = transform.position;
+            float startX = boardCenter.x - boardWidth / 2f + cardWidth / 2f;
+            float startY = boardCenter.y + boardHeight / 2f - cardHeight / 2f;
+
+            return new Vector2(
+                startX + col * strideX,
+                startY - row * strideY
+            );
+        }
+
+        #endregion
+
+        #region Public API — Visual Updates
+
+        /// <summary>Updates edge renderers for all active tiles on the board.</summary>
         public void UpdateAllEdges()
         {
             for (int c = 0; c < _cols; c++)
+            {
                 for (int r = 0; r < _rows; r++)
                 {
                     var card = GetCard(c, r);
@@ -586,15 +319,17 @@ namespace StampJourney.Gameplay
                     if (view == null) continue;
                     view.cardEdgeRenderer?.UpdateEdges();
                 }
+            }
         }
 
         /// <summary>
-        /// Animate tất cả tiles về đúng vị trí grid của chúng.
-        /// Dùng sau group swap khi nhiều tile bị dịch chuyển.
+        /// Animates all tiles to their correct grid positions.
+        /// Used after group swaps when multiple tiles have shifted.
         /// </summary>
         public void AnimateAllTilesToGridPositions(float duration)
         {
             for (int c = 0; c < _cols; c++)
+            {
                 for (int r = 0; r < _rows; r++)
                 {
                     var card = GetCard(c, r);
@@ -604,20 +339,285 @@ namespace StampJourney.Gameplay
                     var targetPos = GetWorldPosition(c, r);
                     view.transform.DOMove(targetPos, duration).SetEase(Ease.OutCubic);
                 }
+            }
         }
 
-        public bool IsBoardAndQueuesEmpty()
+        #endregion
+
+        #region Private — Board Fill
+
+        private void FillBoardInitial()
         {
-            if (tiles == null) return false;
-            if (queueSystem != null && !queueSystem.IsAllQueuesEmpty()) return false;
+            if (_levelData.useAuthoredLayout)
+            {
+                FillAuthoredBoard();
+                return;
+            }
+
+            if (_levelData.fillStrategy == FillStrategy.BalancedDistribution)
+                FillBalanced();
+            else
+                FillRandom();
+        }
+
+        private void FillAuthoredBoard()
+        {
+            // Startup pops from each column bottom-up. Enqueue the authored cards in that same order.
+            for (int c = 0; c < _cols; c++)
+            {
+                for (int r = _rows - 1; r >= 0; r--)
+                {
+                    if (!_levelData.TryGetBoardCard(c, r, out var card)) continue;
+                    queueSystem.AddCardToQueue(c, new CardModel(card.stamp, card.pieceCol, card.pieceRow));
+                }
+            }
+        }
+
+        private void FillRandom()
+        {
+            var stamps = _levelData.stamps;
+            for (int r = 0; r < _rows; r++)
+            {
+                for (int c = 0; c < _cols; c++)
+                {
+                    var stamp = stamps[UnityEngine.Random.Range(0, stamps.Length)];
+                    int pc = UnityEngine.Random.Range(0, stamp.cols);
+                    int pr = UnityEngine.Random.Range(0, stamp.rows);
+                    var model = new CardModel(stamp, pc, pr);
+                    queueSystem.AddCardToQueue(c, model);
+                }
+            }
+        }
+
+        private void FillBalanced()
+        {
+            // Build a pool ensuring each stamp type has all its pieces represented
+            var pool = new List<(StampData stamp, int pc, int pr)>();
+            var stamps = _levelData.stamps;
+            int total = _cols * _rows;
+
+            while (pool.Count < total)
+            {
+                foreach (var stamp in stamps)
+                    for (int pr = 0; pr < stamp.rows; pr++)
+                        for (int pc = 0; pc < stamp.cols; pc++)
+                            pool.Add((stamp, pc, pr));
+            }
+
+            // Fisher-Yates shuffle
+            for (int i = pool.Count - 1; i > 0; i--)
+            {
+                int j = UnityEngine.Random.Range(0, i + 1);
+                (pool[i], pool[j]) = (pool[j], pool[i]);
+            }
+
+            for (int r = 0; r < _rows; r++)
+            {
+                for (int c = 0; c < _cols; c++)
+                {
+                    int idx = c + r * _cols;
+                    if (idx >= pool.Count) break;
+                    var (stamp, pc, pr) = pool[idx];
+                    var model = new CardModel(stamp, pc, pr);
+                    queueSystem.AddCardToQueue(c, model);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Private — Tile Spawning
+
+        private void SpawnTiles()
+        {
+            // Destroy old tiles if present
+            if (_tiles != null && _tiles.Length > 0)
+            {
+                foreach (var tile in _tiles)
+                {
+                    if (tile != null) Destroy(tile.gameObject);
+                }
+            }
+
+            _tiles = new Tile[_cols, _rows];
+
+            for (int r = 0; r < _rows; r++)
+            {
+                for (int c = 0; c < _cols; c++)
+                {
+                    var newTile = Instantiate(tilePrefab, transform);
+                    newTile.gameObject.SetActive(true);
+                    newTile.Init(c, r, this);
+                    newTile.transform.position = GetWorldPosition(c, r);
+                    _tiles[c, r] = newTile;
+                }
+            }
+        }
+
+        private async UniTask StartupEffectAsync()
+        {
+            var droppedCards = new List<CardModel>();
+
+            // Drop cards row by row from bottom to top
+            for (int r = _rows - 1; r >= 0; r--)
+            {
+                for (int c = 0; c < _cols; c++)
+                {
+                    if (queueSystem.GetQueueCount(c) > 0)
+                    {
+                        var model = queueSystem.PopCard(c);
+                        _tiles[c, r].SetCard(model);
+                        cardFactory.AnimateDropOnly(model, c, r);
+                        droppedCards.Add(model);
+                    }
+                }
+                await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
+            }
+
+            // Animate remaining queue cards shifting
+            for (int c = 0; c < _cols; c++)
+            {
+                for (int i = 0; i < queueSystem.GetQueueCount(c); i++)
+                {
+                    var queuedModel = queueSystem.GetCardAt(c, i);
+                    cardFactory.AnimateQueueShift(queuedModel, c, i);
+                }
+            }
+
+            await UniTask.Delay(TimeSpan.FromSeconds(cardFactory.dropEaseTime + 0.2f));
+
+            // Flip all dropped cards face-up
+            foreach (var model in droppedCards)
+            {
+                var view = cardFactory.GetView(model.TileId);
+                if (view != null) view.PlayFlip(FlipState.Up, false);
+                model.CanDrag = true;
+            }
+
+            await UniTask.Delay(TimeSpan.FromSeconds(0.4f));
+        }
+
+        #endregion
+
+        #region Private — Match & Clear
+
+        private async UniTask CheckAndClearAsync()
+        {
+            bool anyCleared;
+            do
+            {
+                var matches = stampDetector.FindCompletedStamps(_tiles, _cols, _rows);
+                anyCleared = matches.Count > 0;
+
+                if (anyCleared)
+                {
+                    foreach (var group in matches)
+                    {
+                        // Calculate group center for ripple effect
+                        Vector2 gridCenter = Vector2.zero;
+                        foreach (var tile in group.Members)
+                            gridCenter += new Vector2(tile.BoardCol, tile.BoardRow);
+
+                        if (group.Members.Count > 0)
+                            gridCenter /= group.Members.Count;
+
+                        // Ripple effect on non-cleared tiles
+                        ApplyRippleEffect(group, gridCenter);
+
+                        // Clear tiles from grid
+                        foreach (var tile in group.Members)
+                            _tiles[tile.BoardCol, tile.BoardRow].SetCard(null);
+
+                        await cardFactory.DespawnStampGroupAsync(group);
+                        OnStampCleared?.Invoke(new List<CardModel>(group.Members));
+                    }
+
+                    await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
+                }
+
+                // Apply gravity then fill empty cells
+                gravitySystem.ApplyGravityAsync().Forget();
+                await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
+                await FillEmptyCellsAsync();
+
+            } while (anyCleared);
+
+            OnBoardSettled?.Invoke();
+        }
+
+        private void ApplyRippleEffect(CardGroup clearedGroup, Vector2 gridCenter)
+        {
             for (int c = 0; c < _cols; c++)
             {
                 for (int r = 0; r < _rows; r++)
                 {
-                    if (tiles[c, r].IsOccupied) return false;
+                    var model = GetCard(c, r);
+                    if (model == null || clearedGroup.Members.Contains(model)) continue;
+
+                    // Skip cards that belong to other completed stamps
+                    if (model.Group != null && model.Group.IsStampComplete) continue;
+
+                    var view = cardFactory.GetView(model.TileId);
+                    if (view != null)
+                    {
+                        float distance = Vector2.Distance(new Vector2(c, r), gridCenter);
+                        float delay = distance * 0.15f;
+                        view.PlayRippleEffect(delay);
+                    }
                 }
             }
-            return true;
         }
+
+        private async UniTask FillEmptyCellsAsync()
+        {
+            bool spawnedAny = false;
+            for (int c = 0; c < _cols; c++)
+            {
+                int emptyCount = 0;
+                for (int r = _rows - 1; r >= 0; r--)
+                {
+                    if (!_tiles[c, r].IsOccupied && queueSystem.GetQueueCount(c) > 0)
+                    {
+                        var model = queueSystem.PopCard(c);
+                        _tiles[c, r].SetCard(model);
+                        cardFactory.AnimateDropAndFlip(model, c, r);
+                        emptyCount++;
+                        spawnedAny = true;
+                    }
+                }
+
+                // Shift remaining queue visuals
+                if (emptyCount > 0 && queueSystem.GetQueueCount(c) > 0)
+                {
+                    for (int i = 0; i < queueSystem.GetQueueCount(c); i++)
+                    {
+                        var queuedModel = queueSystem.GetCardAt(c, i);
+                        cardFactory.AnimateQueueShift(queuedModel, c, i);
+                    }
+                }
+            }
+
+            if (spawnedAny)
+                await UniTask.Delay(TimeSpan.FromSeconds(0.4f));
+
+            // Rebuild groups for newly spawned tiles
+            stampDetector.RebuildGroups();
+            UpdateAllEdges();
+        }
+
+        #endregion
+
+        #region Private — Helpers
+
+        private void SwapInGrid(int colA, int rowA, int colB, int rowB)
+        {
+            var cardA = GetCard(colA, rowA);
+            var cardB = GetCard(colB, rowB);
+
+            _tiles[colA, rowA].SetCard(cardB);
+            _tiles[colB, rowB].SetCard(cardA);
+        }
+
+        #endregion
     }
 }

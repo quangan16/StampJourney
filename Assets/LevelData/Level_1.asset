@@ -1,0 +1,332 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86b92eef2d6667c4286dcda3046c059d, type: 3}
+  m_Name: Level_1
+  m_EditorClassIdentifier: Assembly-CSharp::LevelData
+  levelID: 1
+  boardCols: 3
+  boardRows: 3
+  maxMoves: 22
+  timeLimitSeconds: -1
+  stamps:
+  - stampId: 2
+    stampName: test4_9
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -1153412024, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+    pieceSprites: []
+  - stampId: 3
+    stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_5
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 3
+    rows: 2
+    fullImage: {fileID: 578749791, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+    pieceSprites: []
+  - stampId: 4
+    stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_5
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 3
+    rows: 2
+    fullImage: {fileID: 578749791, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+    pieceSprites: []
+  - stampId: 5
+    stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_8
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 3
+    rows: 2
+    fullImage: {fileID: -1722871190, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+    pieceSprites: []
+  - stampId: 6
+    stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 3
+    rows: 2
+    fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+    pieceSprites: []
+  - stampId: 6
+    stampName: sight 4_4
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -1550986443, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+    pieceSprites: []
+  - stampId: 7
+    stampName: sight 4_10
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 575327178, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+    pieceSprites: []
+  - stampId: 8
+    stampName: test4_5
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 1841190568, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+    pieceSprites: []
+  maxStampTypesOnBoard: 3
+  fillStrategy: 0
+  useAuthoredLayout: 1
+  boardLayout:
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 2
+    pieceRow: 0
+    column: 2
+    row: 1
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 2
+    pieceRow: 0
+    column: 0
+    row: 2
+  - stamp:
+      stampId: 8
+      stampName: test4_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1841190568, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 1
+    row: 2
+  - stamp:
+      stampId: 6
+      stampName: sight 4_4
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1550986443, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 2
+    row: 2
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: 0
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 2
+    pieceRow: 1
+    column: 0
+    row: 1
+  - stamp:
+      stampId: 8
+      stampName: test4_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1841190568, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 1
+    row: 0
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 1
+    row: 1
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: 0
+  queueLayout:
+  - stamp:
+      stampId: 6
+      stampName: sight 4_4
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1550986443, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 0
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 2
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 2
+    pieceRow: 1
+    column: 2
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 8
+      stampName: test4_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1841190568, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 6
+      stampName: sight 4_4
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1550986443, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 6
+      stampName: sight 4_4
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1550986443, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 3
+  - stamp:
+      stampId: 8
+      stampName: test4_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1841190568, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 1
+    row: -1
+    order: 3
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 0
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 6
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: 1772731894, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 1

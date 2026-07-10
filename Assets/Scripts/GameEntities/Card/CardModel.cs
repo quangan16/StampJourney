@@ -4,46 +4,60 @@ using StampJourney.Gameplay;
 namespace StampJourney.Card
 {
     /// <summary>
-    /// Runtime model của một ô (tile) trên board.
-    /// Immutable sau khi khởi tạo; thay đổi vị trí board thông qua BoardManager.
+    /// Runtime model for a card on the board.
+    /// Stamp and piece position are immutable after construction;
+    /// board position changes are managed through the Gameboard.
     /// </summary>
     public class CardModel
     {
-        // ---- Stamp info ----
-        /// <summary>Dữ liệu của tem mà tile này thuộc về.</summary>
+        #region Stamp Identity (Immutable)
+
+        /// <summary>The stamp type this card belongs to.</summary>
         public readonly StampData Stamp;
 
-        /// <summary>Vị trí cột của card này trong stamp (0-based).</summary>
+        /// <summary>Column position of this piece within its stamp (0-based).</summary>
         public readonly int PieceCol;
 
-        /// <summary>Vị trí hàng của card này trong stamp (0-based).</summary>
+        /// <summary>Row position of this piece within its stamp (0-based).</summary>
         public readonly int PieceRow;
 
-        // ---- Board position (managed by TileModel) ----
-        /// <summary>Tile hiện tại chứa card này.</summary>
+        #endregion
+
+        #region Board Position (Managed by Tile)
+
+        /// <summary>The tile currently holding this card.</summary>
         public Tile CurrentTile { get; set; }
 
-        /// <summary>Cột trên board (0-based).</summary>
+        /// <summary>Column on the board (0-based).</summary>
         public int BoardCol => CurrentTile?.Col ?? -1;
 
-        /// <summary>Hàng trên board (0-based, 0 = top).</summary>
+        /// <summary>Row on the board (0-based, 0 = top).</summary>
         public int BoardRow => CurrentTile?.Row ?? -1;
 
-        // ---- State ----
-        /// <summary>True nếu tile đang trong animation và chưa thể tương tác.</summary>
+        #endregion
+
+        #region State
+
+        /// <summary>True if the card is mid-animation and cannot be interacted with.</summary>
         public bool IsAnimating { get; set; }
 
         public bool CanDrag { get; set; } = true;
 
         public FlipState FlipState;
 
-        /// <summary>Group mà tile này thuộc về. Null nếu đứng riêng lẻ.</summary>
-        public CardGroup Group
-        { get; set; }
+        /// <summary>Group this card belongs to. Null if standalone.</summary>
+        public CardGroup Group { get; set; }
 
-        // ---- Unique ID ----
+        #endregion
+
+        #region Unique ID
+
         private static int _nextId;
         public readonly int TileId;
+
+        #endregion
+
+        #region Constructor
 
         public CardModel(StampData stamp, int pieceCol, int pieceRow)
         {
@@ -53,6 +67,8 @@ namespace StampJourney.Card
             TileId = _nextId++;
             FlipState = FlipState.Down;
         }
+
+        #endregion
 
         public override string ToString() =>
             $"Tile[{TileId}] stamp={Stamp.stampName} piece=({PieceCol},{PieceRow}) board=({BoardCol},{BoardRow})";

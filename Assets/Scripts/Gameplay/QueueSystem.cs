@@ -1,13 +1,19 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using StampJourney.Card;
+using StampJourney.Core;
 using StampJourney.Data;
 using UnityEngine;
 
 namespace StampJourney.Gameplay
 {
+    /// <summary>
+    /// Manages per-column card queues that feed into the board when cells become empty.
+    /// </summary>
     public class QueueSystem : SerializedMonoBehaviour
     {
+        #region Inspector
+
         [BoxGroup("Settings")]
         [LabelText("Queue Size")]
         public int queueSize = 4;
@@ -20,18 +26,26 @@ namespace StampJourney.Gameplay
         [LabelText("Stack Offset per Card")]
         public Vector2 stackOffset = new Vector2(0f, 0.15f);
 
+        #endregion
+
+        #region Runtime State
+
         [ShowInInspector, ReadOnly]
         private List<CardModel>[] _columnQueues;
 
         private Gameboard _gameboard;
         private LevelData _levelData;
 
+        #endregion
+
+        #region Initialization
+
         public void Init(Gameboard gameboard, LevelData levelData)
         {
             _gameboard = gameboard;
             _levelData = levelData;
-            _columnQueues = new List<CardModel>[levelData.levelConfig.boardCols];
-            for (int c = 0; c < levelData.levelConfig.boardCols; c++)
+            _columnQueues = new List<CardModel>[levelData.boardCols];
+            for (int c = 0; c < levelData.boardCols; c++)
             {
                 _columnQueues[c] = new List<CardModel>();
             }
@@ -39,7 +53,17 @@ namespace StampJourney.Gameplay
 
         public void SetupInitialQueues()
         {
-            int cols = _levelData.levelConfig.boardCols;
+            int cols = _levelData.boardCols;
+            if (_levelData.useAuthoredLayout)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    foreach (var card in _levelData.GetQueueCards(c))
+                        AddCardToQueue(c, new CardModel(card.stamp, card.pieceCol, card.pieceRow));
+                }
+                return;
+            }
+
             for (int c = 0; c < cols; c++)
             {
                 int startIndex = _columnQueues[c].Count;
@@ -48,14 +72,6 @@ namespace StampJourney.Gameplay
                     _columnQueues[c].Add(CreateRandomCard(c, startIndex + i));
                 }
             }
-        }
-
-        public void AddCardToQueue(int col, CardModel model)
-        {
-            if (_columnQueues == null) return;
-            _columnQueues[col].Add(model);
-            int queueIndex = _columnQueues[col].Count - 1;
-            _gameboard.cardFactory.SpawnCardInQueue(model, col, queueIndex);
         }
 
         public void ClearAllQueues()
@@ -67,45 +83,16 @@ namespace StampJourney.Gameplay
             }
         }
 
-        private CardModel CreateRandomCard(int col, int queueIndex)
+        #endregion
+
+        #region Queue Operations
+
+        public void AddCardToQueue(int col, CardModel model)
         {
-            var stamps = _levelData.levelConfig.stamps;
-            var stamp = stamps[UnityEngine.Random.Range(0, stamps.Length)];
-            int pc = UnityEngine.Random.Range(0, stamp.cols);
-            int pr = UnityEngine.Random.Range(0, stamp.rows);
-            var model = new CardModel(stamp, pc, pr);
+            if (_columnQueues == null) return;
+            _columnQueues[col].Add(model);
+            int queueIndex = _columnQueues[col].Count - 1;
             _gameboard.cardFactory.SpawnCardInQueue(model, col, queueIndex);
-            return model;
-        }
-
-        public Vector2 GetQueueWorldPosition(int col, int queueIndex)
-        {
-            // Base position is just above the board's top row (row 0)
-            Vector2 topRowPos = _gameboard.GetWorldPosition(col, 0);
-            
-            // Add spacing to jump above the board
-            var config = Core.GameManager.Instance.GameConfig;
-            float strideY = config.cardHeight + config.cardGap;
-            Vector2 basePos = topRowPos + Vector2.up * (strideY + queueSpacing);
-
-            // Add the stack offset for each subsequent card in the queue
-            return basePos + stackOffset * queueIndex;
-        }
-
-        public bool IsAllQueuesEmpty()
-        {
-            if (_columnQueues == null) return true;
-            for (int c = 0; c < _columnQueues.Length; c++)
-            {
-                if (_columnQueues[c].Count > 0) return false;
-            }
-            return true;
-        }
-
-        public int GetQueueCount(int col)
-        {
-            if (_columnQueues == null || col < 0 || col >= _columnQueues.Length) return 0;
-            return _columnQueues[col].Count;
         }
 
         public CardModel PopCard(int col)
@@ -121,5 +108,56 @@ namespace StampJourney.Gameplay
             if (GetQueueCount(col) <= index) return null;
             return _columnQueues[col][index];
         }
+
+        public int GetQueueCount(int col)
+        {
+            if (_columnQueues == null || col < 0 || col >= _columnQueues.Length) return 0;
+            return _columnQueues[col].Count;
+        }
+
+        public bool IsAllQueuesEmpty()
+        {
+            if (_columnQueues == null) return true;
+            for (int c = 0; c < _columnQueues.Length; c++)
+            {
+                if (_columnQueues[c].Count > 0) return false;
+            }
+            return true;
+        }
+
+        #endregion
+
+        #region World Position
+
+        /// <summary>
+        /// Gets the world position for a card in the queue above the board.
+        /// </summary>
+        public Vector2 GetQueueWorldPosition(int col, int queueIndex)
+        {
+            Vector2 topRowPos = _gameboard.GetWorldPosition(col, 0);
+
+            var config = GameManager.Instance.GameConfig;
+            float strideY = config.cardHeight + config.cardGap;
+            Vector2 basePos = topRowPos + Vector2.up * (strideY + queueSpacing);
+
+            return basePos + stackOffset * queueIndex;
+        }
+
+        #endregion
+
+        #region Private
+
+        private CardModel CreateRandomCard(int col, int queueIndex)
+        {
+            var stamps = _levelData.stamps;
+            var stamp = stamps[UnityEngine.Random.Range(0, stamps.Length)];
+            int pc = UnityEngine.Random.Range(0, stamp.cols);
+            int pr = UnityEngine.Random.Range(0, stamp.rows);
+            var model = new CardModel(stamp, pc, pr);
+            _gameboard.cardFactory.SpawnCardInQueue(model, col, queueIndex);
+            return model;
+        }
+
+        #endregion
     }
 }

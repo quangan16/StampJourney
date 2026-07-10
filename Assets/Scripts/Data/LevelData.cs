@@ -1,54 +1,112 @@
+using System.Linq;
 using Sirenix.OdinInspector;
+using StampJourney.Data;
 using UnityEngine;
 
-namespace StampJourney.Data
+/// <summary>
+/// Serialized configuration for a level: board dimensions, constraints, and stamp pool.
+/// </summary>
+[CreateAssetMenu(fileName = "Level_", menuName = "Stamp Journey/LevelConfig")]
+public class LevelData : ScriptableObject
 {
-    public class LevelData
+    public int levelID;
+
+    [Range(2, 8)]
+    public int boardCols = 5;
+
+    [Range(2, 10)]
+    public int boardRows = 7;
+
+    [MinValue(-1)]
+    public int maxMoves = -1;
+
+    [MinValue(-1)]
+    [InfoBox("Set to 0 to disable the timer.")]
+    public float timeLimitSeconds = -1f;
+
+    /// <summary>Whether this level has a time restriction.</summary>
+    public bool HasTimeLimit => timeLimitSeconds > 0f;
+
+    /// <summary>Whether this level has a move limit.</summary>
+    public bool HasMoveLimit => maxMoves > 0;
+
+    public StampData[] stamps;
+
+    [Range(1, 8)]
+    public int maxStampTypesOnBoard = 3;
+
+    public FillStrategy fillStrategy = FillStrategy.RandomFromAvailable;
+
+    [Header("Authored Layout")]
+    [Tooltip("When enabled, the board and the above-board queues are loaded exactly as arranged in the Level Designer window.")]
+    public bool useAuthoredLayout;
+
+    [Tooltip("One entry for each occupied board cell. Rows are top-down, columns are left-right.")]
+    public System.Collections.Generic.List<CardPlacement> boardLayout = new();
+
+    [Tooltip("Cards waiting above their column. Order 0 drops first.")]
+    public System.Collections.Generic.List<QueueCardPlacement> queueLayout = new();
+
+    public bool TryGetBoardCard(int col, int row, out CardPlacement placement)
     {
-
-        public LevelConfig levelConfig;
-
-        public bool IsValid =>
-            levelConfig.stamps != null &&
-            levelConfig.stamps.Length > 0 &&
-            levelConfig.boardCols > 0 &&
-            levelConfig.boardRows > 0;
-
-        public int TotalCells => levelConfig.boardCols * levelConfig.boardRows;
+        placement = boardLayout?.Find(card => card != null && card.column == col && card.row == row);
+        return placement != null && placement.IsValid;
     }
 
-    public enum FillStrategy
+    public System.Collections.Generic.IEnumerable<QueueCardPlacement> GetQueueCards(int column)
     {
-        RandomFromAvailable,    // Random stamp, random piece
-        BalancedDistribution,   // Đảm bảo mỗi loại stamp xuất hiện đủ
+        if (queueLayout == null) yield break;
+        foreach (var card in queueLayout.Where(card => card != null).OrderBy(card => card.order))
+            if (card != null && card.column == column && card.IsValid)
+                yield return card;
     }
 
-    public class LevelConfig
+    public bool IsValid =>
+          stamps != null &&
+          stamps.Length > 0 &&
+          boardCols > 0 &&
+          boardRows > 0;
+
+    /// <summary>Total number of cells on the board.</summary>
+    public int TotalCells => boardCols * boardRows;
+}
+
+/// <summary>One stamp piece positioned on the playable board.</summary>
+[System.Serializable]
+public class CardPlacement
+{
+    public StampData stamp;
+    [MinValue(0)] public int pieceCol;
+    [MinValue(0)] public int pieceRow;
+    [HideInInspector] public int column;
+    [HideInInspector] public int row;
+
+    public bool IsValid => stamp != null && pieceCol >= 0 && pieceCol < stamp.cols && pieceRow >= 0 && pieceRow < stamp.rows;
+    public CardPlacement Clone() => new CardPlacement { stamp = stamp, pieceCol = pieceCol, pieceRow = pieceRow, column = column, row = row };
+}
+
+/// <summary>One stamp piece in a queue above a board column. Lower order drops first.</summary>
+[System.Serializable]
+public class QueueCardPlacement : CardPlacement
+{
+    [HideInInspector] public int order;
+
+    public new QueueCardPlacement Clone() => new QueueCardPlacement
     {
-        public int levelID;
+        stamp = stamp,
+        pieceCol = pieceCol,
+        pieceRow = pieceRow,
+        column = column,
+        row = -1,
+        order = order
+    };
+}
 
+public enum FillStrategy
+{
+    /// <summary>Random stamp type and random piece per cell.</summary>
+    RandomFromAvailable,
 
-        [Range(3, 8)]
-        public int boardCols = 5;
-
-        [Range(4, 10)]
-        public int boardRows = 7;
-
-        [MinValue(-1)]
-        public int maxMoves = -1;
-
-        [MinValue(-1)]
-        [InfoBox("Set to 0 to disable the timer.")]
-        public float timeLimitSeconds = -1f;
-
-        /// <summary>Whether this level has a time restriction.</summary>
-        public bool HasTimeLimit => timeLimitSeconds > 0f;
-
-        public bool HasMoveLimit => maxMoves > 0;
-
-        public StampData[] stamps;
-        [Range(1, 8)]
-        public int maxStampTypesOnBoard = 3;
-        public FillStrategy fillStrategy = FillStrategy.RandomFromAvailable;
-    }
+    /// <summary>Ensures each stamp type appears with balanced distribution.</summary>
+    BalancedDistribution,
 }

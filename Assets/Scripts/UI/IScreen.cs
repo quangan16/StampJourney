@@ -1,5 +1,8 @@
-public interface IScreen
+namespace StampJourney.UI
 {
-    public string ScreenName { get; }
-    public void Show();
+    public interface IScreen
+    {
+        string ScreenName { get; }
+        void Show();
+    }
 }

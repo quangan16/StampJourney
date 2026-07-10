@@ -1,15 +1,24 @@
 using UnityEngine;
 
-public class DataManager : SingletonMonoBehaviour<DataManager>
+namespace StampJourney.Core
 {
-    protected override void OnSingletonInitialized() { }
-    public int CurrentLevel
+    /// <summary>
+    /// Persistent data access layer using PlayerPrefs.
+    /// </summary>
+    public class DataManager : SingletonMonoBehaviour<DataManager>
     {
-        get => PlayerPrefs.GetInt("CurrentLevel", 0);
-        set
+        private const string CurrentLevelKey = "CurrentLevel";
+
+        protected override void OnSingletonInitialized() { }
+
+        public int CurrentLevel
         {
-            PlayerPrefs.SetInt("CurrentLevel", value);
-            PlayerPrefs.Save();
+            get => PlayerPrefs.GetInt(CurrentLevelKey, 0);
+            set
+            {
+                PlayerPrefs.SetInt(CurrentLevelKey, value);
+                PlayerPrefs.Save();
+            }
         }
     }
 }

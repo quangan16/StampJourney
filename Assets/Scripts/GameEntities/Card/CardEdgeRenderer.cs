@@ -1,27 +1,26 @@
 using DG.Tweening;
 using Sirenix.OdinInspector;
-using StampJourney.Card;
-using StampJourney.Core;
 using StampJourney.Gameplay;
 using UnityEngine;
 
 namespace StampJourney.Card
 {
     /// <summary>
-    /// Render khung răng cưa (postage stamp perforations) cho tile.
-    /// 
-    /// APPROACH: 4 Image riêng biệt cho 4 cạnh — chỉ cần 1 sprite duy nhất.
-    /// Mỗi cạnh được show/hide độc lập dựa vào tile lân cận.
-    /// Ưu điểm so với 16-sprite:
-    ///   - Chỉ cần 1 art asset thay vì 16
-    ///   - Animate từng cạnh độc lập (fade in/out khi stamp ghép)
-    ///   - Code rõ ràng, dễ debug
+    /// Renders postage stamp perforation edges for a card.
+    ///
+    /// Uses 4 separate SpriteRenderers (one per edge) with a single shared sprite.
+    /// Each edge is shown/hidden independently based on neighboring tiles.
+    /// Advantages over 16-sprite approach:
+    ///   - Only 1 art asset needed
+    ///   - Each edge can animate independently (fade in/out when stamps connect)
+    ///   - Simple, debuggable code
     /// </summary>
     public class CardEdgeRenderer : SerializedMonoBehaviour
     {
-        // ---- Edge Images (4 cạnh riêng biệt) ----
+        #region Inspector — Edge Images
+
         [BoxGroup("Edge Images")]
-        [InfoBox("Mỗi SpriteRenderer là 1 dải perforation. Cùng dùng 1 sprite, chỉ xoay khác nhau.\n" +
+        [InfoBox("Each SpriteRenderer is a perforation strip. Same sprite, different rotations.\n" +
                  "Top=0°, Right=90°, Bottom=180°, Left=270°")]
         [Required] public SpriteRenderer edgeTop;
         [BoxGroup("Edge Images")]
@@ -31,20 +30,29 @@ namespace StampJourney.Card
         [BoxGroup("Edge Images")]
         [Required] public SpriteRenderer edgeLeft;
 
+        #endregion
+
+        #region Inspector — Settings
+
         [BoxGroup("Settings")]
         [LabelText("Animate Edge Transitions")]
-        [Tooltip("Fade in/out khi stamp ghép lại — tắt nếu cần performance tối đa")]
+        [Tooltip("Fades edges in/out when stamps connect — disable for maximum performance")]
         public bool animateTransitions = true;
 
         [BoxGroup("Settings")]
         [ShowIf("animateTransitions")]
         public float transitionDuration = 0.15f;
 
-        // ---- Runtime ----
+        #endregion
+
+        #region Runtime
+
         private CardModel _model;
         private Gameboard _board;
 
-        // ---- Public API ----
+        #endregion
+
+        #region Public API
 
         public void Init(CardModel model, Gameboard board)
         {
@@ -54,44 +62,48 @@ namespace StampJourney.Card
         }
 
         /// <summary>
-        /// Cập nhật trạng thái 4 cạnh dựa trên tile lân cận.
-        /// Gọi sau mỗi swap hoặc khi board thay đổi.
+        /// Updates the visibility of all 4 edges based on neighboring tiles.
+        /// Call after each swap or when the board changes.
         /// </summary>
         public void UpdateEdges()
         {
             if (_model == null) return;
 
-            SetEdge(edgeTop, IsConnected(0, -1, 0, -1));  // Tile phía trên
-            SetEdge(edgeRight, IsConnected(1, 0, 1, 0));  // Tile bên phải
-            SetEdge(edgeBottom, IsConnected(0, 1, 0, 1));  // Tile phía dưới
-            SetEdge(edgeLeft, IsConnected(-1, 0, -1, 0));  // Tile bên trái
+            SetEdge(edgeTop, IsConnected(0, -1, 0, -1));
+            SetEdge(edgeRight, IsConnected(1, 0, 1, 0));
+            SetEdge(edgeBottom, IsConnected(0, 1, 0, 1));
+            SetEdge(edgeLeft, IsConnected(-1, 0, -1, 0));
         }
 
-        // ---- Internal ----
+        /// <summary>Adds a sorting order offset to all edge renderers.</summary>
+        public void AddSortingOrder(int order)
+        {
+            if (edgeTop) edgeTop.sortingOrder += order;
+            if (edgeBottom) edgeBottom.sortingOrder += order;
+            if (edgeLeft) edgeLeft.sortingOrder += order;
+            if (edgeRight) edgeRight.sortingOrder += order;
+        }
+
+        #endregion
+
+        #region Private
 
         /// <summary>
-        /// Show edge nếu cạnh này là biên ngoài (không kết nối với tile cùng stamp).
-        /// Hide edge nếu cạnh này chung với tile cùng stamp đúng thứ tự.
+        /// Shows edge if it's an outer boundary (not connected to a same-stamp tile).
+        /// Hides edge if it borders a same-stamp group member.
         /// </summary>
         private void SetEdge(SpriteRenderer edgeRenderer, bool isConnected)
         {
             if (edgeRenderer == null) return;
 
-            bool shouldShow = !isConnected; // Có răng cưa = KHÔNG kết nối
+            bool shouldShow = !isConnected; // Perforations visible = NOT connected
 
             if (animateTransitions)
             {
-                // Fade alpha thay vì SetActive để animation mượt hơn
                 float targetAlpha = shouldShow ? 1f : 0f;
                 if (!Mathf.Approximately(edgeRenderer.color.a, targetAlpha))
                 {
-#if DOTWEEN
                     edgeRenderer.DOFade(targetAlpha, transitionDuration);
-#else
-                    var c = edgeRenderer.color;
-                    c.a = targetAlpha;
-                    edgeRenderer.color = c;
-#endif
                 }
             }
             else
@@ -100,18 +112,10 @@ namespace StampJourney.Card
             }
         }
 
-        public void AddSortingOrder(int order)
-        {
-            if (edgeTop) edgeTop.sortingOrder += order;
-            if (edgeBottom) edgeBottom.sortingOrder = order;
-            if (edgeLeft) edgeLeft.sortingOrder = order;
-            if (edgeRight) edgeRight.sortingOrder = order;
-        }
-
         /// <summary>
-        /// Kiểm tra cạnh này có kết nối với tile cùng group không.
-        /// Connected = cùng group + đúng piece offset.
-        /// Chỉ ẩn viền khi tile thực sự thuộc cùng group (đã "dính").
+        /// Checks if this edge connects to a tile in the same group.
+        /// Connected = same group + correct piece offset.
+        /// Edges are only hidden when tiles truly belong to the same group.
         /// </summary>
         private bool IsConnected(int dBoardCol, int dBoardRow, int dPieceCol, int dPieceRow)
         {
@@ -129,5 +133,7 @@ namespace StampJourney.Card
             }
             return false;
         }
+
+        #endregion
     }
 }

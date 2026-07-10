@@ -1,10 +1,7 @@
-public class PersistentManager : PersistentSingletonMonoBehaviour<PersistentManager>
+namespace StampJourney.Core
 {
-
-
-    protected override void OnSingletonInitialized()
+    public class PersistentManager : PersistentSingletonMonoBehaviour<PersistentManager>
     {
-
+        protected override void OnSingletonInitialized() { }
     }
-
 }

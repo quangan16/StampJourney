@@ -1,6 +1,7 @@
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using StampJourney.Core;
+using StampJourney.Gameplay;
 using StampJourney.UI;
 using TMPro;
 using UnityEngine;
@@ -56,9 +57,9 @@ public class GameplayUI : MonoBehaviour, IScreen
             AndyUtil.Logger.LogError("Gameplay controler is null!");
             return;
         }
-        if (UIManager.Instance.currentActiveScreen == this) return;
+        if (UIManager.Instance.CurrentActiveScreen is GameplayUI) return;
         this._gameplayControl = gameplayControl;
-        UIManager.Instance.currentActiveScreen = this;
+        UIManager.Instance.CurrentActiveScreen = this;
         Setup();
 
     }
@@ -108,7 +109,7 @@ public class GameplayUI : MonoBehaviour, IScreen
 
     private void HandleGameWon()
     {
-        ShowWinScreen(_gameplayControl.Score, _gameplayControl.LevelData.levelConfig.levelID);
+        ShowWinScreen(_gameplayControl.Score, _gameplayControl.LevelData.levelID);
         UIManager.Instance.ShowToast("YOU WIN!");
     }
 

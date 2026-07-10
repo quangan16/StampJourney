@@ -6,39 +6,54 @@ using UnityEngine;
 namespace StampJourney.Card
 {
     /// <summary>
-    /// Nhóm các tile cùng stamp đã "dính" lại với nhau trên board.
-    /// Khi drag 1 member, cả group di chuyển.
-    /// Viền giữa các member trong group bị ẩn.
+    /// A group of same-stamp tiles that have "stuck" together on the board.
+    /// When dragging one member, the entire group moves.
+    /// Edges between group members are hidden.
     /// </summary>
     public class CardGroup : MonoBehaviour
     {
-        // ---- Static ID counter ----
+        #region Static ID Counter
+
         private static int _nextGroupId;
 
-        // ---- Identity ----
+        #endregion
+
+        #region Identity
+
         public int GroupId { get; private set; }
         public StampData Stamp { get; private set; }
 
-        // ---- Runtime parent object ----
+        /// <summary>The transform used as parent for group member views.</summary>
         public Transform GroupTransform => transform;
 
-        // ---- Members ----
+        #endregion
+
+        #region Members
+
         private readonly List<CardModel> _members = new();
         public IReadOnlyList<CardModel> Members => _members;
 
-        // ---- Bounding box on board (computed) ----
+        /// <summary>Number of members in this group.</summary>
+        public int Count => _members.Count;
+
+        #endregion
+
+        #region Bounding Box (Computed)
+
         public int MinCol { get; private set; }
         public int MinRow { get; private set; }
         public int MaxCol { get; private set; }
         public int MaxRow { get; private set; }
 
-        /// <summary>Width tính bằng số ô trên board.</summary>
+        /// <summary>Width in board cells.</summary>
         public int Width => MaxCol - MinCol + 1;
 
-        /// <summary>Height tính bằng số ô trên board.</summary>
+        /// <summary>Height in board cells.</summary>
         public int Height => MaxRow - MinRow + 1;
 
-        // ---- Constructor ----
+        #endregion
+
+        #region Initialization
 
         public void Init(StampData stamp)
         {
@@ -46,17 +61,19 @@ namespace StampJourney.Card
             Stamp = stamp;
         }
 
-        // ---- Public API ----
+        #endregion
+
+        #region Public API
 
         /// <summary>
-        /// Kiểm tra candidate có thể thêm vào group không.
-        /// Điều kiện: cùng stampId, nằm kề ít nhất 1 member, và pieceCol/pieceRow khớp offset tương đối.
+        /// Checks if a candidate card can join this group.
+        /// Requirements: same stampId, adjacent to at least one member, matching piece offset.
         /// </summary>
         public bool CanAccept(CardModel candidate)
         {
             if (candidate == null) return false;
             if (candidate.Stamp.stampId != Stamp.stampId) return false;
-            if (candidate.Group == this) return false; // Đã thuộc group này
+            if (candidate.Group == this) return false;
 
             foreach (var member in _members)
             {
@@ -66,14 +83,12 @@ namespace StampJourney.Card
             return false;
         }
 
-        /// <summary>
-        /// Thêm tile vào group. Gán tile.Group = this.
-        /// </summary>
+        /// <summary>Adds a card to this group. Sets card.Group = this.</summary>
         public void Add(CardModel tile)
         {
             if (tile == null || _members.Contains(tile)) return;
 
-            // Gỡ khỏi group cũ nếu có
+            // Remove from old group if any
             tile.Group?.Remove(tile);
 
             _members.Add(tile);
@@ -81,9 +96,7 @@ namespace StampJourney.Card
             RecalculateBounds();
         }
 
-        /// <summary>
-        /// Bỏ tile khỏi group. Gán tile.Group = null.
-        /// </summary>
+        /// <summary>Removes a card from this group. Sets card.Group = null.</summary>
         public void Remove(CardModel tile)
         {
             if (tile == null) return;
@@ -94,29 +107,23 @@ namespace StampJourney.Card
             }
         }
 
-        /// <summary>
-        /// Kiểm tra group đã đủ tất cả pieces của stamp chưa.
-        /// </summary>
+        /// <summary>Whether this group contains all pieces of its stamp.</summary>
         public bool IsStampComplete => _members.Count == Stamp.TotalPieces;
 
-        /// <summary>
-        /// Merge group khác vào group này. Tất cả member của other chuyển sang this.
-        /// </summary>
+        /// <summary>Merges another group into this one. All members of other transfer to this.</summary>
         public void Absorb(CardGroup other)
         {
             if (other == null || other == this) return;
 
-            // Copy danh sách trước khi iterate vì Add sẽ modify other._members qua Remove
+            // Copy list first since Add will modify other._members via Remove
             var otherMembers = other._members.ToList();
             foreach (var member in otherMembers)
             {
-                Add(member); // Add sẽ tự gọi other.Remove(member)
+                Add(member);
             }
         }
 
-        /// <summary>
-        /// Giải tán group — tất cả member.Group = null.
-        /// </summary>
+        /// <summary>Disbands the group — all member.Group references are set to null.</summary>
         public void Disband()
         {
             foreach (var member in _members)
@@ -124,14 +131,13 @@ namespace StampJourney.Card
             _members.Clear();
         }
 
-        /// <summary>Số lượng member.</summary>
-        public int Count => _members.Count;
+        #endregion
 
-        // ---- Internal ----
+        #region Neighbor Matching
 
         /// <summary>
-        /// Kiểm tra 2 tile có phải neighbor hợp lệ không.
-        /// Hợp lệ = cùng stampId + nằm kề trên board + pieceCol/pieceRow offset đúng.
+        /// Checks if two cards are valid matching neighbors.
+        /// Valid = same stampId + adjacent on board + piece offset matches board offset.
         /// </summary>
         public static bool AreMatchingNeighbors(CardModel a, CardModel b)
         {
@@ -143,12 +149,16 @@ namespace StampJourney.Card
             int dPieceCol = b.PieceCol - a.PieceCol;
             int dPieceRow = b.PieceRow - a.PieceRow;
 
-            // Phải kề nhau trên board (chỉ 4 hướng, không chéo)
+            // Must be orthogonally adjacent on the board (no diagonals)
             if (Mathf.Abs(dBoardCol) + Mathf.Abs(dBoardRow) != 1) return false;
 
-            // Board offset phải khớp piece offset
+            // Board offset must match piece offset
             return dBoardCol == dPieceCol && dBoardRow == dPieceRow;
         }
+
+        #endregion
+
+        #region Bounds Calculation
 
         public void RecalculateBounds()
         {
@@ -171,6 +181,8 @@ namespace StampJourney.Card
                 if (m.BoardRow > MaxRow) MaxRow = m.BoardRow;
             }
         }
+
+        #endregion
 
         public override string ToString() =>
             $"Group[{GroupId}] stamp={Stamp.stampName} members={_members.Count} bounds=({MinCol},{MinRow})-({MaxCol},{MaxRow})";

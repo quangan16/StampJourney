@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
 using StampJourney.Card;
@@ -9,29 +7,29 @@ using UnityEngine;
 namespace StampJourney.Gameplay
 {
     /// <summary>
-    /// Hệ thống trọng lực: sau khi xóa tile, các tile phía trên rơi xuống.
-    /// Ở phiên bản này, mọi tile rơi xuống độc lập, các group sẽ bị vỡ nếu không có chỗ trống đồng đều.
+    /// Gravity system: after tiles are cleared, tiles above drop down to fill gaps.
+    /// Each tile drops independently; groups break if empty spaces are uneven.
     /// </summary>
     public class GravitySystem : SerializedMonoBehaviour
     {
-        private Gameboard gameboard;
-
         [BoxGroup("Settings")]
         [LabelText("Drop Duration per Cell (seconds)")]
         public float dropDurationPerCell = 0.08f;
 
+        private Gameboard _gameboard;
+
         public void Init(Gameboard gameboard)
         {
-            this.gameboard = gameboard;
+            _gameboard = gameboard;
         }
 
         /// <summary>
-        /// Áp dụng trọng lực toàn board.
-        /// Mọi tile sẽ rơi xuống ô trống bên dưới cùng trong cột của nó.
+        /// Applies gravity across the entire board.
+        /// Every tile drops to the lowest empty cell in its column.
         /// </summary>
         public async UniTask ApplyGravityAsync()
         {
-            if (gameboard == null)
+            if (_gameboard == null)
             {
                 AndyUtil.Logger.LogError("Gameboard is null!");
                 return;
@@ -41,40 +39,37 @@ namespace StampJourney.Gameplay
 
             if (anyMoved)
             {
-                // Chờ animation xong
-                float maxDelay = dropDurationPerCell * gameboard.Rows;
+                float maxDelay = dropDurationPerCell * _gameboard.Rows;
                 await UniTask.Delay(TimeSpan.FromSeconds(maxDelay + 0.1f));
             }
         }
 
         /// <summary>
-        /// Rơi mọi tile độc lập (column-by-column).
-        /// Trả về true nếu có tile nào di chuyển.
+        /// Drops all tiles independently (column by column).
+        /// Returns true if any tile moved.
         /// </summary>
         private bool DropAllTiles()
         {
             bool anyMoved = false;
 
-            for (int c = 0; c < gameboard.Cols; c++)
+            for (int c = 0; c < _gameboard.Cols; c++)
             {
-                int writeRow = gameboard.Rows - 1;
+                int writeRow = _gameboard.Rows - 1;
 
-                for (int readRow = gameboard.Rows - 1; readRow >= 0; readRow--)
+                for (int readRow = _gameboard.Rows - 1; readRow >= 0; readRow--)
                 {
-                    var tile = gameboard.GetCard(c, readRow);
+                    var tile = _gameboard.GetCard(c, readRow);
                     if (tile == null) continue;
 
                     if (writeRow != readRow)
                     {
-                        // Cập nhật model
-                        gameboard.SetTile(c, writeRow, tile);
-                        gameboard.SetTile(c, readRow, null);
+                        _gameboard.SetTile(c, writeRow, tile);
+                        _gameboard.SetTile(c, readRow, null);
 
-                        // Tính thời gian và tạo animation
                         int distance = writeRow - readRow;
                         float duration = dropDurationPerCell * distance;
-                        Vector2 targetPos = gameboard.GetWorldPosition(c, writeRow);
-                        gameboard.cardFactory.AnimateTileDrop(tile, targetPos, duration);
+                        Vector2 targetPos = _gameboard.GetWorldPosition(c, writeRow);
+                        _gameboard.cardFactory.AnimateTileDrop(tile, targetPos, duration);
 
                         anyMoved = true;
                     }

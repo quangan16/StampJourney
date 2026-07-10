@@ -4,58 +4,74 @@ using UnityEngine;
 namespace StampJourney.Core
 {
     /// <summary>
-    /// Quản lý âm thanh game: SFX và BGM.
-    /// Dùng AudioSource pool đơn giản để tránh allocations.
+    /// Manages audio playback: SFX (pooled AudioSources) and BGM.
     /// </summary>
     public class AudioManager : SingletonMonoBehaviour<AudioManager>
     {
+        #region Inspector — SFX Clips
 
-        // ---- SFX ----
         [FoldoutGroup("SFX")]
-        public AudioClip swapSFX;
+        [SerializeField] private AudioClip swapSFX;
         [FoldoutGroup("SFX")]
-        public AudioClip clearSFX;
+        [SerializeField] private AudioClip clearSFX;
         [FoldoutGroup("SFX")]
-        public AudioClip combo2SFX;
+        [SerializeField] private AudioClip combo2SFX;
         [FoldoutGroup("SFX")]
-        public AudioClip combo3SFX;
+        [SerializeField] private AudioClip combo3SFX;
         [FoldoutGroup("SFX")]
-        public AudioClip winSFX;
+        [SerializeField] private AudioClip winSFX;
         [FoldoutGroup("SFX")]
-        public AudioClip loseSFX;
+        [SerializeField] private AudioClip loseSFX;
         [FoldoutGroup("SFX")]
-        public AudioClip snapBackSFX;
+        [SerializeField] private AudioClip snapBackSFX;
         [FoldoutGroup("SFX")]
-        public AudioClip dropSFX;
+        [SerializeField] private AudioClip dropSFX;
 
-        // ---- BGM ----
-        [FoldoutGroup("BGM")]
-        [Required] public AudioSource bgmSource;
-        [FoldoutGroup("BGM")]
-        public AudioClip[] bgmTracks;
-        [FoldoutGroup("BGM")]
-        [Range(0f, 1f)] public float bgmVolume = 0.5f;
-
-        // ---- SFX Source Pool ----
         [FoldoutGroup("SFX")]
-        [Range(0f, 1f)] public float sfxVolume = 0.8f;
+        [Range(0f, 1f)] [SerializeField] private float sfxVolume = 0.8f;
+
+        #endregion
+
+        #region Inspector — BGM
+
+        [FoldoutGroup("BGM")]
+        [Required] [SerializeField] private AudioSource bgmSource;
+        [FoldoutGroup("BGM")]
+        [SerializeField] private AudioClip[] bgmTracks;
+        [FoldoutGroup("BGM")]
+        [Range(0f, 1f)] [SerializeField] private float bgmVolume = 0.5f;
+
+        #endregion
+
+        #region SFX Pool
+
         private AudioSource[] _sfxPool;
         private int _poolIndex;
         private const int PoolSize = 8;
 
-        // ---- Prefs Keys ----
+        #endregion
+
+        #region Prefs Keys
+
         private const string BGMKey = "BGMEnabled";
         private const string SFXKey = "SFXEnabled";
 
         public bool BGMEnabled { get; private set; } = true;
         public bool SFXEnabled { get; private set; } = true;
 
+        #endregion
+
+        #region Initialization
+
         protected override void OnSingletonInitialized()
         {
+            BuildSfxPool();
+            LoadAudioSettings();
+            PlayBGM();
+        }
 
-
-            // Build SFX pool
-
+        private void BuildSfxPool()
+        {
             _sfxPool = new AudioSource[PoolSize];
             for (int i = 0; i < PoolSize; i++)
             {
@@ -64,15 +80,17 @@ namespace StampJourney.Core
                 _sfxPool[i] = go.AddComponent<AudioSource>();
                 _sfxPool[i].playOnAwake = false;
             }
-
-            // Load settings
-            BGMEnabled = PlayerPrefs.GetInt(BGMKey, 1) == 1;
-            SFXEnabled = PlayerPrefs.GetInt(SFXKey, 1) == 1;
-
-            PlayBGM();
         }
 
-        // ---- Public Play Methods ----
+        private void LoadAudioSettings()
+        {
+            BGMEnabled = PlayerPrefs.GetInt(BGMKey, 1) == 1;
+            SFXEnabled = PlayerPrefs.GetInt(SFXKey, 1) == 1;
+        }
+
+        #endregion
+
+        #region Public Play Methods
 
         public void PlaySwap() => PlaySFX(swapSFX);
         public void PlaySnapBack() => PlaySFX(snapBackSFX);
@@ -87,30 +105,38 @@ namespace StampJourney.Core
             else if (combo >= 3 && combo3SFX) PlaySFX(combo3SFX, 0.1f);
         }
 
-        // ---- Toggle ----
+        #endregion
+
+        #region Toggle Settings
 
         public void SetBGM(bool enabled)
         {
             BGMEnabled = enabled;
             bgmSource.mute = !enabled;
             PlayerPrefs.SetInt(BGMKey, enabled ? 1 : 0);
+            PlayerPrefs.Save();
         }
 
         public void SetSFX(bool enabled)
         {
             SFXEnabled = enabled;
             PlayerPrefs.SetInt(SFXKey, enabled ? 1 : 0);
+            PlayerPrefs.Save();
         }
 
-        // ---- Internal ----
+        #endregion
+
+        #region Internal
 
         private void PlaySFX(AudioClip clip, float delay = 0f)
         {
             if (!SFXEnabled || clip == null) return;
+
             var src = _sfxPool[_poolIndex % PoolSize];
             _poolIndex++;
             src.clip = clip;
             src.volume = sfxVolume;
+
             if (delay > 0f) src.PlayDelayed(delay);
             else src.Play();
         }
@@ -118,11 +144,14 @@ namespace StampJourney.Core
         private void PlayBGM()
         {
             if (bgmTracks == null || bgmTracks.Length == 0 || bgmSource == null) return;
+
             bgmSource.clip = bgmTracks[Random.Range(0, bgmTracks.Length)];
             bgmSource.volume = bgmVolume;
             bgmSource.loop = true;
             bgmSource.mute = !BGMEnabled;
             bgmSource.Play();
         }
+
+        #endregion
     }
 }
