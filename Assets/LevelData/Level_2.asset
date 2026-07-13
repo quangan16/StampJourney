@@ -1,0 +1,193 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86b92eef2d6667c4286dcda3046c059d, type: 3}
+  m_Name: Level_2
+  m_EditorClassIdentifier: Assembly-CSharp::LevelData
+  levelID: 2
+  boardCols: 3
+  boardRows: 3
+  maxMoves: -1
+  timeLimitSeconds: -1
+  stamps:
+  - stampId: 1
+    stampName: sight 4_8
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+    pieceSprites: []
+  - stampId: 2
+    stampName: sight 4_2
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -583664690, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+    pieceSprites: []
+  - stampId: 3
+    stampName: sight 4_11
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -379853724, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+    pieceSprites: []
+  maxStampTypesOnBoard: 3
+  fillStrategy: 0
+  useAuthoredLayout: 1
+  boardLayout:
+  - stamp:
+      stampId: 1
+      stampName: sight 4_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 0
+    row: 0
+  - stamp:
+      stampId: 1
+      stampName: sight 4_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 1
+    row: 0
+  - stamp:
+      stampId: 3
+      stampName: sight 4_11
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -379853724, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 2
+    row: 0
+  - stamp:
+      stampId: 2
+      stampName: sight 4_2
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -583664690, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 0
+    row: 1
+  - stamp:
+      stampId: 3
+      stampName: sight 4_11
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -379853724, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 1
+    row: 1
+  - stamp:
+      stampId: 1
+      stampName: sight 4_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: 1
+  - stamp:
+      stampId: 2
+      stampName: sight 4_2
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -583664690, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: 2
+  - stamp:
+      stampId: 2
+      stampName: sight 4_2
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -583664690, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 1
+    row: 2
+  - stamp:
+      stampId: 1
+      stampName: sight 4_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 2
+    row: 2
+  queueLayout:
+  - stamp:
+      stampId: 3
+      stampName: sight 4_11
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -379853724, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 3
+      stampName: sight 4_11
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -379853724, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 2
+      stampName: sight 4_2
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -583664690, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: -1
+    order: 0

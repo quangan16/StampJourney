@@ -160,15 +160,8 @@ namespace StampJourney.Gameplay
             var cardB = GetCard(colB, rowB);
             if (cardA == null || cardB == null) return;
 
-            // Mark animating to block input
-            cardA.IsAnimating = true;
-            cardB.IsAnimating = true;
-
             SwapInGrid(colA, rowA, colB, rowB);
             OnSwapCompleted?.Invoke(cardA, cardB);
-
-            cardA.IsAnimating = false;
-            cardB.IsAnimating = false;
 
             // Rebuild groups after swap
             stampDetector.RebuildGroups();
@@ -195,10 +188,6 @@ namespace StampJourney.Gameplay
                 }
             }
 
-            // Mark all members as animating
-            foreach (var member in cachedMembers)
-                member.IsAnimating = true;
-
             bool success = stampDetector.TrySwapGroup(group, deltaCol, deltaRow);
 
             if (success)
@@ -222,8 +211,6 @@ namespace StampJourney.Gameplay
             }
 
             // Unmark animating — use cachedMembers since group.Members has been cleared
-            foreach (var member in cachedMembers)
-                member.IsAnimating = false;
         }
 
         public async UniTask TrySwapSingleGridAsync(CardModel card, int deltaCol, int deltaRow)
@@ -240,12 +227,9 @@ namespace StampJourney.Gameplay
                 return;
             }
 
-            card.IsAnimating = true;
-
             if (!IsInBounds(newCol, newRow))
             {
                 AnimateAllTilesToGridPositions(0.18f);
-                card.IsAnimating = false;
                 return;
             }
 
@@ -256,7 +240,7 @@ namespace StampJourney.Gameplay
             SetTile(origCol, origRow, targetCard);
             SetTile(newCol, newRow, card);
 
-            AnimateAllTilesToGridPositions(0.25f);
+            AnimateAllTilesToGridPositions(0.18f);
 
             if (targetCard != null)
                 OnSwapCompleted?.Invoke(card, targetCard);
@@ -266,7 +250,6 @@ namespace StampJourney.Gameplay
             stampDetector.RebuildGroups();
             UpdateAllEdges();
 
-            card.IsAnimating = false;
             await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
             await CheckAndClearAsync();
         }
@@ -300,6 +283,49 @@ namespace StampJourney.Gameplay
                 startX + col * strideX,
                 startY - row * strideY
             );
+        }
+
+        /// <summary>
+        /// World-space bounds occupied by the playable board and, optionally, its waiting queues.
+        /// </summary>
+        public Bounds GetGameplayBounds(bool includeQueues = true)
+        {
+            if (_cols <= 0 || _rows <= 0)
+                return new Bounds(transform.position, Vector3.zero);
+
+            var config = GameManager.Instance.GameConfig;
+            float halfCardWidth = config.cardWidth * 0.5f;
+            float halfCardHeight = config.cardHeight * 0.5f;
+            Vector2 firstCard = GetWorldPosition(0, 0);
+            Vector2 lastCard = GetWorldPosition(_cols - 1, _rows - 1);
+
+            float minX = Mathf.Min(firstCard.x, lastCard.x) - halfCardWidth;
+            float maxX = Mathf.Max(firstCard.x, lastCard.x) + halfCardWidth;
+            float minY = Mathf.Min(firstCard.y, lastCard.y) - halfCardHeight;
+            float maxY = Mathf.Max(firstCard.y, lastCard.y) + halfCardHeight;
+
+            if (includeQueues && queueSystem != null && _levelData != null)
+            {
+                for (int col = 0; col < _cols; col++)
+                {
+                    int queueCardCount = _levelData.useAuthoredLayout
+                        ? _levelData.GetQueueCards(col).Count()
+                        : queueSystem.queueSize;
+
+                    for (int queueIndex = 0; queueIndex < queueCardCount; queueIndex++)
+                    {
+                        Vector2 queuePosition = queueSystem.GetQueueWorldPosition(col, queueIndex);
+                        minX = Mathf.Min(minX, queuePosition.x - halfCardWidth);
+                        maxX = Mathf.Max(maxX, queuePosition.x + halfCardWidth);
+                        minY = Mathf.Min(minY, queuePosition.y - halfCardHeight);
+                        maxY = Mathf.Max(maxY, queuePosition.y + halfCardHeight);
+                    }
+                }
+            }
+
+            Vector3 center = new((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, transform.position.z);
+            Vector3 size = new(maxX - minX, maxY - minY, 0f);
+            return new Bounds(center, size);
         }
 
         #endregion
@@ -337,7 +363,14 @@ namespace StampJourney.Gameplay
                     var view = cardFactory.GetView(card.TileId);
                     if (view == null) continue;
                     var targetPos = GetWorldPosition(c, r);
-                    view.transform.DOMove(targetPos, duration).SetEase(Ease.OutCubic);
+                    if ((view.transform.position - (Vector3)targetPos).sqrMagnitude <= 0.0001f)
+                        continue;
+
+                    var movingCard = card;
+                    movingCard.IsAnimating = true;
+                    view.transform.DOMove(targetPos, duration)
+                        .SetEase(Ease.OutCubic)
+                        .OnComplete(() => movingCard.IsAnimating = false);
                 }
             }
         }

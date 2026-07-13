@@ -1,0 +1,1190 @@
+[
+  {
+    "category": "decorations",
+    "name": "dotted_line",
+    "file": "decorations/dotted_line.png",
+    "source_box": [
+      1100,
+      909,
+      1276,
+      925
+    ],
+    "size": [
+      174,
+      7
+    ]
+  },
+  {
+    "category": "decorations",
+    "name": "gold_divider",
+    "file": "decorations/gold_divider.png",
+    "source_box": [
+      1100,
+      937,
+      1276,
+      952
+    ],
+    "size": [
+      175,
+      15
+    ]
+  },
+  {
+    "category": "decorations",
+    "name": "paper_tape",
+    "file": "decorations/paper_tape.png",
+    "source_box": [
+      1111,
+      966,
+      1259,
+      999
+    ],
+    "size": [
+      148,
+      33
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "long_beige_disabled",
+    "file": "extra_buttons/long_beige_disabled.png",
+    "source_box": [
+      637,
+      768,
+      727,
+      800
+    ],
+    "size": [
+      88,
+      32
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "long_beige_idle",
+    "file": "extra_buttons/long_beige_idle.png",
+    "source_box": [
+      436,
+      768,
+      526,
+      800
+    ],
+    "size": [
+      90,
+      32
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "long_beige_pressed",
+    "file": "extra_buttons/long_beige_pressed.png",
+    "source_box": [
+      536,
+      768,
+      626,
+      800
+    ],
+    "size": [
+      90,
+      32
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "long_green_disabled",
+    "file": "extra_buttons/long_green_disabled.png",
+    "source_box": [
+      637,
+      806,
+      727,
+      838
+    ],
+    "size": [
+      88,
+      32
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "long_green_idle",
+    "file": "extra_buttons/long_green_idle.png",
+    "source_box": [
+      436,
+      806,
+      526,
+      838
+    ],
+    "size": [
+      90,
+      32
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "long_green_pressed",
+    "file": "extra_buttons/long_green_pressed.png",
+    "source_box": [
+      536,
+      806,
+      626,
+      838
+    ],
+    "size": [
+      90,
+      32
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "plus_gold_disabled",
+    "file": "extra_buttons/plus_gold_disabled.png",
+    "source_box": [
+      952,
+      763,
+      994,
+      806
+    ],
+    "size": [
+      38,
+      38
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "plus_gold_idle",
+    "file": "extra_buttons/plus_gold_idle.png",
+    "source_box": [
+      775,
+      763,
+      817,
+      806
+    ],
+    "size": [
+      41,
+      39
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "plus_gold_pressed",
+    "file": "extra_buttons/plus_gold_pressed.png",
+    "source_box": [
+      861,
+      763,
+      903,
+      806
+    ],
+    "size": [
+      42,
+      38
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "plus_green_disabled",
+    "file": "extra_buttons/plus_green_disabled.png",
+    "source_box": [
+      952,
+      807,
+      994,
+      849
+    ],
+    "size": [
+      38,
+      38
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "plus_green_idle",
+    "file": "extra_buttons/plus_green_idle.png",
+    "source_box": [
+      775,
+      807,
+      817,
+      849
+    ],
+    "size": [
+      41,
+      38
+    ]
+  },
+  {
+    "category": "extra_buttons",
+    "name": "plus_green_pressed",
+    "file": "extra_buttons/plus_green_pressed.png",
+    "source_box": [
+      861,
+      807,
+      903,
+      849
+    ],
+    "size": [
+      41,
+      38
+    ]
+  },
+  {
+    "category": "icons",
+    "name": "coin_star",
+    "file": "icons/coin_star.png",
+    "source_box": [
+      24,
+      762,
+      84,
+      821
+    ],
+    "size": [
+      60,
+      59
+    ]
+  },
+  {
+    "category": "icons",
+    "name": "gift",
+    "file": "icons/gift.png",
+    "source_box": [
+      323,
+      752,
+      394,
+      823
+    ],
+    "size": [
+      70,
+      69
+    ]
+  },
+  {
+    "category": "icons",
+    "name": "heart",
+    "file": "icons/heart.png",
+    "source_box": [
+      174,
+      763,
+      233,
+      819
+    ],
+    "size": [
+      59,
+      56
+    ]
+  },
+  {
+    "category": "icons",
+    "name": "star",
+    "file": "icons/star.png",
+    "source_box": [
+      101,
+      759,
+      159,
+      819
+    ],
+    "size": [
+      57,
+      57
+    ]
+  },
+  {
+    "category": "icons",
+    "name": "trophy",
+    "file": "icons/trophy.png",
+    "source_box": [
+      253,
+      758,
+      312,
+      820
+    ],
+    "size": [
+      55,
+      60
+    ]
+  },
+  {
+    "category": "panels_9_slice",
+    "name": "green_pill_panel",
+    "file": "panels_9_slice/green_pill_panel.png",
+    "source_box": [
+      726,
+      893,
+      913,
+      966
+    ],
+    "size": [
+      187,
+      73
+    ]
+  },
+  {
+    "category": "panels_9_slice",
+    "name": "green_small_panel",
+    "file": "panels_9_slice/green_small_panel.png",
+    "source_box": [
+      940,
+      893,
+      1061,
+      966
+    ],
+    "size": [
+      121,
+      72
+    ]
+  },
+  {
+    "category": "panels_9_slice",
+    "name": "green_wide_panel",
+    "file": "panels_9_slice/green_wide_panel.png",
+    "source_box": [
+      26,
+      889,
+      249,
+      1003
+    ],
+    "size": [
+      223,
+      114
+    ]
+  },
+  {
+    "category": "panels_9_slice",
+    "name": "paper_medium_panel",
+    "file": "panels_9_slice/paper_medium_panel.png",
+    "source_box": [
+      529,
+      889,
+      702,
+      1002
+    ],
+    "size": [
+      172,
+      113
+    ]
+  },
+  {
+    "category": "panels_9_slice",
+    "name": "paper_wide_panel",
+    "file": "panels_9_slice/paper_wide_panel.png",
+    "source_box": [
+      279,
+      889,
+      502,
+      1003
+    ],
+    "size": [
+      223,
+      113
+    ]
+  },
+  {
+    "category": "progress_bar",
+    "name": "bar_background",
+    "file": "progress_bar/bar_background.png",
+    "source_box": [
+      1118,
+      773,
+      1209,
+      800
+    ],
+    "size": [
+      91,
+      25
+    ]
+  },
+  {
+    "category": "progress_bar",
+    "name": "bar_fill",
+    "file": "progress_bar/bar_fill.png",
+    "source_box": [
+      1218,
+      771,
+      1317,
+      801
+    ],
+    "size": [
+      99,
+      28
+    ]
+  },
+  {
+    "category": "progress_bar",
+    "name": "bar_frame",
+    "file": "progress_bar/bar_frame.png",
+    "source_box": [
+      1329,
+      771,
+      1431,
+      801
+    ],
+    "size": [
+      102,
+      30
+    ]
+  },
+  {
+    "category": "progress_bar",
+    "name": "star_left",
+    "file": "progress_bar/star_left.png",
+    "source_box": [
+      1054,
+      758,
+      1111,
+      821
+    ],
+    "size": [
+      53,
+      51
+    ]
+  },
+  {
+    "category": "progress_bar",
+    "name": "star_right",
+    "file": "progress_bar/star_right.png",
+    "source_box": [
+      1454,
+      758,
+      1512,
+      821
+    ],
+    "size": [
+      54,
+      63
+    ]
+  },
+  {
+    "category": "puzzle_frames",
+    "name": "blank_puzzle_frame",
+    "file": "puzzle_frames/blank_puzzle_frame.png",
+    "source_box": [
+      23,
+      396,
+      356,
+      704
+    ],
+    "size": [
+      333,
+      308
+    ]
+  },
+  {
+    "category": "puzzle_frames",
+    "name": "dog_puzzle_frame",
+    "file": "puzzle_frames/dog_puzzle_frame.png",
+    "source_box": [
+      391,
+      396,
+      734,
+      704
+    ],
+    "size": [
+      343,
+      308
+    ]
+  },
+  {
+    "category": "ribbons",
+    "name": "blue_ribbon",
+    "file": "ribbons/blue_ribbon.png",
+    "source_box": [
+      776,
+      537,
+      1014,
+      598
+    ],
+    "size": [
+      238,
+      58
+    ]
+  },
+  {
+    "category": "ribbons",
+    "name": "brown_ribbon",
+    "file": "ribbons/brown_ribbon.png",
+    "source_box": [
+      776,
+      615,
+      1014,
+      674
+    ],
+    "size": [
+      238,
+      53
+    ]
+  },
+  {
+    "category": "ribbons",
+    "name": "green_ribbon",
+    "file": "ribbons/green_ribbon.png",
+    "source_box": [
+      776,
+      393,
+      1014,
+      454
+    ],
+    "size": [
+      238,
+      59
+    ]
+  },
+  {
+    "category": "ribbons",
+    "name": "red_ribbon",
+    "file": "ribbons/red_ribbon.png",
+    "source_box": [
+      776,
+      464,
+      1014,
+      525
+    ],
+    "size": [
+      238,
+      58
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "arrow_left_idle_01",
+    "file": "round_buttons/arrow_left_idle_01.png",
+    "source_box": [
+      1055,
+      78,
+      1121,
+      144
+    ],
+    "size": [
+      66,
+      66
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "arrow_left_idle_02",
+    "file": "round_buttons/arrow_left_idle_02.png",
+    "source_box": [
+      1055,
+      152,
+      1121,
+      218
+    ],
+    "size": [
+      66,
+      65
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "arrow_right_disabled_01",
+    "file": "round_buttons/arrow_right_disabled_01.png",
+    "source_box": [
+      1243,
+      78,
+      1309,
+      144
+    ],
+    "size": [
+      65,
+      66
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "arrow_right_disabled_02",
+    "file": "round_buttons/arrow_right_disabled_02.png",
+    "source_box": [
+      1243,
+      152,
+      1309,
+      218
+    ],
+    "size": [
+      65,
+      65
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "arrow_right_pressed_01",
+    "file": "round_buttons/arrow_right_pressed_01.png",
+    "source_box": [
+      1149,
+      78,
+      1215,
+      144
+    ],
+    "size": [
+      66,
+      66
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "arrow_right_pressed_02",
+    "file": "round_buttons/arrow_right_pressed_02.png",
+    "source_box": [
+      1149,
+      152,
+      1215,
+      218
+    ],
+    "size": [
+      66,
+      66
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "blank_beige_01",
+    "file": "round_buttons/blank_beige_01.png",
+    "source_box": [
+      1055,
+      374,
+      1121,
+      438
+    ],
+    "size": [
+      66,
+      61
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "blank_beige_02",
+    "file": "round_buttons/blank_beige_02.png",
+    "source_box": [
+      1055,
+      447,
+      1121,
+      511
+    ],
+    "size": [
+      66,
+      62
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "blank_gray_01",
+    "file": "round_buttons/blank_gray_01.png",
+    "source_box": [
+      1243,
+      374,
+      1309,
+      438
+    ],
+    "size": [
+      65,
+      60
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "blank_gray_02",
+    "file": "round_buttons/blank_gray_02.png",
+    "source_box": [
+      1243,
+      447,
+      1309,
+      511
+    ],
+    "size": [
+      65,
+      62
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "blank_green_01",
+    "file": "round_buttons/blank_green_01.png",
+    "source_box": [
+      1149,
+      374,
+      1215,
+      438
+    ],
+    "size": [
+      66,
+      61
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "blank_green_02",
+    "file": "round_buttons/blank_green_02.png",
+    "source_box": [
+      1149,
+      447,
+      1215,
+      511
+    ],
+    "size": [
+      66,
+      62
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "check_idle",
+    "file": "round_buttons/check_idle.png",
+    "source_box": [
+      1055,
+      226,
+      1121,
+      293
+    ],
+    "size": [
+      66,
+      63
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "close_disabled",
+    "file": "round_buttons/close_disabled.png",
+    "source_box": [
+      1243,
+      226,
+      1309,
+      293
+    ],
+    "size": [
+      65,
+      64
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "close_pressed",
+    "file": "round_buttons/close_pressed.png",
+    "source_box": [
+      1149,
+      226,
+      1215,
+      293
+    ],
+    "size": [
+      66,
+      64
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "lock_dark_pressed",
+    "file": "round_buttons/lock_dark_pressed.png",
+    "source_box": [
+      1149,
+      300,
+      1215,
+      367
+    ],
+    "size": [
+      66,
+      62
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "lock_disabled",
+    "file": "round_buttons/lock_disabled.png",
+    "source_box": [
+      1243,
+      300,
+      1309,
+      367
+    ],
+    "size": [
+      65,
+      62
+    ]
+  },
+  {
+    "category": "round_buttons",
+    "name": "lock_gold_idle",
+    "file": "round_buttons/lock_gold_idle.png",
+    "source_box": [
+      1055,
+      300,
+      1121,
+      367
+    ],
+    "size": [
+      66,
+      62
+    ]
+  },
+  {
+    "category": "shadows",
+    "name": "small_shadow_left",
+    "file": "shadows/small_shadow_left.png",
+    "source_box": [
+      1340,
+      977,
+      1402,
+      1003
+    ],
+    "size": [
+      62,
+      21
+    ]
+  },
+  {
+    "category": "shadows",
+    "name": "small_shadow_right",
+    "file": "shadows/small_shadow_right.png",
+    "source_box": [
+      1411,
+      975,
+      1502,
+      1004
+    ],
+    "size": [
+      78,
+      28
+    ]
+  },
+  {
+    "category": "shadows",
+    "name": "wide_shadow_middle",
+    "file": "shadows/wide_shadow_middle.png",
+    "source_box": [
+      1342,
+      936,
+      1501,
+      970
+    ],
+    "size": [
+      159,
+      34
+    ]
+  },
+  {
+    "category": "shadows",
+    "name": "wide_shadow_top",
+    "file": "shadows/wide_shadow_top.png",
+    "source_box": [
+      1340,
+      887,
+      1501,
+      924
+    ],
+    "size": [
+      161,
+      37
+    ]
+  },
+  {
+    "category": "stamp_frames",
+    "name": "blue_frame",
+    "file": "stamp_frames/blue_frame.png",
+    "source_box": [
+      1357,
+      352,
+      1490,
+      487
+    ],
+    "size": [
+      133,
+      135
+    ]
+  },
+  {
+    "category": "stamp_frames",
+    "name": "green_frame",
+    "file": "stamp_frames/green_frame.png",
+    "source_box": [
+      1357,
+      203,
+      1490,
+      337
+    ],
+    "size": [
+      133,
+      134
+    ]
+  },
+  {
+    "category": "stamp_frames",
+    "name": "plain_frame",
+    "file": "stamp_frames/plain_frame.png",
+    "source_box": [
+      1357,
+      56,
+      1490,
+      191
+    ],
+    "size": [
+      133,
+      135
+    ]
+  },
+  {
+    "category": "stamp_frames",
+    "name": "wood_frame",
+    "file": "stamp_frames/wood_frame.png",
+    "source_box": [
+      1357,
+      501,
+      1490,
+      636
+    ],
+    "size": [
+      133,
+      135
+    ]
+  },
+  {
+    "category": "stamp_slots_panel",
+    "name": "panel_full",
+    "file": "stamp_slots_panel/panel_full.png",
+    "source_box": [
+      505,
+      57,
+      1014,
+      221
+    ],
+    "size": [
+      509,
+      164
+    ]
+  },
+  {
+    "category": "stamp_slots_panel",
+    "name": "slot_01",
+    "file": "stamp_slots_panel/slot_01.png",
+    "source_box": [
+      524,
+      82,
+      612,
+      195
+    ],
+    "size": [
+      88,
+      113
+    ]
+  },
+  {
+    "category": "stamp_slots_panel",
+    "name": "slot_02",
+    "file": "stamp_slots_panel/slot_02.png",
+    "source_box": [
+      619,
+      82,
+      707,
+      195
+    ],
+    "size": [
+      88,
+      113
+    ]
+  },
+  {
+    "category": "stamp_slots_panel",
+    "name": "slot_03",
+    "file": "stamp_slots_panel/slot_03.png",
+    "source_box": [
+      716,
+      82,
+      804,
+      195
+    ],
+    "size": [
+      88,
+      113
+    ]
+  },
+  {
+    "category": "stamp_slots_panel",
+    "name": "slot_04",
+    "file": "stamp_slots_panel/slot_04.png",
+    "source_box": [
+      812,
+      82,
+      900,
+      195
+    ],
+    "size": [
+      88,
+      113
+    ]
+  },
+  {
+    "category": "stamp_slots_panel",
+    "name": "slot_05",
+    "file": "stamp_slots_panel/slot_05.png",
+    "source_box": [
+      906,
+      82,
+      994,
+      195
+    ],
+    "size": [
+      88,
+      113
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "label_slot",
+    "file": "top_bar/label_slot.png",
+    "source_box": [
+      45,
+      65,
+      166,
+      136
+    ],
+    "size": [
+      145,
+      94
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "pill_button_blank",
+    "file": "top_bar/pill_button_blank.png",
+    "source_box": [
+      202,
+      64,
+      362,
+      135
+    ],
+    "size": [
+      184,
+      93
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "round_back_button",
+    "file": "top_bar/round_back_button.png",
+    "source_box": [
+      27,
+      167,
+      100,
+      240
+    ],
+    "size": [
+      73,
+      73
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "round_gallery_button",
+    "file": "top_bar/round_gallery_button.png",
+    "source_box": [
+      301,
+      167,
+      375,
+      240
+    ],
+    "size": [
+      74,
+      73
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "round_hint_button",
+    "file": "top_bar/round_hint_button.png",
+    "source_box": [
+      118,
+      167,
+      192,
+      240
+    ],
+    "size": [
+      74,
+      73
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "round_pause_button",
+    "file": "top_bar/round_pause_button.png",
+    "source_box": [
+      26,
+      255,
+      101,
+      330
+    ],
+    "size": [
+      75,
+      75
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "round_reset_button",
+    "file": "top_bar/round_reset_button.png",
+    "source_box": [
+      393,
+      167,
+      467,
+      240
+    ],
+    "size": [
+      74,
+      73
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "round_shuffle_button",
+    "file": "top_bar/round_shuffle_button.png",
+    "source_box": [
+      210,
+      167,
+      283,
+      240
+    ],
+    "size": [
+      73,
+      73
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "settings_button",
+    "file": "top_bar/settings_button.png",
+    "source_box": [
+      381,
+      63,
+      456,
+      140
+    ],
+    "size": [
+      95,
+      93
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "top_bar_panel",
+    "file": "top_bar/top_bar_panel.png",
+    "source_box": [
+      22,
+      47,
+      468,
+      151
+    ],
+    "size": [
+      446,
+      103
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "top_bar_panel_blank",
+    "file": "top_bar/top_bar_panel_blank.png",
+    "size": [
+      446,
+      103
+    ]
+  },
+  {
+    "category": "top_bar",
+    "name": "top_bar_panel_with_controls",
+    "file": "top_bar/top_bar_panel_with_controls.png",
+    "size": [
+      446,
+      103
+    ]
+  }
+]

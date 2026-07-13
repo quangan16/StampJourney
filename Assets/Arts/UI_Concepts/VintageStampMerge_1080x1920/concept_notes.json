@@ -1,0 +1,13 @@
+{
+  "concept_name": "Vintage Stamp Merge",
+  "screen": "1080x1920 portrait",
+  "core_idea": "A jigsaw puzzle where stamp fragments merge into upgraded collectible stamps, then fill an album board.",
+  "ui_structure": [
+    "Top HUD for currency, album progress, and settings",
+    "Merge Desk showing two matching fragments combining into a higher tier stamp",
+    "Jigsaw Album board as the main play space with open sockets and merge path feedback",
+    "Stamp Tray as the lower inventory and touch-friendly action area"
+  ],
+  "art_direction": "Warm vintage stamp album, aged paper, olive cloth panels, brass/gold accents, and collectible postage frames.",
+  "output": "C:\\Users\\Andy\\StampJourney\\Assets\\Arts\\UI_Concepts\\VintageStampMerge_1080x1920\\vintage_stamp_merge_concept_1080x1920.png"
+}

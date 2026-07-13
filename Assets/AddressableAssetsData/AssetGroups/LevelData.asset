@@ -15,8 +15,13 @@ MonoBehaviour:
   m_GroupName: LevelData
   m_GUID: 852888f556fd5cb4db9ebc34dae8b1b7
   m_SerializeEntries:
+  - m_GUID: 6c15c1b31c05ed74cbc9fec0ded8d5ea
+    m_Address: Level_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f43ddd0f8c07b6a4d83ed0cb369c96ca
-    m_Address: Assets/LevelData/Level_1.asset
+    m_Address: Level_1
     m_ReadOnly: 0
     m_SerializedLabels:
     - level_data

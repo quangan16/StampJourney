@@ -51,6 +51,8 @@ namespace StampJourney.Card
         /// <summary>Height in board cells.</summary>
         public int Height => MaxRow - MinRow + 1;
 
+        public bool HasCardAnimating => _members.Any(m => m != null && m.IsAnimating);
+
         #endregion
 
         #region Initialization

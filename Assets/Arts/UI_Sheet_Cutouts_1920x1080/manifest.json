@@ -1,0 +1,1042 @@
+[
+  {
+    "file": "decorations/dotted_line.png",
+    "source_size": [
+      174,
+      7
+    ],
+    "scaled_size": [
+      218,
+      9
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "decorations/gold_divider.png",
+    "source_size": [
+      183,
+      23
+    ],
+    "scaled_size": [
+      229,
+      29
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "decorations/paper_tape.png",
+    "source_size": [
+      156,
+      41
+    ],
+    "scaled_size": [
+      195,
+      51
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/long_beige_disabled.png",
+    "source_size": [
+      96,
+      40
+    ],
+    "scaled_size": [
+      120,
+      50
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/long_beige_idle.png",
+    "source_size": [
+      90,
+      32
+    ],
+    "scaled_size": [
+      112,
+      40
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/long_beige_pressed.png",
+    "source_size": [
+      90,
+      32
+    ],
+    "scaled_size": [
+      112,
+      40
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/long_green_disabled.png",
+    "source_size": [
+      96,
+      40
+    ],
+    "scaled_size": [
+      120,
+      50
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/long_green_idle.png",
+    "source_size": [
+      98,
+      40
+    ],
+    "scaled_size": [
+      122,
+      50
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/long_green_pressed.png",
+    "source_size": [
+      98,
+      40
+    ],
+    "scaled_size": [
+      122,
+      50
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/plus_gold_disabled.png",
+    "source_size": [
+      46,
+      46
+    ],
+    "scaled_size": [
+      58,
+      58
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/plus_gold_idle.png",
+    "source_size": [
+      49,
+      47
+    ],
+    "scaled_size": [
+      61,
+      59
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/plus_gold_pressed.png",
+    "source_size": [
+      50,
+      46
+    ],
+    "scaled_size": [
+      62,
+      58
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/plus_green_disabled.png",
+    "source_size": [
+      46,
+      46
+    ],
+    "scaled_size": [
+      58,
+      58
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/plus_green_idle.png",
+    "source_size": [
+      49,
+      46
+    ],
+    "scaled_size": [
+      61,
+      58
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "extra_buttons/plus_green_pressed.png",
+    "source_size": [
+      49,
+      46
+    ],
+    "scaled_size": [
+      61,
+      58
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "icons/coin_star.png",
+    "source_size": [
+      68,
+      67
+    ],
+    "scaled_size": [
+      85,
+      84
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "icons/gift.png",
+    "source_size": [
+      78,
+      77
+    ],
+    "scaled_size": [
+      98,
+      96
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "icons/heart.png",
+    "source_size": [
+      67,
+      64
+    ],
+    "scaled_size": [
+      84,
+      80
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "icons/star.png",
+    "source_size": [
+      65,
+      65
+    ],
+    "scaled_size": [
+      81,
+      81
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "icons/trophy.png",
+    "source_size": [
+      63,
+      68
+    ],
+    "scaled_size": [
+      79,
+      85
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "panels_9_slice/green_pill_panel.png",
+    "source_size": [
+      195,
+      81
+    ],
+    "scaled_size": [
+      244,
+      101
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "panels_9_slice/green_small_panel.png",
+    "source_size": [
+      129,
+      80
+    ],
+    "scaled_size": [
+      161,
+      100
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "panels_9_slice/green_wide_panel.png",
+    "source_size": [
+      231,
+      122
+    ],
+    "scaled_size": [
+      289,
+      152
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "panels_9_slice/paper_medium_panel.png",
+    "source_size": [
+      180,
+      121
+    ],
+    "scaled_size": [
+      225,
+      151
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "panels_9_slice/paper_wide_panel.png",
+    "source_size": [
+      231,
+      121
+    ],
+    "scaled_size": [
+      289,
+      151
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "progress_bar/bar_background.png",
+    "source_size": [
+      99,
+      33
+    ],
+    "scaled_size": [
+      124,
+      41
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "progress_bar/bar_fill.png",
+    "source_size": [
+      107,
+      36
+    ],
+    "scaled_size": [
+      134,
+      45
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "progress_bar/bar_frame.png",
+    "source_size": [
+      110,
+      38
+    ],
+    "scaled_size": [
+      138,
+      48
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "progress_bar/star_left.png",
+    "source_size": [
+      53,
+      51
+    ],
+    "scaled_size": [
+      66,
+      64
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "progress_bar/star_right.png",
+    "source_size": [
+      62,
+      71
+    ],
+    "scaled_size": [
+      78,
+      89
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "puzzle_frames/blank_puzzle_frame.png",
+    "source_size": [
+      341,
+      316
+    ],
+    "scaled_size": [
+      426,
+      395
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "puzzle_frames/dog_puzzle_frame.png",
+    "source_size": [
+      351,
+      316
+    ],
+    "scaled_size": [
+      439,
+      395
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "ribbons/blue_ribbon.png",
+    "source_size": [
+      246,
+      66
+    ],
+    "scaled_size": [
+      308,
+      82
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "ribbons/brown_ribbon.png",
+    "source_size": [
+      246,
+      61
+    ],
+    "scaled_size": [
+      308,
+      76
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "ribbons/green_ribbon.png",
+    "source_size": [
+      246,
+      67
+    ],
+    "scaled_size": [
+      308,
+      84
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "ribbons/red_ribbon.png",
+    "source_size": [
+      246,
+      66
+    ],
+    "scaled_size": [
+      308,
+      82
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/arrow_left_idle_01.png",
+    "source_size": [
+      66,
+      66
+    ],
+    "scaled_size": [
+      82,
+      82
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/arrow_left_idle_02.png",
+    "source_size": [
+      74,
+      73
+    ],
+    "scaled_size": [
+      92,
+      91
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/arrow_right_disabled_01.png",
+    "source_size": [
+      73,
+      74
+    ],
+    "scaled_size": [
+      91,
+      92
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/arrow_right_disabled_02.png",
+    "source_size": [
+      73,
+      73
+    ],
+    "scaled_size": [
+      91,
+      91
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/arrow_right_pressed_01.png",
+    "source_size": [
+      66,
+      66
+    ],
+    "scaled_size": [
+      82,
+      82
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/arrow_right_pressed_02.png",
+    "source_size": [
+      74,
+      74
+    ],
+    "scaled_size": [
+      92,
+      92
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/blank_beige_01.png",
+    "source_size": [
+      74,
+      69
+    ],
+    "scaled_size": [
+      92,
+      86
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/blank_beige_02.png",
+    "source_size": [
+      74,
+      70
+    ],
+    "scaled_size": [
+      92,
+      88
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/blank_gray_01.png",
+    "source_size": [
+      73,
+      68
+    ],
+    "scaled_size": [
+      91,
+      85
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/blank_gray_02.png",
+    "source_size": [
+      73,
+      70
+    ],
+    "scaled_size": [
+      91,
+      88
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/blank_green_01.png",
+    "source_size": [
+      74,
+      69
+    ],
+    "scaled_size": [
+      92,
+      86
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/blank_green_02.png",
+    "source_size": [
+      74,
+      70
+    ],
+    "scaled_size": [
+      92,
+      88
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/check_idle.png",
+    "source_size": [
+      74,
+      71
+    ],
+    "scaled_size": [
+      92,
+      89
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/close_disabled.png",
+    "source_size": [
+      73,
+      72
+    ],
+    "scaled_size": [
+      91,
+      90
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/close_pressed.png",
+    "source_size": [
+      74,
+      72
+    ],
+    "scaled_size": [
+      92,
+      90
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/lock_dark_pressed.png",
+    "source_size": [
+      74,
+      70
+    ],
+    "scaled_size": [
+      92,
+      88
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/lock_disabled.png",
+    "source_size": [
+      73,
+      70
+    ],
+    "scaled_size": [
+      91,
+      88
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "round_buttons/lock_gold_idle.png",
+    "source_size": [
+      74,
+      70
+    ],
+    "scaled_size": [
+      92,
+      88
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "shadows/small_shadow_left.png",
+    "source_size": [
+      70,
+      29
+    ],
+    "scaled_size": [
+      88,
+      36
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "shadows/small_shadow_right.png",
+    "source_size": [
+      86,
+      36
+    ],
+    "scaled_size": [
+      108,
+      45
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "shadows/wide_shadow_middle.png",
+    "source_size": [
+      167,
+      42
+    ],
+    "scaled_size": [
+      209,
+      52
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "shadows/wide_shadow_top.png",
+    "source_size": [
+      169,
+      45
+    ],
+    "scaled_size": [
+      211,
+      56
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "stamp_frames/blue_frame.png",
+    "source_size": [
+      141,
+      143
+    ],
+    "scaled_size": [
+      176,
+      179
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "stamp_frames/green_frame.png",
+    "source_size": [
+      141,
+      142
+    ],
+    "scaled_size": [
+      176,
+      178
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "stamp_frames/plain_frame.png",
+    "source_size": [
+      141,
+      143
+    ],
+    "scaled_size": [
+      176,
+      179
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "stamp_frames/wood_frame.png",
+    "source_size": [
+      141,
+      143
+    ],
+    "scaled_size": [
+      176,
+      179
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "stamp_slots_panel/panel_full.png",
+    "source_size": [
+      517,
+      172
+    ],
+    "scaled_size": [
+      646,
+      215
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "stamp_slots_panel/slot_01.png",
+    "source_size": [
+      96,
+      121
+    ],
+    "scaled_size": [
+      120,
+      151
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "stamp_slots_panel/slot_02.png",
+    "source_size": [
+      96,
+      121
+    ],
+    "scaled_size": [
+      120,
+      151
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "stamp_slots_panel/slot_03.png",
+    "source_size": [
+      96,
+      121
+    ],
+    "scaled_size": [
+      120,
+      151
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "stamp_slots_panel/slot_04.png",
+    "source_size": [
+      96,
+      121
+    ],
+    "scaled_size": [
+      120,
+      151
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "stamp_slots_panel/slot_05.png",
+    "source_size": [
+      96,
+      121
+    ],
+    "scaled_size": [
+      120,
+      151
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/label_slot.png",
+    "source_size": [
+      145,
+      94
+    ],
+    "scaled_size": [
+      181,
+      118
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/pill_button_blank.png",
+    "source_size": [
+      184,
+      93
+    ],
+    "scaled_size": [
+      230,
+      116
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/round_back_button.png",
+    "source_size": [
+      81,
+      81
+    ],
+    "scaled_size": [
+      101,
+      101
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/round_gallery_button.png",
+    "source_size": [
+      82,
+      81
+    ],
+    "scaled_size": [
+      102,
+      101
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/round_hint_button.png",
+    "source_size": [
+      82,
+      81
+    ],
+    "scaled_size": [
+      102,
+      101
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/round_pause_button.png",
+    "source_size": [
+      83,
+      83
+    ],
+    "scaled_size": [
+      104,
+      104
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/round_reset_button.png",
+    "source_size": [
+      82,
+      81
+    ],
+    "scaled_size": [
+      102,
+      101
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/round_shuffle_button.png",
+    "source_size": [
+      81,
+      81
+    ],
+    "scaled_size": [
+      101,
+      101
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/settings_button.png",
+    "source_size": [
+      95,
+      93
+    ],
+    "scaled_size": [
+      119,
+      116
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/top_bar_panel.png",
+    "source_size": [
+      446,
+      103
+    ],
+    "scaled_size": [
+      558,
+      129
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/top_bar_panel_blank.png",
+    "source_size": [
+      446,
+      103
+    ],
+    "scaled_size": [
+      558,
+      129
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  },
+  {
+    "file": "top_bar/top_bar_panel_with_controls.png",
+    "source_size": [
+      446,
+      103
+    ],
+    "scaled_size": [
+      558,
+      129
+    ],
+    "scale": 1.25,
+    "target_screen": "1920x1080"
+  }
+]

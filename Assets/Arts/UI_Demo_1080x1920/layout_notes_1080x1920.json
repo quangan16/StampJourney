@@ -1,0 +1,14 @@
+{
+  "screen": {
+    "width": 1080,
+    "height": 1920,
+    "orientation": "portrait"
+  },
+  "output": "C:\\Users\\Andy\\StampJourney\\Assets\\Arts\\UI_Demo_1080x1920\\stamp_journey_portrait_demo_1080x1920.png",
+  "layout": {
+    "top_hud": "Level, stamp count, and settings are separated inside a safe top bar.",
+    "stamp_tray": "Placed directly above the action area to support a top-to-bottom drag flow.",
+    "puzzle_focus": "Large centered board with a quiet backing plate for contrast.",
+    "controls": "Five primary controls are placed in the lower thumb zone."
+  }
+}

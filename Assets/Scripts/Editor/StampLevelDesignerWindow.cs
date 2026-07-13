@@ -26,6 +26,9 @@ namespace StampJourney.EditorTools
         private const float PalettePieceSize = 64f;
         private const float PaletteCardWidth = 286f;
         private const string DragTitle = "Stamp card";
+        private const string LevelDataFolder = "Assets/LevelData";
+        private const string LevelDataAddressableGroup = "LevelData";
+        private const string LevelDataAddressableLabel = "level_data";
 
         private static readonly Regex DimensionsInName = new(@"_(?<cols>[1-4])x(?<rows>[1-4])$", RegexOptions.IgnoreCase);
         private static readonly Color HeaderColor = new(0.10f, 0.17f, 0.28f);
@@ -86,7 +89,6 @@ namespace StampJourney.EditorTools
         }
 
         private GameManager _gameManager;
-        private int _levelIndex;
         private string _topicFolder = "Assets/Arts/PictureTopics";
         private string[] _topicTypes = Array.Empty<string>();
         private int _selectedTopicIndex = 0;
@@ -100,7 +102,7 @@ namespace StampJourney.EditorTools
         private readonly DragState _drag = new();
         private string _validationMessage = "Choose a level, then build its board and queues.";
 
-        [MenuItem("Tools/Stamp Journey/Level Designer")]
+        [MenuItem("Tools/Stamp Journey/Level Designer %g")]
         public static void Open()
         {
             var window = GetWindow<StampLevelDesignerWindow>("Stamp Level Designer");
@@ -130,7 +132,7 @@ namespace StampJourney.EditorTools
         private void OnGUI()
         {
             DrawHeader();
-            if (!TryGetConfig(_currentLevelID, out LevelData config)) return;
+            if (!TryGetConfig(out LevelData config)) return;
 
             EnsureCollections(config);
             _paletteHits.Clear();
@@ -178,13 +180,13 @@ namespace StampJourney.EditorTools
             if (DrawHeaderButton(new Rect(right - 190, headerRect.y + 15, 84, 28), "Refresh", QueueColor)) RefreshTopicSprites();
         }
 
-        private bool TryGetConfig(int levelID, out LevelData config)
+        private bool TryGetConfig(out LevelData config)
         {
             config = null;
             EditorGUILayout.Space(8);
             EditorGUI.BeginChangeCheck();
             _gameManager.LevelSystem = (LevelSystem)EditorGUILayout.ObjectField("Level System", _gameManager.LevelSystem, typeof(LevelSystem), true);
-            if (EditorGUI.EndChangeCheck()) _levelIndex = 0;
+            if (EditorGUI.EndChangeCheck()) cachedEditorLevelData = null;
 
             if (_gameManager.LevelSystem == null)
             {
@@ -193,11 +195,32 @@ namespace StampJourney.EditorTools
             }
 
 
+            EditorGUILayout.BeginHorizontal();
             _currentLevelID = EditorGUILayout.IntField("Level ID", _currentLevelID);
-            var level = cachedEditorLevelData?.FirstOrDefault(x => x.levelID == _currentLevelID);
+
+            LevelData level = _currentLevelID > 0 ? FindLevelData(_currentLevelID) : null;
+            if (_currentLevelID > 0)
+            {
+                string actionLabel = level == null ? "Create Level" : "Save Level";
+                if (GUILayout.Button(actionLabel, GUILayout.Width(110f)))
+                {
+                    if (level == null)
+                        level = CreateLevelData(_currentLevelID);
+                    else
+                        SaveLevelData(level);
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (_currentLevelID <= 0)
+            {
+                EditorGUILayout.HelpBox("Enter a Level ID of 1 or higher.", MessageType.Info);
+                return false;
+            }
+
             if (level == null)
             {
-                EditorGUILayout.HelpBox("The selected level has no LevelConfig.", MessageType.Error);
+                EditorGUILayout.HelpBox($"Level {_currentLevelID} has not been created. Press Create Level to confirm.", MessageType.Info);
                 return false;
             }
 
@@ -205,12 +228,85 @@ namespace StampJourney.EditorTools
             return true;
         }
 
+        private LevelData FindLevelData(int levelID)
+        {
+            LevelData level = cachedEditorLevelData?.FirstOrDefault(candidate => candidate != null && candidate.levelID == levelID);
+            if (level != null) return level;
+
+            string assetPath = $"{LevelDataFolder}/Level_{levelID}.asset";
+            level = AssetDatabase.LoadAssetAtPath<LevelData>(assetPath);
+            if (level == null) return null;
+
+            cachedEditorLevelData ??= new List<LevelData>();
+            if (!cachedEditorLevelData.Contains(level))
+                cachedEditorLevelData.Add(level);
+
+            return level;
+        }
+
+        private LevelData CreateLevelData(int levelID)
+        {
+            LevelData existingLevel = FindLevelData(levelID);
+            if (existingLevel != null) return existingLevel;
+
+            string assetPath = $"{LevelDataFolder}/Level_{levelID}.asset";
+            EnsureAssetFolder(LevelDataFolder);
+
+            LevelData level = CreateInstance<LevelData>();
+            level.name = $"Level_{levelID}";
+            level.levelID = levelID;
+            AssetDatabase.CreateAsset(level, assetPath);
+            Undo.RegisterCreatedObjectUndo(level, $"Create Level {levelID} Data");
+
+            cachedEditorLevelData ??= new List<LevelData>();
+            cachedEditorLevelData.Add(level);
+
+            SaveLevelData(level);
+            _validationMessage = $"Created LevelData for level {levelID}.";
+            return level;
+        }
+
+        private void SaveLevelData(LevelData level)
+        {
+            if (level == null) return;
+
+            string assetPath = AssetDatabase.GetAssetPath(level);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                Debug.LogError($"[Stamp Level Designer] Level {level.levelID} is not a saved asset.", level);
+                return;
+            }
+
+            EditorUtility.SetDirty(level);
+            AndyUtil.Addressable.MarkAssetAsAddressable(
+                assetPath,
+                LevelDataAddressableGroup,
+                $"Level_{level.levelID}",
+                LevelDataAddressableLabel);
+
+            MarkDirty();
+            AssetDatabase.SaveAssets();
+            _validationMessage = $"Saved LevelData for level {level.levelID}.";
+        }
+
+        private static void EnsureAssetFolder(string folderPath)
+        {
+            if (AssetDatabase.IsValidFolder(folderPath)) return;
+
+            string parentFolder = System.IO.Path.GetDirectoryName(folderPath)?.Replace('\\', '/');
+            string folderName = System.IO.Path.GetFileName(folderPath);
+            if (!string.IsNullOrEmpty(parentFolder) && !AssetDatabase.IsValidFolder(parentFolder))
+                EnsureAssetFolder(parentFolder);
+
+            AssetDatabase.CreateFolder(parentFolder, folderName);
+        }
+
         private void DrawLevelSettings(LevelData config)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField("LEVEL SETUP", EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
-            config.levelID = EditorGUILayout.IntField("Level ID", config.levelID);
+            EditorGUILayout.LabelField("Level ID", config.levelID.ToString());
             config.boardCols = EditorGUILayout.IntSlider("Board columns", config.boardCols, 2, 8);
             config.boardRows = EditorGUILayout.IntSlider("Board rows", config.boardRows, 2, 10);
             config.maxMoves = EditorGUILayout.IntField("Move limit (-1 = unlimited)", config.maxMoves);
@@ -315,9 +411,13 @@ namespace StampJourney.EditorTools
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(92));
             Texture preview = AssetPreview.GetAssetPreview(sprite) ?? sprite.texture;
-            if (GUILayout.Button(new GUIContent(preview, $"Add {sprite.name}"), GUILayout.Width(86), GUILayout.Height(62)))
+            bool isAlreadyAdded = IsSpriteAlreadyInPalette(config, sprite);
+            string tooltip = isAlreadyAdded
+                ? $"{sprite.name} is already in the Stamp Piece Palette."
+                : $"Add {sprite.name}";
+            if (GUILayout.Button(new GUIContent(preview, tooltip), GUILayout.Width(86), GUILayout.Height(62)))
                 AddStampToLevel(config, sprite);
-            EditorGUILayout.LabelField(sprite.name, EditorStyles.miniLabel, GUILayout.Width(86));
+            EditorGUILayout.LabelField(isAlreadyAdded ? "Already added" : sprite.name, EditorStyles.miniLabel, GUILayout.Width(86));
             EditorGUILayout.EndVertical();
         }
 
@@ -690,6 +790,15 @@ namespace StampJourney.EditorTools
 
         private void AddStampToLevel(LevelData config, Sprite sprite)
         {
+            config.stamps ??= Array.Empty<StampData>();
+            if (IsSpriteAlreadyInPalette(config, sprite))
+            {
+                string warning = $"[Stamp Level Designer] Cannot add '{sprite.name}' again: each picture may appear only once in the Stamp Piece Palette.";
+                Debug.LogWarning(warning, sprite);
+                _validationMessage = warning;
+                return;
+            }
+
             Match dimensions = DimensionsInName.Match(sprite.name);
             int cols;
             int rows;
@@ -717,6 +826,11 @@ namespace StampJourney.EditorTools
             };
             config.stamps = config.stamps.Append(stamp).ToArray();
             MarkDirty();
+        }
+
+        private static bool IsSpriteAlreadyInPalette(LevelData config, Sprite sprite)
+        {
+            return config?.stamps?.Any(stamp => stamp != null && stamp.fullImage == sprite) == true;
         }
 
         private void RemoveStamp(LevelData config, StampData stamp)
@@ -763,8 +877,9 @@ namespace StampJourney.EditorTools
 
             config.boardLayout.Clear();
             config.queueLayout.Clear();
-            int requestedCards = config.boardCols * config.boardRows + config.boardCols * 2;
-            List<CardPlacement> pieces = BuildCompleteStampSets(config.stamps, requestedCards);
+
+            int boardCardCount = config.boardCols * config.boardRows;
+            List<CardPlacement> pieces = BuildCompleteStampSets(config.stamps, boardCardCount);
             Shuffle(pieces);
 
             int pieceIndex = 0;
@@ -772,12 +887,12 @@ namespace StampJourney.EditorTools
                 for (int col = 0; col < config.boardCols; col++)
                     SetSlot(config, new LayoutSlot(SlotKind.Board, col, row), pieces[pieceIndex++]);
 
-            int queueOrder = 0;
-            while (pieceIndex < pieces.Count)
+            int redundantCardCount = pieces.Count - boardCardCount;
+            int queueRows = Mathf.CeilToInt(redundantCardCount / (float)config.boardCols);
+            for (int queueOrder = 0; queueOrder < queueRows; queueOrder++)
             {
                 for (int col = 0; col < config.boardCols && pieceIndex < pieces.Count; col++)
                     SetSlot(config, new LayoutSlot(SlotKind.Queue, col, queueOrder), pieces[pieceIndex++]);
-                queueOrder++;
             }
 
             config.useAuthoredLayout = true;
@@ -789,14 +904,24 @@ namespace StampJourney.EditorTools
         {
             System.Random random = new();
             List<CardPlacement> result = new();
+
+            // Give every stamp in the palette one complete set before creating repeats.
+            // This makes the generated level representative of the designer's selection
+            // and keeps every piece count balanced across the board and drop queues.
+            foreach (StampData stamp in stamps)
+                AddCompleteStampSet(result, stamp);
+
             while (result.Count < minimumCards)
-            {
-                StampData stamp = stamps[random.Next(stamps.Length)];
-                for (int row = 0; row < stamp.rows; row++)
-                    for (int col = 0; col < stamp.cols; col++)
-                        result.Add(new CardPlacement { stamp = stamp, pieceCol = col, pieceRow = row });
-            }
+                AddCompleteStampSet(result, stamps[random.Next(stamps.Length)]);
+
             return result;
+        }
+
+        private static void AddCompleteStampSet(ICollection<CardPlacement> result, StampData stamp)
+        {
+            for (int row = 0; row < stamp.rows; row++)
+                for (int col = 0; col < stamp.cols; col++)
+                    result.Add(new CardPlacement { stamp = stamp, pieceCol = col, pieceRow = row });
         }
 
         private static void Shuffle<T>(IList<T> items)

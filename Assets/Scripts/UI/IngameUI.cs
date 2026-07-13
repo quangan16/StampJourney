@@ -22,6 +22,14 @@ public class GameplayUI : MonoBehaviour, IScreen
     [FoldoutGroup("HUD")]
     public TextMeshProUGUI timerText;
 
+    // ---- Gameplay framing ----
+    [FoldoutGroup("Gameplay Framing")]
+    [Tooltip("Top HUD area that gameplay must remain below. Defaults to the child named Header.")]
+    [SerializeField] private RectTransform headerArea;
+    [FoldoutGroup("Gameplay Framing")]
+    [Tooltip("Bottom HUD area that gameplay must remain above. Defaults to the child named Footer.")]
+    [SerializeField] private RectTransform footerArea;
+
     // ---- Panels ----
     [FoldoutGroup("Panels")]
     [Required] public GameObject gameplayPanel;
@@ -34,7 +42,7 @@ public class GameplayUI : MonoBehaviour, IScreen
 
     // ---- Win Panel ----
     [FoldoutGroup("Win Panel")]
-    [Required] public TextMeshProUGUI winScoreText;
+    public Button nextBtn;
     [FoldoutGroup("Win Panel")]
     public Image[] starImages;
 
@@ -48,6 +56,9 @@ public class GameplayUI : MonoBehaviour, IScreen
     [FoldoutGroup("Combo")]
     public float comboDuration = 1.2f;
 
+    public RectTransform HeaderArea => ResolveFramingArea(ref headerArea, "Header");
+    public RectTransform FooterArea => ResolveFramingArea(ref footerArea, "Footer");
+
 
 
     public void Init(GameplayControl gameplayControl)
@@ -60,8 +71,8 @@ public class GameplayUI : MonoBehaviour, IScreen
         if (UIManager.Instance.CurrentActiveScreen is GameplayUI) return;
         this._gameplayControl = gameplayControl;
         UIManager.Instance.CurrentActiveScreen = this;
+        nextBtn?.onClick.AddListener(() => GameManager.Instance?.LevelSystem.GoToNextLevel());
         Setup();
-
     }
 
     public void Setup()
@@ -77,6 +88,19 @@ public class GameplayUI : MonoBehaviour, IScreen
         _gameplayControl.OnGameplaySetupFinish += HandleSetupFinish;
 
         Show();
+    }
+
+    private RectTransform ResolveFramingArea(ref RectTransform area, string childName)
+    {
+        if (area != null) return area;
+
+        foreach (RectTransform candidate in GetComponentsInChildren<RectTransform>(true))
+        {
+            if (candidate.name != childName) continue;
+            area = candidate;
+            break;
+        }
+        return area;
     }
 
     public void Show()
@@ -143,7 +167,7 @@ public class GameplayUI : MonoBehaviour, IScreen
     public void ShowWinScreen(int score, int levelIndex)
     {
         winPanel.SetActive(true);
-        winScoreText.text = score.ToString("N0");
+        nextBtn.gameObject.SetActive(levelIndex <= GameManager.Instance.LevelSystem.TotalLevelCount);
 
         // Animate win panel bounce in
         winPanel.transform.localScale = Vector3.zero;

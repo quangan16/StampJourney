@@ -74,7 +74,7 @@ namespace StampJourney.Card
 
         #region Runtime State
 
-        private CardModel _model;
+        [ShowInInspector] private CardModel _model;
         private Gameboard _board;
         private bool _isDragging;
         private bool _isSnapping;
@@ -184,7 +184,8 @@ namespace StampJourney.Card
 
         private void OnMouseDown()
         {
-            if (_model == null || _model.IsAnimating || _isSnapping || !_model.CanDrag) return;
+            if (_model == null || _model.IsAnimating || _isSnapping || !_model.CanDrag || _model.FlipState == FlipState.Down) return;
+            if (_model.Group != null && _model.Group.HasCardAnimating) return;
             if (GameManager.Instance.State != GameState.Playing) return;
 
             // Block drag if this column has cards currently dropping
@@ -209,13 +210,16 @@ namespace StampJourney.Card
                 BeginSingleDrag(mouseWorldPos);
 
             if (glowImg) glowImg.DOFade(1f, liftDuration);
-            if (pressEffect) pressEffect.SetActive(true);
+            if (_dragGroup != null && _dragGroup.Count > 1)
+                SetGroupPressEffects(true);
+            else if (pressEffect)
+                pressEffect.SetActive(true);
         }
 
         private void OnMouseDrag()
         {
             if (!_isDragging || _isSnapping) return;
-
+            if (_model.Group != null && _model.Group.HasCardAnimating) return;
             Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
             mouseWorldPos.z = 0;
             Vector3 newPosition = mouseWorldPos + _dragOffset;
@@ -241,7 +245,10 @@ namespace StampJourney.Card
             _isDragging = false;
 
             if (glowImg) glowImg.DOFade(0f, snapDuration);
-            if (pressEffect) pressEffect.SetActive(false);
+            if (_dragGroup != null && _dragGroup.Count > 1)
+                SetGroupPressEffects(false);
+            else if (pressEffect)
+                pressEffect.SetActive(false);
 
             _currentTilt = 0f;
 
@@ -356,6 +363,20 @@ namespace StampJourney.Card
             }
 
             _dragOffset = _dragGroup.GroupTransform.position - mouseWorldPos;
+        }
+
+        private void SetGroupPressEffects(bool active)
+        {
+            if (_dragGroup == null || _board == null || _board.cardFactory == null) return;
+
+            foreach (var member in _dragGroup.Members)
+            {
+                if (member == null) continue;
+
+                var view = _board.cardFactory.GetView(member.TileId);
+                if (view != null && view.pressEffect != null)
+                    view.pressEffect.SetActive(active);
+            }
         }
 
         private void BeginSingleDrag(Vector3 mouseWorldPos)

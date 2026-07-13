@@ -21,8 +21,6 @@ namespace StampJourney.Core
         [Required]
         [SerializeField] private Dictionary<int, LevelData> levels = new();
 
-        [SerializeField] private string levelDataDirectory;
-
         #endregion
 
         #region Properties
@@ -40,6 +38,7 @@ namespace StampJourney.Core
 
         /// <summary>Read-only access to the level list.</summary>
         public IReadOnlyDictionary<int, LevelData> Levels => levels;
+        public int TotalLevelCount => levels?.Count ?? 0;
 
         private AsyncOperationHandle<IList<LevelData>> loadedLevelDataHandle;
         #endregion
@@ -64,7 +63,7 @@ namespace StampJourney.Core
                 {
                     levels.Add(level.levelID, level);
                 }
-                AndyUtil.Logger.Log($"[LevelSystem] Loaded {levels.Count} levels.");
+                AndyUtil.Logger.Log($"[LevelSystem] Loaded {TotalLevelCount} levels.");
             }
 
 
@@ -85,9 +84,9 @@ namespace StampJourney.Core
                 return null;
             }
 
-            if (targetLevel <= 0 || targetLevel > levels.Count)
+            if (targetLevel <= 0 || targetLevel > TotalLevelCount)
             {
-                Debug.LogWarning($"[LevelSystem] Level {targetLevel} out of range (max={levels.Count}).");
+                Debug.LogWarning($"[LevelSystem] Level {targetLevel} out of range (max={TotalLevelCount}).");
                 return null;
             }
 
@@ -109,7 +108,7 @@ namespace StampJourney.Core
         }
 
         public LevelData GetLevelData(int index) =>
-            index > 0 && index <= levels.Count ? levels[index] : null;
+            index > 0 && index <= TotalLevelCount ? levels[index] : null;
 
         public bool IsLevelUnlocked(int index)
         {
@@ -126,7 +125,7 @@ namespace StampJourney.Core
 
         public async UniTaskVoid StartLevel(int targetLevel)
         {
-            if (targetLevel <= 0 || targetLevel > levels.Count)
+            if (targetLevel <= 0 || targetLevel > TotalLevelCount)
             {
                 Debug.LogError($"[LevelSystem] Invalid level index: {targetLevel}");
                 return;
@@ -148,7 +147,7 @@ namespace StampJourney.Core
         public void GoToNextLevel()
         {
             int nextLevel = CurrentLevel + 1;
-            if (nextLevel <= levels.Count)
+            if (nextLevel <= TotalLevelCount)
                 StartLevel(nextLevel);
         }
 

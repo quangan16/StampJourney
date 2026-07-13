@@ -1,0 +1,813 @@
+{
+  "source": "C:\\Users\\Andy\\StampJourney\\Assets\\Arts\\Prototype_UI_Demo_Cutouts\\_reference\\source_ui_941x1672.png",
+  "source_size": [
+    941,
+    1672
+  ],
+  "screen_reference_size": [
+    1080,
+    1920
+  ],
+  "unity_notes": {
+    "texture_type": "Sprite (2D and UI)",
+    "mesh_type": "Full Rect",
+    "filter_mode": "Bilinear",
+    "compression": "None for UI, or High Quality after visual review",
+    "canvas_reference_resolution": [
+      1080,
+      1920
+    ]
+  },
+  "assets": [
+    {
+      "file": "_reference/source_ui_941x1672.png",
+      "category": "reference",
+      "size": [
+        941,
+        1672
+      ],
+      "source_box": [
+        0,
+        0,
+        941,
+        1672
+      ],
+      "note": ""
+    },
+    {
+      "file": "_reference/layout_1080x1920.png",
+      "category": "reference",
+      "size": [
+        1080,
+        1920
+      ],
+      "source_box": [
+        0,
+        0,
+        941,
+        1672
+      ],
+      "note": "Scaled screen reference for Canvas layout."
+    },
+    {
+      "file": "header/header_full.png",
+      "category": "header",
+      "size": [
+        941,
+        205
+      ],
+      "source_box": [
+        0,
+        0,
+        941,
+        205
+      ],
+      "note": ""
+    },
+    {
+      "file": "header/header_background_blank_rebuilt.png",
+      "category": "header",
+      "size": [
+        941,
+        205
+      ],
+      "source_box": null,
+      "note": "Clean reconstructed background from the source palette."
+    },
+    {
+      "file": "header/button_back.png",
+      "category": "header",
+      "size": [
+        101,
+        100
+      ],
+      "source_box": [
+        35,
+        47,
+        136,
+        147
+      ],
+      "note": "round button"
+    },
+    {
+      "file": "header/level_badge.png",
+      "category": "header",
+      "size": [
+        180,
+        129
+      ],
+      "source_box": [
+        151,
+        31,
+        331,
+        160
+      ],
+      "note": "level label and value together"
+    },
+    {
+      "file": "header/timer_panel.png",
+      "category": "header",
+      "size": [
+        300,
+        99
+      ],
+      "source_box": [
+        365,
+        48,
+        665,
+        147
+      ],
+      "note": "timer icon and value together"
+    },
+    {
+      "file": "header/button_settings.png",
+      "category": "header",
+      "size": [
+        101,
+        99
+      ],
+      "source_box": [
+        803,
+        48,
+        904,
+        147
+      ],
+      "note": "round button"
+    },
+    {
+      "file": "header/level_word.png",
+      "category": "text",
+      "size": [
+        76,
+        24
+      ],
+      "source_box": [
+        202,
+        59,
+        278,
+        83
+      ],
+      "note": "LEVEL title glyphs."
+    },
+    {
+      "file": "header/level_value_1.png",
+      "category": "text",
+      "size": [
+        38,
+        48
+      ],
+      "source_box": [
+        229,
+        92,
+        267,
+        140
+      ],
+      "note": "Current level glyph."
+    },
+    {
+      "file": "header/timer_value_03_38.png",
+      "category": "text",
+      "size": [
+        141,
+        42
+      ],
+      "source_box": [
+        463,
+        76,
+        604,
+        118
+      ],
+      "note": "Timer value glyphs."
+    },
+    {
+      "file": "icons/icon_back.png",
+      "category": "icons",
+      "size": [
+        53,
+        45
+      ],
+      "source_box": [
+        60,
+        77,
+        113,
+        122
+      ],
+      "note": ""
+    },
+    {
+      "file": "icons/icon_gear.png",
+      "category": "icons",
+      "size": [
+        58,
+        53
+      ],
+      "source_box": [
+        824,
+        70,
+        882,
+        123
+      ],
+      "note": ""
+    },
+    {
+      "file": "icons/icon_clock.png",
+      "category": "icons",
+      "size": [
+        55,
+        62
+      ],
+      "source_box": [
+        399,
+        67,
+        454,
+        129
+      ],
+      "note": ""
+    },
+    {
+      "file": "stamp_tray/stamp_tray_full.png",
+      "category": "stamp tray",
+      "size": [
+        889,
+        263
+      ],
+      "source_box": [
+        27,
+        189,
+        916,
+        452
+      ],
+      "note": ""
+    },
+    {
+      "file": "stamp_tray/stamp_tray_blank_rebuilt.png",
+      "category": "stamp tray",
+      "size": [
+        889,
+        263
+      ],
+      "source_box": null,
+      "note": "Blank tray for dynamic stamp slots."
+    },
+    {
+      "file": "stamp_tray/stamp_tray_frame.png",
+      "category": "stamp tray",
+      "size": [
+        889,
+        263
+      ],
+      "source_box": [
+        27,
+        189,
+        916,
+        452
+      ],
+      "note": "Full source tray, useful as a fixed backdrop."
+    },
+    {
+      "file": "stamp_tray/stamp_slot_01.png",
+      "category": "stamp slots",
+      "size": [
+        160,
+        189
+      ],
+      "source_box": [
+        62,
+        222,
+        222,
+        411
+      ],
+      "note": "Individual stamped placeholder slot."
+    },
+    {
+      "file": "stamp_tray/stamp_slot_02.png",
+      "category": "stamp slots",
+      "size": [
+        160,
+        189
+      ],
+      "source_box": [
+        225,
+        222,
+        385,
+        411
+      ],
+      "note": "Individual stamped placeholder slot."
+    },
+    {
+      "file": "stamp_tray/stamp_slot_03.png",
+      "category": "stamp slots",
+      "size": [
+        159,
+        189
+      ],
+      "source_box": [
+        389,
+        222,
+        548,
+        411
+      ],
+      "note": "Individual stamped placeholder slot."
+    },
+    {
+      "file": "stamp_tray/stamp_slot_04.png",
+      "category": "stamp slots",
+      "size": [
+        159,
+        189
+      ],
+      "source_box": [
+        552,
+        222,
+        711,
+        411
+      ],
+      "note": "Individual stamped placeholder slot."
+    },
+    {
+      "file": "stamp_tray/stamp_slot_05.png",
+      "category": "stamp slots",
+      "size": [
+        160,
+        189
+      ],
+      "source_box": [
+        715,
+        222,
+        875,
+        411
+      ],
+      "note": "Individual stamped placeholder slot."
+    },
+    {
+      "file": "puzzle/puzzle_board_full.png",
+      "category": "puzzle",
+      "size": [
+        888,
+        858
+      ],
+      "source_box": [
+        27,
+        462,
+        915,
+        1320
+      ],
+      "note": "Complete puzzle board as shown in the reference."
+    },
+    {
+      "file": "puzzle/puzzle_board_frame.png",
+      "category": "puzzle",
+      "size": [
+        888,
+        858
+      ],
+      "source_box": [
+        27,
+        462,
+        915,
+        1320
+      ],
+      "note": "Outer board/frame with a transparent puzzle area."
+    },
+    {
+      "file": "puzzle/puzzle_piece_top_left.png",
+      "category": "puzzle pieces",
+      "size": [
+        432,
+        448
+      ],
+      "source_box": [
+        87,
+        512,
+        519,
+        960
+      ],
+      "note": "Transparent jigsaw piece, including its white stamp edge."
+    },
+    {
+      "file": "puzzle/puzzle_piece_top_right.png",
+      "category": "puzzle pieces",
+      "size": [
+        428,
+        448
+      ],
+      "source_box": [
+        430,
+        512,
+        858,
+        960
+      ],
+      "note": "Transparent jigsaw piece, including its white stamp edge."
+    },
+    {
+      "file": "puzzle/puzzle_piece_bottom_left.png",
+      "category": "puzzle pieces",
+      "size": [
+        432,
+        391
+      ],
+      "source_box": [
+        87,
+        875,
+        519,
+        1266
+      ],
+      "note": "Transparent jigsaw piece, including its white stamp edge."
+    },
+    {
+      "file": "puzzle/puzzle_piece_bottom_right.png",
+      "category": "puzzle pieces",
+      "size": [
+        428,
+        391
+      ],
+      "source_box": [
+        430,
+        875,
+        858,
+        1266
+      ],
+      "note": "Transparent jigsaw piece, including its white stamp edge."
+    },
+    {
+      "file": "_reference/puzzle_piece_assembly_preview.png",
+      "category": "reference",
+      "size": [
+        771,
+        754
+      ],
+      "source_box": null,
+      "note": "Assembly check for the four individual transparent pieces."
+    },
+    {
+      "file": "puzzle/puzzle_complete_stamp.png",
+      "category": "puzzle",
+      "size": [
+        771,
+        754
+      ],
+      "source_box": [
+        87,
+        512,
+        858,
+        1266
+      ],
+      "note": "Complete four-piece stamp artwork."
+    },
+    {
+      "file": "hint/instruction_note_full.png",
+      "category": "hint",
+      "size": [
+        415,
+        131
+      ],
+      "source_box": [
+        266,
+        1327,
+        681,
+        1458
+      ],
+      "note": ""
+    },
+    {
+      "file": "icons/icon_lightbulb_note.png",
+      "category": "icons",
+      "size": [
+        46,
+        64
+      ],
+      "source_box": [
+        315,
+        1368,
+        361,
+        1432
+      ],
+      "note": ""
+    },
+    {
+      "file": "hint/tape_left.png",
+      "category": "hint",
+      "size": [
+        66,
+        44
+      ],
+      "source_box": [
+        265,
+        1330,
+        331,
+        1374
+      ],
+      "note": ""
+    },
+    {
+      "file": "hint/tape_right.png",
+      "category": "hint",
+      "size": [
+        65,
+        46
+      ],
+      "source_box": [
+        618,
+        1417,
+        683,
+        1463
+      ],
+      "note": ""
+    },
+    {
+      "file": "bottom_bar/bottom_toolbar_full.png",
+      "category": "bottom bar",
+      "size": [
+        867,
+        177
+      ],
+      "source_box": [
+        35,
+        1483,
+        902,
+        1660
+      ],
+      "note": ""
+    },
+    {
+      "file": "bottom_bar/bottom_toolbar_blank_rebuilt.png",
+      "category": "bottom bar",
+      "size": [
+        867,
+        177
+      ],
+      "source_box": null,
+      "note": "Blank toolbar for interactive controls."
+    },
+    {
+      "file": "bottom_bar/control_hint_with_badge.png",
+      "category": "bottom controls",
+      "size": [
+        110,
+        108
+      ],
+      "source_box": [
+        73,
+        1504,
+        183,
+        1612
+      ],
+      "note": "Control including its item-count badge."
+    },
+    {
+      "file": "bottom_bar/button_hint.png",
+      "category": "bottom controls",
+      "size": [
+        110,
+        108
+      ],
+      "source_box": [
+        73,
+        1504,
+        183,
+        1612
+      ],
+      "note": "round button"
+    },
+    {
+      "file": "bottom_bar/button_shuffle.png",
+      "category": "bottom controls",
+      "size": [
+        110,
+        108
+      ],
+      "source_box": [
+        235,
+        1504,
+        345,
+        1612
+      ],
+      "note": "round button"
+    },
+    {
+      "file": "bottom_bar/button_pause.png",
+      "category": "bottom controls",
+      "size": [
+        161,
+        144
+      ],
+      "source_box": [
+        384,
+        1485,
+        545,
+        1629
+      ],
+      "note": "primary round button"
+    },
+    {
+      "file": "bottom_bar/control_preview_with_badge.png",
+      "category": "bottom controls",
+      "size": [
+        120,
+        108
+      ],
+      "source_box": [
+        587,
+        1504,
+        707,
+        1612
+      ],
+      "note": "Control including its item-count badge."
+    },
+    {
+      "file": "bottom_bar/button_preview.png",
+      "category": "bottom controls",
+      "size": [
+        120,
+        108
+      ],
+      "source_box": [
+        587,
+        1504,
+        707,
+        1612
+      ],
+      "note": "round button"
+    },
+    {
+      "file": "bottom_bar/button_restart.png",
+      "category": "bottom controls",
+      "size": [
+        112,
+        108
+      ],
+      "source_box": [
+        747,
+        1504,
+        859,
+        1612
+      ],
+      "note": "round button"
+    },
+    {
+      "file": "bottom_bar/badge_hint_5.png",
+      "category": "badges",
+      "size": [
+        45,
+        49
+      ],
+      "source_box": [
+        142,
+        1490,
+        187,
+        1539
+      ],
+      "note": ""
+    },
+    {
+      "file": "bottom_bar/badge_preview_3.png",
+      "category": "badges",
+      "size": [
+        44,
+        48
+      ],
+      "source_box": [
+        666,
+        1491,
+        710,
+        1539
+      ],
+      "note": ""
+    },
+    {
+      "file": "icons/icon_hint.png",
+      "category": "icons",
+      "size": [
+        55,
+        60
+      ],
+      "source_box": [
+        99,
+        1521,
+        154,
+        1581
+      ],
+      "note": ""
+    },
+    {
+      "file": "icons/icon_shuffle.png",
+      "category": "icons",
+      "size": [
+        68,
+        43
+      ],
+      "source_box": [
+        257,
+        1532,
+        325,
+        1575
+      ],
+      "note": ""
+    },
+    {
+      "file": "icons/icon_preview.png",
+      "category": "icons",
+      "size": [
+        62,
+        47
+      ],
+      "source_box": [
+        612,
+        1530,
+        674,
+        1577
+      ],
+      "note": ""
+    },
+    {
+      "file": "icons/icon_restart.png",
+      "category": "icons",
+      "size": [
+        71,
+        51
+      ],
+      "source_box": [
+        767,
+        1529,
+        838,
+        1580
+      ],
+      "note": ""
+    },
+    {
+      "file": "icons/icon_pause.png",
+      "category": "icons",
+      "size": [
+        77,
+        70
+      ],
+      "source_box": [
+        428,
+        1524,
+        505,
+        1594
+      ],
+      "note": ""
+    },
+    {
+      "file": "bottom_bar/label_hint.png",
+      "category": "text",
+      "size": [
+        68,
+        30
+      ],
+      "source_box": [
+        92,
+        1610,
+        160,
+        1640
+      ],
+      "note": "Vietnamese control label glyphs."
+    },
+    {
+      "file": "bottom_bar/label_shuffle.png",
+      "category": "text",
+      "size": [
+        108,
+        30
+      ],
+      "source_box": [
+        238,
+        1610,
+        346,
+        1640
+      ],
+      "note": "Vietnamese control label glyphs."
+    },
+    {
+      "file": "bottom_bar/label_preview.png",
+      "category": "text",
+      "size": [
+        134,
+        30
+      ],
+      "source_box": [
+        578,
+        1610,
+        712,
+        1640
+      ],
+      "note": "Vietnamese control label glyphs."
+    },
+    {
+      "file": "bottom_bar/label_restart.png",
+      "category": "text",
+      "size": [
+        95,
+        30
+      ],
+      "source_box": [
+        760,
+        1610,
+        855,
+        1640
+      ],
+      "note": "Vietnamese control label glyphs."
+    }
+  ]
+}
