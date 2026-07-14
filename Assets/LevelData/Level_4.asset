@@ -1,0 +1,552 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86b92eef2d6667c4286dcda3046c059d, type: 3}
+  m_Name: Level_4
+  m_EditorClassIdentifier: Assembly-CSharp::LevelData
+  levelID: 4
+  boardCols: 4
+  boardRows: 4
+  maxMoves: -1
+  timeLimitSeconds: 300
+  stamps:
+  - stampId: 1
+    stampName: summer_beach_2x3_1
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 3
+    fullImage: {fileID: 172882868, guid: 1cdf551782ffc214dafcc8a06ae6b731, type: 3}
+    pieceSprites: []
+  - stampId: 2
+    stampName: summer_1_2x2_5
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 1849951300, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+    pieceSprites: []
+  - stampId: 3
+    stampName: summer_1_2x2_3
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -53017512, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+    pieceSprites: []
+  - stampId: 4
+    stampName: summer_1_2x2_6
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 892791719, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+    pieceSprites: []
+  - stampId: 5
+    stampName: summer_1_2x2_8
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 2074874765, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+    pieceSprites: []
+  - stampId: 6
+    stampName: summer_beach_2x3_v2_10
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 3
+    fullImage: {fileID: -1918502313, guid: 25ed07021c6b2b44595dacbbcab1b479, type: 3}
+    pieceSprites: []
+  maxStampTypesOnBoard: 3
+  fillStrategy: 0
+  useAuthoredLayout: 1
+  boardLayout:
+  - stamp:
+      stampId: 4
+      stampName: summer_1_2x2_6
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 892791719, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: 0
+  - stamp:
+      stampId: 6
+      stampName: summer_beach_2x3_v2_10
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: -1918502313, guid: 25ed07021c6b2b44595dacbbcab1b479, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 1
+    column: 1
+    row: 0
+  - stamp:
+      stampId: 2
+      stampName: summer_1_2x2_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1849951300, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 0
+    column: 2
+    row: 0
+  - stamp:
+      stampId: 4
+      stampName: summer_1_2x2_6
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 892791719, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 0
+    column: 3
+    row: 0
+  - stamp:
+      stampId: 4
+      stampName: summer_1_2x2_6
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 892791719, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 0
+    column: 0
+    row: 1
+  - stamp:
+      stampId: 6
+      stampName: summer_beach_2x3_v2_10
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: -1918502313, guid: 25ed07021c6b2b44595dacbbcab1b479, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 2
+    column: 1
+    row: 1
+  - stamp:
+      stampId: 6
+      stampName: summer_beach_2x3_v2_10
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: -1918502313, guid: 25ed07021c6b2b44595dacbbcab1b479, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 2
+    column: 2
+    row: 1
+  - stamp:
+      stampId: 4
+      stampName: summer_1_2x2_6
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 892791719, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 1
+    column: 3
+    row: 1
+  - stamp:
+      stampId: 6
+      stampName: summer_beach_2x3_v2_10
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: -1918502313, guid: 25ed07021c6b2b44595dacbbcab1b479, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 1
+    column: 0
+    row: 2
+  - stamp:
+      stampId: 6
+      stampName: summer_beach_2x3_v2_10
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: -1918502313, guid: 25ed07021c6b2b44595dacbbcab1b479, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 0
+    column: 1
+    row: 2
+  - stamp:
+      stampId: 2
+      stampName: summer_1_2x2_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1849951300, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: 2
+  - stamp:
+      stampId: 2
+      stampName: summer_1_2x2_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1849951300, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 0
+    column: 3
+    row: 2
+  - stamp:
+      stampId: 3
+      stampName: summer_1_2x2_3
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -53017512, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: 3
+  - stamp:
+      stampId: 2
+      stampName: summer_1_2x2_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1849951300, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 1
+    column: 1
+    row: 3
+  - stamp:
+      stampId: 5
+      stampName: summer_1_2x2_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 2074874765, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 1
+    column: 2
+    row: 3
+  - stamp:
+      stampId: 6
+      stampName: summer_beach_2x3_v2_10
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: -1918502313, guid: 25ed07021c6b2b44595dacbbcab1b479, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 0
+    column: 3
+    row: 3
+  queueLayout:
+  - stamp:
+      stampId: 1
+      stampName: summer_beach_2x3_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: 172882868, guid: 1cdf551782ffc214dafcc8a06ae6b731, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 1
+      stampName: summer_beach_2x3_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: 172882868, guid: 1cdf551782ffc214dafcc8a06ae6b731, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 2
+    column: 1
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 1
+      stampName: summer_beach_2x3_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: 172882868, guid: 1cdf551782ffc214dafcc8a06ae6b731, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 5
+      stampName: summer_1_2x2_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 2074874765, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 1
+    column: 3
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 1
+      stampName: summer_beach_2x3_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: 172882868, guid: 1cdf551782ffc214dafcc8a06ae6b731, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 0
+    column: 0
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 5
+      stampName: summer_1_2x2_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 2074874765, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 1
+      stampName: summer_beach_2x3_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: 172882868, guid: 1cdf551782ffc214dafcc8a06ae6b731, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 0
+    column: 2
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 3
+      stampName: summer_1_2x2_3
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -53017512, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 0
+    column: 3
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 1
+      stampName: summer_beach_2x3_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 3
+      fullImage: {fileID: 172882868, guid: 1cdf551782ffc214dafcc8a06ae6b731, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 2
+    column: 0
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 3
+      stampName: summer_1_2x2_3
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -53017512, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 3
+      stampName: summer_1_2x2_3
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -53017512, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 5
+      stampName: summer_1_2x2_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 2074874765, guid: 90b9e36287374a344831f5e84cbe60ed, type: 3}
+      pieceSprites:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    pieceCol: 0
+    pieceRow: 0
+    column: 3
+    row: -1
+    order: 2
+  authoredQueueRows: 1

@@ -21,7 +21,7 @@ public class LevelData : ScriptableObject
     public int maxMoves = -1;
 
     [MinValue(-1)]
-    [InfoBox("Set to 0 to disable the timer.")]
+    [InfoBox("Set to 0 or less to disable the timer.")]
     public float timeLimitSeconds = -1f;
 
     /// <summary>Whether this level has a time restriction.</summary>
@@ -46,6 +46,10 @@ public class LevelData : ScriptableObject
 
     [Tooltip("Cards waiting above their column. Order 0 drops first.")]
     public System.Collections.Generic.List<QueueCardPlacement> queueLayout = new();
+
+    [MinValue(0)]
+    [Tooltip("Number of queue rows shown by the authored level editor, including empty rows.")]
+    public int authoredQueueRows = 1;
 
     public bool TryGetBoardCard(int col, int row, out CardPlacement placement)
     {

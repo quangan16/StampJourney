@@ -22,7 +22,12 @@ public class GameplayUI : MonoBehaviour, IScreen
     [FoldoutGroup("HUD")]
     public TextMeshProUGUI timerText;
 
+    public Button ReplayBtn;
+    public Button PauseBtn;
+
+
     // ---- Gameplay framing ----
+
     [FoldoutGroup("Gameplay Framing")]
     [Tooltip("Top HUD area that gameplay must remain below. Defaults to the child named Header.")]
     [SerializeField] private RectTransform headerArea;
@@ -68,10 +73,10 @@ public class GameplayUI : MonoBehaviour, IScreen
             AndyUtil.Logger.LogError("Gameplay controler is null!");
             return;
         }
-        if (UIManager.Instance.CurrentActiveScreen is GameplayUI) return;
         this._gameplayControl = gameplayControl;
         UIManager.Instance.CurrentActiveScreen = this;
         nextBtn?.onClick.AddListener(() => GameManager.Instance?.LevelSystem.GoToNextLevel());
+        ReplayBtn?.onClick.AddListener(() => OnRestartClicked());
         Setup();
     }
 
@@ -105,6 +110,7 @@ public class GameplayUI : MonoBehaviour, IScreen
 
     public void Show()
     {
+        HideAllPanels();
         ShowGameplay();
     }
 
@@ -133,6 +139,7 @@ public class GameplayUI : MonoBehaviour, IScreen
 
     private void HandleGameWon()
     {
+        Debug.Log("Game won!");
         ShowWinScreen(_gameplayControl.Score, _gameplayControl.LevelData.levelID);
         UIManager.Instance.ShowToast("YOU WIN!");
     }
@@ -181,6 +188,14 @@ public class GameplayUI : MonoBehaviour, IScreen
 
         losePanel.transform.localScale = Vector3.zero;
         losePanel.transform.DOScale(1f, 0.4f).SetEase(Ease.OutBack);
+    }
+
+    public void HideAllPanels()
+    {
+        gameplayPanel.SetActive(false);
+        winPanel.SetActive(false);
+        losePanel.SetActive(false);
+        pausePanel.SetActive(false);
     }
 
     #endregion

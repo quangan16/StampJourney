@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 1cdf551782ffc214dafcc8a06ae6b731
+guid: e2881d4f092bae34083c53069146a3a6
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4834644610580570380
-    second: summer_beach_2x3_0
+      213: -69228392967884597
+    second: New Sprite_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,12 +46,12 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 1024
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -126,133 +126,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: summer_beach_2x3_0
+      name: New Sprite_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 800
-        height: 1200
+        width: 1024
+        height: 1024
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 4fe961b7754e7ecb0800000000000000
-      internalID: -4834644610580570380
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: summer_beach_2x3_1
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 884
-        width: 186
-        height: 316
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 093d0514bddad6444bb17e65bcfbf216
-      internalID: 172882868
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: summer_beach_2x3_2
-      rect:
-        serializedVersion: 2
-        x: 183
-        y: 885
-        width: 210
-        height: 315
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 3, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 5cd013992b8f8ca47997bd9ba93cc3e8
-      internalID: 309212442
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: summer_beach_2x3_3
-      rect:
-        serializedVersion: 2
-        x: 393
-        y: 888
-        width: 204
-        height: 312
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: b58c2b3099dd8a74d855c1b40a2caf0e
-      internalID: 1402864455
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: summer_beach_2x3_4
-      rect:
-        serializedVersion: 2
-        x: 596
-        y: 884
-        width: 203
-        height: 316
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 3, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 09d60a50ac4e50a40ad47a0ec5487173
-      internalID: 961204118
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: summer_beach_2x3_5
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 590
-        width: 185
-        height: 297
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 5d09d5e93e06ec5409ce32884bdb8e17
-      internalID: -1653166746
+      spriteID: bc037c4b42d0a0ff0800000000000000
+      internalID: -69228392967884597
       vertices: []
       indices: 
       edges: []
@@ -261,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: e38dfb45d2ddc404fab13496e8422bca
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -271,12 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      summer_beach_2x3_0: -4834644610580570380
-      summer_beach_2x3_1: 172882868
-      summer_beach_2x3_2: 309212442
-      summer_beach_2x3_3: 1402864455
-      summer_beach_2x3_4: 961204118
-      summer_beach_2x3_5: -1653166746
+      New Sprite_0: -69228392967884597
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

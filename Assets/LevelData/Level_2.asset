@@ -16,136 +16,150 @@ MonoBehaviour:
   boardCols: 3
   boardRows: 3
   maxMoves: -1
-  timeLimitSeconds: -1
+  timeLimitSeconds: 0
   stamps:
   - stampId: 1
-    stampName: sight 4_8
+    stampName: test4_11
     stampColor: {r: 1, g: 1, b: 1, a: 1}
     cols: 2
     rows: 2
-    fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+    fullImage: {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
     pieceSprites: []
   - stampId: 2
-    stampName: sight 4_2
+    stampName: test4_4
     stampColor: {r: 1, g: 1, b: 1, a: 1}
     cols: 2
     rows: 2
-    fullImage: {fileID: -583664690, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+    fullImage: {fileID: -1273491934, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
     pieceSprites: []
   - stampId: 3
-    stampName: sight 4_11
+    stampName: test4_10
     stampColor: {r: 1, g: 1, b: 1, a: 1}
     cols: 2
     rows: 2
-    fullImage: {fileID: -379853724, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+    fullImage: {fileID: 153388095, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+    pieceSprites: []
+  - stampId: 4
+    stampName: test4_7
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 1823338359, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+    pieceSprites: []
+  - stampId: 5
+    stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 3
+    rows: 2
+    fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
     pieceSprites: []
   maxStampTypesOnBoard: 3
   fillStrategy: 0
   useAuthoredLayout: 1
   boardLayout:
   - stamp:
-      stampId: 1
-      stampName: sight 4_8
+      stampId: 2
+      stampName: test4_4
       stampColor: {r: 1, g: 1, b: 1, a: 1}
       cols: 2
       rows: 2
-      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: -1273491934, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
       pieceSprites: []
-    pieceCol: 0
-    pieceRow: 0
+    pieceCol: 1
+    pieceRow: 1
     column: 0
     row: 0
   - stamp:
-      stampId: 1
-      stampName: sight 4_8
+      stampId: 3
+      stampName: test4_10
       stampColor: {r: 1, g: 1, b: 1, a: 1}
       cols: 2
       rows: 2
-      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: 153388095, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
       pieceSprites: []
     pieceCol: 0
-    pieceRow: 1
+    pieceRow: 0
     column: 1
     row: 0
   - stamp:
       stampId: 3
-      stampName: sight 4_11
+      stampName: test4_10
       stampColor: {r: 1, g: 1, b: 1, a: 1}
       cols: 2
       rows: 2
-      fullImage: {fileID: -379853724, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: 153388095, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
       pieceSprites: []
-    pieceCol: 0
+    pieceCol: 1
     pieceRow: 1
     column: 2
     row: 0
   - stamp:
       stampId: 2
-      stampName: sight 4_2
+      stampName: test4_4
       stampColor: {r: 1, g: 1, b: 1, a: 1}
       cols: 2
       rows: 2
-      fullImage: {fileID: -583664690, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: -1273491934, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
       pieceSprites: []
-    pieceCol: 1
-    pieceRow: 0
+    pieceCol: 0
+    pieceRow: 1
     column: 0
     row: 1
   - stamp:
       stampId: 3
-      stampName: sight 4_11
+      stampName: test4_10
       stampColor: {r: 1, g: 1, b: 1, a: 1}
       cols: 2
       rows: 2
-      fullImage: {fileID: -379853724, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: 153388095, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
       pieceSprites: []
-    pieceCol: 1
-    pieceRow: 0
+    pieceCol: 0
+    pieceRow: 1
     column: 1
     row: 1
   - stamp:
-      stampId: 1
-      stampName: sight 4_8
+      stampId: 5
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
+      cols: 3
       rows: 2
-      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
       pieceSprites: []
     pieceCol: 1
-    pieceRow: 1
+    pieceRow: 0
     column: 2
     row: 1
   - stamp:
       stampId: 2
-      stampName: sight 4_2
+      stampName: test4_4
       stampColor: {r: 1, g: 1, b: 1, a: 1}
       cols: 2
       rows: 2
-      fullImage: {fileID: -583664690, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: -1273491934, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
       pieceSprites: []
     pieceCol: 0
-    pieceRow: 1
+    pieceRow: 0
     column: 0
     row: 2
   - stamp:
       stampId: 2
-      stampName: sight 4_2
+      stampName: test4_4
       stampColor: {r: 1, g: 1, b: 1, a: 1}
       cols: 2
       rows: 2
-      fullImage: {fileID: -583664690, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: -1273491934, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
       pieceSprites: []
-    pieceCol: 0
+    pieceCol: 1
     pieceRow: 0
     column: 1
     row: 2
   - stamp:
-      stampId: 1
-      stampName: sight 4_8
+      stampId: 3
+      stampName: test4_10
       stampColor: {r: 1, g: 1, b: 1, a: 1}
       cols: 2
       rows: 2
-      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: 153388095, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
       pieceSprites: []
     pieceCol: 1
     pieceRow: 0
@@ -153,12 +167,12 @@ MonoBehaviour:
     row: 2
   queueLayout:
   - stamp:
-      stampId: 3
-      stampName: sight 4_11
+      stampId: 1
+      stampName: test4_11
       stampColor: {r: 1, g: 1, b: 1, a: 1}
       cols: 2
       rows: 2
-      fullImage: {fileID: -379853724, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
       pieceSprites: []
     pieceCol: 1
     pieceRow: 1
@@ -166,28 +180,159 @@ MonoBehaviour:
     row: -1
     order: 0
   - stamp:
-      stampId: 3
-      stampName: sight 4_11
+      stampId: 5
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 1
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 1
+      stampName: test4_11
       stampColor: {r: 1, g: 1, b: 1, a: 1}
       cols: 2
       rows: 2
-      fullImage: {fileID: -379853724, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 2
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 5
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 2
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 5
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 2
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 5
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 2
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 4
+      stampName: test4_7
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1823338359, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 1
+      stampName: test4_11
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
       pieceSprites: []
     pieceCol: 0
     pieceRow: 0
     column: 1
     row: -1
-    order: 0
+    order: 2
   - stamp:
-      stampId: 2
-      stampName: sight 4_2
+      stampId: 4
+      stampName: test4_7
       stampColor: {r: 1, g: 1, b: 1, a: 1}
       cols: 2
       rows: 2
-      fullImage: {fileID: -583664690, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
+      fullImage: {fileID: 1823338359, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 2
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 1
+      stampName: test4_11
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 3
+  - stamp:
+      stampId: 5
+      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 3
+      rows: 2
+      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
       pieceSprites: []
     pieceCol: 1
     pieceRow: 1
+    column: 1
+    row: -1
+    order: 3
+  - stamp:
+      stampId: 4
+      stampName: test4_7
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1823338359, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
     column: 2
     row: -1
-    order: 0
+    order: 3
+  - stamp:
+      stampId: 4
+      stampName: test4_7
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1823338359, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 4
+  authoredQueueRows: 5

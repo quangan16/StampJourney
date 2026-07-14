@@ -29,6 +29,7 @@ namespace StampJourney.EditorTools
         private const string LevelDataFolder = "Assets/LevelData";
         private const string LevelDataAddressableGroup = "LevelData";
         private const string LevelDataAddressableLabel = "level_data";
+        private static readonly System.Random LayoutRandom = new();
 
         private static readonly Regex DimensionsInName = new(@"_(?<cols>[1-4])x(?<rows>[1-4])$", RegexOptions.IgnoreCase);
         private static readonly Color HeaderColor = new(0.10f, 0.17f, 0.28f);
@@ -276,13 +277,13 @@ namespace StampJourney.EditorTools
                 Debug.LogError($"[Stamp Level Designer] Level {level.levelID} is not a saved asset.", level);
                 return;
             }
-
+            string levelLabel = "level_data";
             EditorUtility.SetDirty(level);
             AndyUtil.Addressable.MarkAssetAsAddressable(
                 assetPath,
                 LevelDataAddressableGroup,
                 $"Level_{level.levelID}",
-                LevelDataAddressableLabel);
+                levelLabel);
 
             MarkDirty();
             AssetDatabase.SaveAssets();
@@ -310,6 +311,9 @@ namespace StampJourney.EditorTools
             config.boardCols = EditorGUILayout.IntSlider("Board columns", config.boardCols, 2, 8);
             config.boardRows = EditorGUILayout.IntSlider("Board rows", config.boardRows, 2, 10);
             config.maxMoves = EditorGUILayout.IntField("Move limit (-1 = unlimited)", config.maxMoves);
+            config.timeLimitSeconds = EditorGUILayout.FloatField("Time limit (sec, 0 = off)", config.timeLimitSeconds);
+            if (config.timeLimitSeconds < 0f)
+                config.timeLimitSeconds = 0f;
             if (EditorGUI.EndChangeCheck())
             {
                 TrimInvalidSlots(config);
@@ -496,6 +500,16 @@ namespace StampJourney.EditorTools
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField("AUTHORED LEVEL LAYOUT", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Queue cards are stacked above their column. The NEXT row (closest to the board) drops first.", EditorStyles.miniLabel);
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("+ Add queue row", GUILayout.Width(150), GUILayout.Height(24)))
+            {
+                Undo.RecordObject(config, "Add authored queue row");
+                config.authoredQueueRows = GetQueueRowCount(config) + 1;
+                EditorUtility.SetDirty(config);
+                MarkDirty();
+            }
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space(8);
 
             int queueRows = GetQueueRowCount(config);
@@ -706,6 +720,7 @@ namespace StampJourney.EditorTools
             }
 
             config.useAuthoredLayout = true;
+            EditorUtility.SetDirty(config);
             MarkDirty();
         }
 
@@ -768,6 +783,7 @@ namespace StampJourney.EditorTools
             }
             else
             {
+                config.authoredQueueRows = Mathf.Max(config.authoredQueueRows, slot.Index + 1);
                 config.queueLayout.Add(new QueueCardPlacement
                 {
                     stamp = card.stamp,
@@ -783,7 +799,7 @@ namespace StampJourney.EditorTools
         private static int GetQueueRowCount(LevelData config)
         {
             int highest = config.queueLayout.Count == 0 ? 0 : config.queueLayout.Where(card => card != null).DefaultIfEmpty().Max(card => card?.order ?? 0);
-            return Mathf.Max(1, highest + 1);
+            return Mathf.Max(1, config.authoredQueueRows, highest + 1);
         }
 
         private static string GetSlotBadge(LayoutSlot slot) => slot.Kind == SlotKind.Queue ? $"Q{slot.Index + 1}" : $"{slot.Column + 1}:{slot.Index + 1}";
@@ -817,7 +833,7 @@ namespace StampJourney.EditorTools
 
             StampData stamp = new()
             {
-                stampId = config.stamps.Length + 1,
+                stampId = GetNextStampId(config.stamps),
                 stampName = Regex.Replace(sprite.name, @"_[1-4]x[1-4]$", ""),
                 fullImage = sprite,
                 cols = cols,
@@ -826,6 +842,14 @@ namespace StampJourney.EditorTools
             };
             config.stamps = config.stamps.Append(stamp).ToArray();
             MarkDirty();
+        }
+
+        private static int GetNextStampId(IEnumerable<StampData> stamps)
+        {
+            HashSet<int> usedIds = stamps.Where(stamp => stamp != null).Select(stamp => stamp.stampId).ToHashSet();
+            int nextId = usedIds.Count == 0 ? 1 : usedIds.Max() + 1;
+            while (usedIds.Contains(nextId)) nextId++;
+            return nextId;
         }
 
         private static bool IsSpriteAlreadyInPalette(LevelData config, Sprite sprite)
@@ -845,6 +869,7 @@ namespace StampJourney.EditorTools
         {
             config.boardLayout.RemoveAll(card => card == null || card.column < 0 || card.column >= config.boardCols || card.row < 0 || card.row >= config.boardRows);
             config.queueLayout.RemoveAll(card => card == null || card.column < 0 || card.column >= config.boardCols || card.order < 0);
+            config.authoredQueueRows = Mathf.Max(config.authoredQueueRows, GetQueueRowCount(config));
         }
 
         #endregion
@@ -855,66 +880,253 @@ namespace StampJourney.EditorTools
         {
             EditorGUILayout.Space(8);
             EditorGUILayout.BeginHorizontal();
-            if (DrawActionButton("Auto-arrange solvable", BoardColor)) GenerateSolvableLayout(config);
+            if (DrawActionButton("Auto-arrange solvable", BoardColor)) GenerateGuaranteedSolvableLayout(config);
             if (DrawActionButton("Validate layout", QueueColor)) Validate(config);
             if (DrawActionButton("Clear layout", new Color(.78f, .30f, .30f)))
             {
                 config.boardLayout.Clear();
                 config.queueLayout.Clear();
+                config.authoredQueueRows = 1;
+                EditorUtility.SetDirty(config);
                 MarkDirty();
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.HelpBox(_validationMessage, _validationMessage.StartsWith("Solvable") ? MessageType.Info : MessageType.None);
         }
 
-        private void GenerateSolvableLayout(LevelData config)
+        private void GenerateGuaranteedSolvableLayout(LevelData config)
         {
-            if (config.stamps.Length == 0)
+            EnsureCollections(config);
+            Undo.RecordObject(config, "Generate solvable stamp layout");
+            ReassignContinuousStampIds(config.stamps);
+            if (!TryBuildGuaranteedLayout(config, out List<CardPlacement> board, out List<QueueCardPlacement> queue, out string error))
             {
-                _validationMessage = "Add at least one stamp image before generating.";
+                _validationMessage = error;
+                EditorUtility.SetDirty(config);
                 return;
             }
 
-            config.boardLayout.Clear();
-            config.queueLayout.Clear();
-
-            int boardCardCount = config.boardCols * config.boardRows;
-            List<CardPlacement> pieces = BuildCompleteStampSets(config.stamps, boardCardCount);
-            Shuffle(pieces);
-
-            int pieceIndex = 0;
-            for (int row = 0; row < config.boardRows; row++)
-                for (int col = 0; col < config.boardCols; col++)
-                    SetSlot(config, new LayoutSlot(SlotKind.Board, col, row), pieces[pieceIndex++]);
-
-            int redundantCardCount = pieces.Count - boardCardCount;
-            int queueRows = Mathf.CeilToInt(redundantCardCount / (float)config.boardCols);
-            for (int queueOrder = 0; queueOrder < queueRows; queueOrder++)
-            {
-                for (int col = 0; col < config.boardCols && pieceIndex < pieces.Count; col++)
-                    SetSlot(config, new LayoutSlot(SlotKind.Queue, col, queueOrder), pieces[pieceIndex++]);
-            }
-
+            config.boardLayout = board;
+            config.queueLayout = queue;
+            config.authoredQueueRows = Mathf.Max(1, Mathf.CeilToInt(queue.Count / (float)config.boardCols));
             config.useAuthoredLayout = true;
+            EditorUtility.SetDirty(config);
             Validate(config);
             MarkDirty();
         }
 
-        private static List<CardPlacement> BuildCompleteStampSets(StampData[] stamps, int minimumCards)
+        private static void ReassignContinuousStampIds(IEnumerable<StampData> stamps)
         {
-            System.Random random = new();
-            List<CardPlacement> result = new();
+            int nextId = 1;
+            foreach (StampData stamp in stamps.Where(stamp => stamp != null))
+                stamp.stampId = nextId++;
+        }
 
-            // Give every stamp in the palette one complete set before creating repeats.
-            // This makes the generated level representative of the designer's selection
-            // and keeps every piece count balanced across the board and drop queues.
-            foreach (StampData stamp in stamps)
-                AddCompleteStampSet(result, stamp);
+        private static bool TryBuildGuaranteedLayout(
+            LevelData config,
+            out List<CardPlacement> boardLayout,
+            out List<QueueCardPlacement> queueLayout,
+            out string error)
+        {
+            boardLayout = null;
+            queueLayout = null;
+            error = string.Empty;
 
-            while (result.Count < minimumCards)
-                AddCompleteStampSet(result, stamps[random.Next(stamps.Length)]);
+            if (config.stamps == null || config.stamps.Length == 0)
+            {
+                error = "Add at least one stamp image before generating.";
+                return false;
+            }
+
+            List<StampData> eligible = config.stamps.Where(stamp => stamp != null).ToList();
+            if (eligible.Count == 0)
+            {
+                error = "Add at least one valid stamp image before generating.";
+                return false;
+            }
+
+            StampData stampThatDoesNotFit = eligible.FirstOrDefault(stamp =>
+                stamp.cols <= 0 || stamp.rows <= 0 ||
+                stamp.cols > config.boardCols || stamp.rows > config.boardRows);
+            if (stampThatDoesNotFit != null)
+            {
+                error = $"{stampThatDoesNotFit.stampName} does not fit inside this board. Every palette image must fit because all images are included.";
+                return false;
+            }
+
+            IGrouping<int, StampData> duplicateIdGroup = eligible.GroupBy(stamp => stamp.stampId).FirstOrDefault(group => group.Count() > 1);
+            if (duplicateIdGroup != null)
+            {
+                error = $"Stamp ID {duplicateIdGroup.Key} is duplicated. Runtime matching requires every stamp ID to be unique.";
+                return false;
+            }
+
+            int boardCardCount = config.boardCols * config.boardRows;
+            List<List<CardPlacement>> completeSets = BuildPaletteSetsForBottomPackedQueue(eligible, boardCardCount);
+            int totalCardCount = completeSets.Sum(set => set.Count);
+            int queueCardCount = totalCardCount - boardCardCount;
+            if (queueCardCount < 0)
+            {
+                error = "Could not create enough complete stamp sets to fill the board.";
+                return false;
+            }
+
+            for (int attempt = 0; attempt < 512; attempt++)
+            {
+                List<List<CardPlacement>> shuffledSets = completeSets.ToList();
+                Shuffle(shuffledSets);
+
+                List<CardPlacement> boardPieces = new(boardCardCount);
+                List<CardPlacement> remainingPieces = new(totalCardCount);
+                foreach (List<CardPlacement> set in shuffledSets)
+                {
+                    if (boardPieces.Count + set.Count <= boardCardCount)
+                        boardPieces.AddRange(set);
+                    else
+                        remainingPieces.AddRange(set);
+                }
+
+                Shuffle(remainingPieces);
+                int partialBoardCount = boardCardCount - boardPieces.Count;
+                boardPieces.AddRange(remainingPieces.Take(partialBoardCount));
+                List<CardPlacement> queuePieces = remainingPieces.Skip(partialBoardCount).ToList();
+                Shuffle(boardPieces);
+                Shuffle(queuePieces);
+
+                List<CardPlacement> candidateBoard = CreateBoardLayout(boardPieces, config.boardCols, config.boardRows);
+                List<QueueCardPlacement> candidateQueue = CreateBottomPackedQueueLayout(queuePieces, config.boardCols);
+                if (!eligible.All(stamp => stamp.TotalPieces == 1) &&
+                    ContainsCompletedStamp(candidateBoard, config.boardCols, config.boardRows))
+                    continue;
+
+                if (!CanSolveLayout(candidateBoard, candidateQueue, config.boardCols, config.boardRows, out _))
+                    continue;
+
+                boardLayout = candidateBoard;
+                queueLayout = candidateQueue;
+                return true;
+            }
+
+            error = "Could not find a solvable bottom-packed queue after 512 attempts. Try increasing the board or reducing incompatible stamp dimensions.";
+            return false;
+        }
+
+        private static List<List<CardPlacement>> BuildPaletteSetsForBottomPackedQueue(
+            IReadOnlyList<StampData> stamps,
+            int boardCardCount)
+        {
+            List<List<CardPlacement>> result = new();
+            int totalCardCount = 0;
+
+            // Include every palette image once, then repeat complete palette passes only
+            // when more cards are needed to fill the playable board.
+            while (totalCardCount < boardCardCount || result.Count < stamps.Count)
+            {
+                foreach (StampData stamp in stamps)
+                {
+                    List<CardPlacement> set = BuildCompleteStampSet(stamp);
+                    result.Add(set);
+                    totalCardCount += set.Count;
+                }
+            }
 
             return result;
+        }
+
+        private static List<CardPlacement> CreateBoardLayout(
+            IReadOnlyList<CardPlacement> pieces,
+            int boardCols,
+            int boardRows)
+        {
+            List<CardPlacement> result = new(boardCols * boardRows);
+            int index = 0;
+            for (int row = 0; row < boardRows; row++)
+                for (int col = 0; col < boardCols; col++)
+                    result.Add(CopyPlacement(pieces[index++], col, row));
+            return result;
+        }
+
+        private static List<QueueCardPlacement> CreateBottomPackedQueueLayout(
+            IReadOnlyList<CardPlacement> pieces,
+            int boardCols)
+        {
+            List<QueueCardPlacement> result = new(pieces.Count);
+            int index = 0;
+            int queueRows = Mathf.CeilToInt(pieces.Count / (float)boardCols);
+            for (int order = 0; order < queueRows && index < pieces.Count; order++)
+            {
+                for (int col = 0; col < boardCols && index < pieces.Count; col++)
+                {
+                    CardPlacement piece = pieces[index++];
+                    result.Add(new QueueCardPlacement
+                    {
+                        stamp = piece.stamp,
+                        pieceCol = piece.pieceCol,
+                        pieceRow = piece.pieceRow,
+                        column = col,
+                        row = -1,
+                        order = order
+                    });
+                }
+            }
+
+            return result;
+        }
+
+        private static List<CardPlacement> BuildCompleteStampSet(StampData stamp)
+        {
+            List<CardPlacement> result = new(stamp.TotalPieces);
+            AddCompleteStampSet(result, stamp);
+            return result;
+        }
+
+        private static CardPlacement CopyPlacement(CardPlacement source, int column, int row)
+        {
+            return new CardPlacement
+            {
+                stamp = source.stamp,
+                pieceCol = source.pieceCol,
+                pieceRow = source.pieceRow,
+                column = column,
+                row = row
+            };
+        }
+
+        private static bool ContainsCompletedStamp(IReadOnlyList<CardPlacement> boardLayout, int boardCols, int boardRows)
+        {
+            CardPlacement[,] board = new CardPlacement[boardCols, boardRows];
+            foreach (CardPlacement card in boardLayout)
+                board[card.column, card.row] = card;
+
+            for (int row = 0; row < boardRows; row++)
+            {
+                for (int col = 0; col < boardCols; col++)
+                {
+                    CardPlacement anchor = board[col, row];
+                    if (anchor == null || anchor.pieceCol != 0 || anchor.pieceRow != 0) continue;
+                    StampData stamp = anchor.stamp;
+                    if (col + stamp.cols > boardCols || row + stamp.rows > boardRows) continue;
+
+                    bool complete = true;
+                    for (int pieceRow = 0; pieceRow < stamp.rows && complete; pieceRow++)
+                    {
+                        for (int pieceCol = 0; pieceCol < stamp.cols; pieceCol++)
+                        {
+                            CardPlacement piece = board[col + pieceCol, row + pieceRow];
+                            if (piece == null || piece.stamp.stampId != stamp.stampId ||
+                                piece.pieceCol != pieceCol || piece.pieceRow != pieceRow)
+                            {
+                                complete = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (complete) return true;
+                }
+            }
+
+            return false;
         }
 
         private static void AddCompleteStampSet(ICollection<CardPlacement> result, StampData stamp)
@@ -926,19 +1138,177 @@ namespace StampJourney.EditorTools
 
         private static void Shuffle<T>(IList<T> items)
         {
-            System.Random random = new();
             for (int i = items.Count - 1; i > 0; i--)
             {
-                int j = random.Next(i + 1);
+                int j = LayoutRandom.Next(i + 1);
                 (items[i], items[j]) = (items[j], items[i]);
             }
         }
 
+        private sealed class SolverStamp
+        {
+            public int Id;
+            public int Cols;
+            public int Rows;
+            public int Offset;
+            public int PieceCount => Cols * Rows;
+        }
+
+        private static bool CanSolveLayout(
+            IReadOnlyList<CardPlacement> boardLayout,
+            IReadOnlyList<QueueCardPlacement> queueLayout,
+            int boardCols,
+            int boardRows,
+            out int clearedStampCount)
+        {
+            clearedStampCount = 0;
+            List<CardPlacement> allCards = boardLayout.Cast<CardPlacement>().Concat(queueLayout).Where(card => card != null).ToList();
+            List<SolverStamp> stamps = new();
+            Dictionary<int, SolverStamp> stampById = new();
+            int pieceSlotCount = 0;
+
+            foreach (IGrouping<int, CardPlacement> group in allCards.GroupBy(card => card.stamp.stampId))
+            {
+                StampData stamp = group.First().stamp;
+                SolverStamp solverStamp = new()
+                {
+                    Id = stamp.stampId,
+                    Cols = stamp.cols,
+                    Rows = stamp.rows,
+                    Offset = pieceSlotCount
+                };
+                pieceSlotCount += solverStamp.PieceCount;
+                stamps.Add(solverStamp);
+                stampById.Add(solverStamp.Id, solverStamp);
+            }
+
+            int[] boardCounts = new int[pieceSlotCount];
+            foreach (CardPlacement card in boardLayout)
+            {
+                SolverStamp stamp = stampById[card.stamp.stampId];
+                boardCounts[stamp.Offset + card.pieceCol + card.pieceRow * stamp.Cols]++;
+            }
+
+            int[][] queues = new int[boardCols][];
+            for (int column = 0; column < boardCols; column++)
+            {
+                queues[column] = queueLayout
+                    .Where(card => card.column == column)
+                    .OrderBy(card => card.order)
+                    .Select(card =>
+                    {
+                        SolverStamp stamp = stampById[card.stamp.stampId];
+                        return stamp.Offset + card.pieceCol + card.pieceRow * stamp.Cols;
+                    })
+                    .ToArray();
+            }
+
+            int[] queueIndices = new int[boardCols];
+            HashSet<string> failedStates = new();
+            int visitedStates = 0;
+            return SearchSolvableState(
+                boardCounts,
+                queueIndices,
+                queues,
+                stamps,
+                boardCols,
+                boardRows,
+                failedStates,
+                ref visitedStates,
+                0,
+                out clearedStampCount);
+        }
+
+        private static bool SearchSolvableState(
+            int[] boardCounts,
+            int[] queueIndices,
+            int[][] queues,
+            IReadOnlyList<SolverStamp> stamps,
+            int boardCols,
+            int boardRows,
+            ISet<string> failedStates,
+            ref int visitedStates,
+            int depth,
+            out int clearedStampCount)
+        {
+            clearedStampCount = depth;
+            if (++visitedStates > 250000) return false;
+
+            bool boardEmpty = boardCounts.All(count => count == 0);
+            bool queuesEmpty = Enumerable.Range(0, boardCols).All(column => queueIndices[column] >= queues[column].Length);
+            if (boardEmpty && queuesEmpty) return true;
+
+            string stateKey = string.Join(",", boardCounts) + "|" + string.Join(",", queueIndices);
+            if (failedStates.Contains(stateKey)) return false;
+
+            foreach (SolverStamp stamp in stamps.OrderByDescending(candidate => candidate.PieceCount))
+            {
+                bool completeSetAvailable = true;
+                for (int piece = 0; piece < stamp.PieceCount; piece++)
+                {
+                    if (boardCounts[stamp.Offset + piece] > 0) continue;
+                    completeSetAvailable = false;
+                    break;
+                }
+                if (!completeSetAvailable) continue;
+
+                List<int> startColumns = Enumerable.Range(0, boardCols - stamp.Cols + 1)
+                    .OrderByDescending(start => CountQueueCardsReleased(start, stamp, queueIndices, queues))
+                    .ToList();
+                foreach (int startColumn in startColumns)
+                {
+                    int[] nextBoardCounts = (int[])boardCounts.Clone();
+                    int[] nextQueueIndices = (int[])queueIndices.Clone();
+                    for (int piece = 0; piece < stamp.PieceCount; piece++)
+                        nextBoardCounts[stamp.Offset + piece]--;
+
+                    for (int column = startColumn; column < startColumn + stamp.Cols; column++)
+                    {
+                        int released = 0;
+                        while (released < stamp.Rows && nextQueueIndices[column] < queues[column].Length)
+                        {
+                            int pieceSlot = queues[column][nextQueueIndices[column]++];
+                            nextBoardCounts[pieceSlot]++;
+                            released++;
+                        }
+                    }
+
+                    if (SearchSolvableState(
+                            nextBoardCounts,
+                            nextQueueIndices,
+                            queues,
+                            stamps,
+                            boardCols,
+                            boardRows,
+                            failedStates,
+                            ref visitedStates,
+                            depth + 1,
+                            out clearedStampCount))
+                        return true;
+                }
+            }
+
+            failedStates.Add(stateKey);
+            return false;
+        }
+
+        private static int CountQueueCardsReleased(
+            int startColumn,
+            SolverStamp stamp,
+            IReadOnlyList<int> queueIndices,
+            IReadOnlyList<int[]> queues)
+        {
+            int result = 0;
+            for (int column = startColumn; column < startColumn + stamp.Cols; column++)
+                result += Mathf.Min(stamp.Rows, queues[column].Length - queueIndices[column]);
+            return result;
+        }
+
         private void Validate(LevelData config)
         {
+            EnsureCollections(config);
             List<CardPlacement> allCards = config.boardLayout.Cast<CardPlacement>().Concat(config.queueLayout).Where(card => card != null).ToList();
             if (allCards.Count == 0) { _validationMessage = "Layout is empty."; return; }
-            if (config.maxMoves > 0) { _validationMessage = "Validation needs unlimited moves. This level has a move limit, so a no-dead-end guarantee cannot be made."; return; }
 
             int authoredBoardSlots = config.boardLayout
                 .Where(card => card != null && card.column >= 0 && card.column < config.boardCols && card.row >= 0 && card.row < config.boardRows)
@@ -954,19 +1324,75 @@ namespace StampJourney.EditorTools
             CardPlacement invalid = allCards.FirstOrDefault(card => !card.IsValid);
             if (invalid != null) { _validationMessage = "Invalid card: a selected stamp was removed or its dimensions changed."; return; }
 
-            foreach (IGrouping<StampData, CardPlacement> stampGroup in allCards.GroupBy(card => card.stamp))
+            StampData missingPaletteStamp = config.stamps
+                .Where(stamp => stamp != null)
+                .FirstOrDefault(stamp => allCards.All(card => card.stamp.stampId != stamp.stampId));
+            if (missingPaletteStamp != null)
             {
+                _validationMessage = $"Not solvable as authored: {missingPaletteStamp.stampName} from the palette is missing from gameplay.";
+                return;
+            }
+
+            IGrouping<int, CardPlacement> inconsistentStamp = allCards
+                .GroupBy(card => card.stamp.stampId)
+                .FirstOrDefault(group => group.Select(card => (card.stamp.cols, card.stamp.rows)).Distinct().Count() > 1);
+            if (inconsistentStamp != null)
+            {
+                _validationMessage = $"Not solvable: stamp ID {inconsistentStamp.Key} is used with different dimensions.";
+                return;
+            }
+
+            foreach (IGrouping<int, CardPlacement> stampGroup in allCards.GroupBy(card => card.stamp.stampId))
+            {
+                StampData stamp = stampGroup.First().stamp;
+                if (stamp.cols > config.boardCols || stamp.rows > config.boardRows)
+                {
+                    _validationMessage = $"Not solvable: {stamp.stampName} is larger than the board.";
+                    return;
+                }
+
                 Dictionary<int, int> counts = stampGroup
-                    .GroupBy(card => card.pieceCol + card.pieceRow * card.stamp.cols)
+                    .GroupBy(card => card.pieceCol + card.pieceRow * stamp.cols)
                     .ToDictionary(group => group.Key, group => group.Count());
-                bool hasCompleteEqualSets = counts.Count == stampGroup.Key.TotalPieces && counts.Values.Distinct().Count() == 1;
+                bool hasCompleteEqualSets = counts.Count == stamp.TotalPieces && counts.Values.Distinct().Count() == 1;
                 if (!hasCompleteEqualSets)
                 {
-                    _validationMessage = $"Not solvable: {stampGroup.Key.stampName} does not have matching counts for every piece.";
+                    _validationMessage = $"Not solvable: {stamp.stampName} does not have matching counts for every piece.";
                     return;
                 }
             }
-            _validationMessage = "Solvable: every card belongs to a complete stamp set, and unlimited swaps ensure no required piece is missing.";
+
+            if (config.queueLayout.Count > 0)
+            {
+                List<QueueCardPlacement> queueCards = config.queueLayout.Where(card => card != null).ToList();
+                int highestOrder = queueCards.Max(card => card.order);
+                bool isBottomPacked = highestOrder >= 0;
+                for (int order = 0; order <= highestOrder && isBottomPacked; order++)
+                {
+                    List<QueueCardPlacement> row = queueCards.Where(card => card.order == order).ToList();
+                    int expectedCount = order < highestOrder ? config.boardCols : row.Count;
+                    isBottomPacked = row.Count > 0 && row.Count == expectedCount &&
+                                     row.Count <= config.boardCols &&
+                                     row.Select(card => card.column).Distinct().Count() == row.Count;
+                }
+
+                if (!isBottomPacked)
+                {
+                    _validationMessage = "Not ready: fill each lower queue row before placing cards in the row above it. Only the highest row may be partial.";
+                    return;
+                }
+            }
+
+            if (!CanSolveLayout(config.boardLayout, config.queueLayout, config.boardCols, config.boardRows, out int clearCount))
+            {
+                _validationMessage = "Not solvable: queue simulation reaches a state where no complete stamp set is available on the board.";
+                return;
+            }
+
+            string limitWarning = config.maxMoves > 0 || config.HasTimeLimit
+                ? " Move/time limits are not included in this structural guarantee."
+                : string.Empty;
+            _validationMessage = $"Solvable: all palette images are included, the queue is packed bottom-up, and the simulated clear path removes {clearCount} stamp sets.{limitWarning}";
         }
 
         private void RefreshTopicSprites()

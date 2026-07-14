@@ -1,0 +1,887 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86b92eef2d6667c4286dcda3046c059d, type: 3}
+  m_Name: Level_6
+  m_EditorClassIdentifier: Assembly-CSharp::LevelData
+  levelID: 6
+  boardCols: 4
+  boardRows: 6
+  maxMoves: -1
+  timeLimitSeconds: 300
+  stamps:
+  - stampId: 1
+    stampName: food_1_1x1_0
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 2302735189404257074, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 2
+    stampName: food_1_1x1_1
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -438485098, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 3
+    stampName: food_1_1x1_2
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -2136857163, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 4
+    stampName: food_1_1x1_3
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 1695795838, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 5
+    stampName: food_1_1x1_4
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 668985731, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 6
+    stampName: food_1_1x1_5
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -1663012795, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 7
+    stampName: food_1_1x1_6
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 1996622045, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 8
+    stampName: food_1_1x1_7
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -1670738020, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 9
+    stampName: food_1_1x1_8
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -1258065674, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 10
+    stampName: food_1_1x1_9
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -1668365834, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 11
+    stampName: food_1_1x1_10
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -1270011537, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 12
+    stampName: food_1_1x1_11
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -949902075, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 13
+    stampName: food_1_1x1_12
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 1843497141, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 14
+    stampName: food_1_1x1_13
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: -631961713, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  - stampId: 15
+    stampName: food_1_1x1_14
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    cols: 2
+    rows: 2
+    fullImage: {fileID: 1936232175, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+    pieceSprites: []
+  maxStampTypesOnBoard: 3
+  fillStrategy: 0
+  useAuthoredLayout: 1
+  boardLayout:
+  - stamp:
+      stampId: 3
+      stampName: food_1_1x1_2
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -2136857163, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 0
+    row: 0
+  - stamp:
+      stampId: 7
+      stampName: food_1_1x1_6
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1996622045, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 1
+    row: 0
+  - stamp:
+      stampId: 12
+      stampName: food_1_1x1_11
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -949902075, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 2
+    row: 0
+  - stamp:
+      stampId: 2
+      stampName: food_1_1x1_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -438485098, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 3
+    row: 0
+  - stamp:
+      stampId: 2
+      stampName: food_1_1x1_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -438485098, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: 1
+  - stamp:
+      stampId: 3
+      stampName: food_1_1x1_2
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -2136857163, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 1
+    row: 1
+  - stamp:
+      stampId: 12
+      stampName: food_1_1x1_11
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -949902075, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 2
+    row: 1
+  - stamp:
+      stampId: 3
+      stampName: food_1_1x1_2
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -2136857163, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 3
+    row: 1
+  - stamp:
+      stampId: 4
+      stampName: food_1_1x1_3
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1695795838, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: 2
+  - stamp:
+      stampId: 12
+      stampName: food_1_1x1_11
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -949902075, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 1
+    row: 2
+  - stamp:
+      stampId: 12
+      stampName: food_1_1x1_11
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -949902075, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 2
+    row: 2
+  - stamp:
+      stampId: 4
+      stampName: food_1_1x1_3
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1695795838, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 3
+    row: 2
+  - stamp:
+      stampId: 2
+      stampName: food_1_1x1_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -438485098, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 0
+    row: 3
+  - stamp:
+      stampId: 7
+      stampName: food_1_1x1_6
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1996622045, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 1
+    row: 3
+  - stamp:
+      stampId: 4
+      stampName: food_1_1x1_3
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1695795838, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 2
+    row: 3
+  - stamp:
+      stampId: 3
+      stampName: food_1_1x1_2
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -2136857163, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 3
+    row: 3
+  - stamp:
+      stampId: 1
+      stampName: food_1_1x1_0
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 2302735189404257074, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 0
+    row: 4
+  - stamp:
+      stampId: 1
+      stampName: food_1_1x1_0
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 2302735189404257074, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 1
+    row: 4
+  - stamp:
+      stampId: 7
+      stampName: food_1_1x1_6
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1996622045, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: 4
+  - stamp:
+      stampId: 7
+      stampName: food_1_1x1_6
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1996622045, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 3
+    row: 4
+  - stamp:
+      stampId: 1
+      stampName: food_1_1x1_0
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 2302735189404257074, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: 5
+  - stamp:
+      stampId: 2
+      stampName: food_1_1x1_1
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -438485098, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 1
+    row: 5
+  - stamp:
+      stampId: 1
+      stampName: food_1_1x1_0
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 2302735189404257074, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: 5
+  - stamp:
+      stampId: 4
+      stampName: food_1_1x1_3
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1695795838, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 3
+    row: 5
+  queueLayout:
+  - stamp:
+      stampId: 6
+      stampName: food_1_1x1_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1663012795, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 0
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 15
+      stampName: food_1_1x1_14
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1936232175, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 8
+      stampName: food_1_1x1_7
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1670738020, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 8
+      stampName: food_1_1x1_7
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1670738020, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 3
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 5
+      stampName: food_1_1x1_4
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 668985731, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 11
+      stampName: food_1_1x1_10
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1270011537, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 1
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 11
+      stampName: food_1_1x1_10
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1270011537, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 2
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 15
+      stampName: food_1_1x1_14
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1936232175, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 3
+    row: -1
+    order: 1
+  - stamp:
+      stampId: 13
+      stampName: food_1_1x1_12
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1843497141, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 5
+      stampName: food_1_1x1_4
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 668985731, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 14
+      stampName: food_1_1x1_13
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -631961713, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 2
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 6
+      stampName: food_1_1x1_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1663012795, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 3
+    row: -1
+    order: 2
+  - stamp:
+      stampId: 14
+      stampName: food_1_1x1_13
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -631961713, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 3
+  - stamp:
+      stampId: 6
+      stampName: food_1_1x1_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1663012795, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 3
+  - stamp:
+      stampId: 11
+      stampName: food_1_1x1_10
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1270011537, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: -1
+    order: 3
+  - stamp:
+      stampId: 5
+      stampName: food_1_1x1_4
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 668985731, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 3
+    row: -1
+    order: 3
+  - stamp:
+      stampId: 9
+      stampName: food_1_1x1_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1258065674, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 4
+  - stamp:
+      stampId: 8
+      stampName: food_1_1x1_7
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1670738020, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 1
+    row: -1
+    order: 4
+  - stamp:
+      stampId: 5
+      stampName: food_1_1x1_4
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 668985731, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 2
+    row: -1
+    order: 4
+  - stamp:
+      stampId: 11
+      stampName: food_1_1x1_10
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1270011537, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 3
+    row: -1
+    order: 4
+  - stamp:
+      stampId: 9
+      stampName: food_1_1x1_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1258065674, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 0
+    row: -1
+    order: 5
+  - stamp:
+      stampId: 10
+      stampName: food_1_1x1_9
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1668365834, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 5
+  - stamp:
+      stampId: 10
+      stampName: food_1_1x1_9
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1668365834, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 2
+    row: -1
+    order: 5
+  - stamp:
+      stampId: 13
+      stampName: food_1_1x1_12
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1843497141, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 3
+    row: -1
+    order: 5
+  - stamp:
+      stampId: 14
+      stampName: food_1_1x1_13
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -631961713, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 0
+    row: -1
+    order: 6
+  - stamp:
+      stampId: 13
+      stampName: food_1_1x1_12
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1843497141, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 1
+    row: -1
+    order: 6
+  - stamp:
+      stampId: 8
+      stampName: food_1_1x1_7
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1670738020, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 2
+    row: -1
+    order: 6
+  - stamp:
+      stampId: 6
+      stampName: food_1_1x1_5
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1663012795, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 3
+    row: -1
+    order: 6
+  - stamp:
+      stampId: 9
+      stampName: food_1_1x1_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1258065674, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 0
+    row: -1
+    order: 7
+  - stamp:
+      stampId: 15
+      stampName: food_1_1x1_14
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1936232175, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 1
+    row: -1
+    order: 7
+  - stamp:
+      stampId: 13
+      stampName: food_1_1x1_12
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1843497141, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 2
+    row: -1
+    order: 7
+  - stamp:
+      stampId: 10
+      stampName: food_1_1x1_9
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1668365834, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 1
+    column: 3
+    row: -1
+    order: 7
+  - stamp:
+      stampId: 10
+      stampName: food_1_1x1_9
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1668365834, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 0
+    row: -1
+    order: 8
+  - stamp:
+      stampId: 14
+      stampName: food_1_1x1_13
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -631961713, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 1
+    column: 1
+    row: -1
+    order: 8
+  - stamp:
+      stampId: 9
+      stampName: food_1_1x1_8
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: -1258065674, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 0
+    pieceRow: 0
+    column: 2
+    row: -1
+    order: 8
+  - stamp:
+      stampId: 15
+      stampName: food_1_1x1_14
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      cols: 2
+      rows: 2
+      fullImage: {fileID: 1936232175, guid: 5ec3d7f2d171ff841928b7d47b828c6e, type: 3}
+      pieceSprites: []
+    pieceCol: 1
+    pieceRow: 0
+    column: 3
+    row: -1
+    order: 8
+  authoredQueueRows: 1

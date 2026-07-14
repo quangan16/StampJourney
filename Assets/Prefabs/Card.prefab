@@ -25,7 +25,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 517973856357716852}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 1
@@ -34,7 +34,7 @@ Transform:
   - {fileID: 7288535215493696531}
   - {fileID: 2746457009148304553}
   - {fileID: 7948642426427724950}
-  m_Father: {fileID: 3310447291470483294}
+  m_Father: {fileID: 667783847716098646}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!210 &8213902456973413596
 SortingGroup:
@@ -73,13 +73,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1946884046606638217}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -1, z: 0, w: 0}
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3649763029798936787}
-  m_Father: {fileID: 3310447291470483294}
+  m_Father: {fileID: 667783847716098646}
   m_LocalEulerAnglesHint: {x: 0, y: -180, z: 0}
 --- !u!1 &2289342430596332786
 GameObject:
@@ -354,6 +354,82 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &3600879959591942770
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 667783847716098646}
+  - component: {fileID: 2320311806844999586}
+  - component: {fileID: 9057550732802179634}
+  m_Layer: 0
+  m_Name: SortingView
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &667783847716098646
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3600879959591942770}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3500078772648679055}
+  - {fileID: 5955291472697757521}
+  - {fileID: 1706934776703100626}
+  m_Father: {fileID: 3310447291470483294}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &2320311806844999586
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3600879959591942770}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 10
+  m_SortAtRoot: 0
+  m_Sort3DAs2D: 0
+--- !u!114 &9057550732802179634
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3600879959591942770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdbe88b96e37029459ad5501227723b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Card.CardEdgeRenderer
+  serializationData:
+    SerializedFormat: 0
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  edgeTop: {fileID: 71106441451590587}
+  edgeRight: {fileID: 5951113738200137585}
+  edgeBottom: {fileID: 8877256334708848204}
+  edgeLeft: {fileID: 3191838970184934510}
+  animateTransitions: 1
+  transitionDuration: 0.15
 --- !u!1 &3744435735319240381
 GameObject:
   m_ObjectHideFlags: 0
@@ -818,10 +894,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3310447291470483294}
-  - component: {fileID: 1803811266691169692}
-  - component: {fileID: 2150335881280746207}
-  - component: {fileID: 4172016964222623668}
-  - component: {fileID: 2039930896037697759}
+  - component: {fileID: 6491794501969668113}
+  - component: {fileID: 2470603436158780526}
   m_Layer: 0
   m_Name: Card
   m_TagString: Untagged
@@ -842,14 +916,12 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
-  - {fileID: 3500078772648679055}
-  - {fileID: 5955291472697757521}
-  - {fileID: 1706934776703100626}
+  - {fileID: 667783847716098646}
   - {fileID: 9216984614962452893}
   - {fileID: 5040679801806801086}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!61 &1803811266691169692
+--- !u!61 &6491794501969668113
 BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -893,22 +965,9 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.19, y: 1.4370732}
+  m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
---- !u!210 &2150335881280746207
-SortingGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7472978493335716944}
-  m_Enabled: 1
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 10
-  m_SortAtRoot: 0
-  m_Sort3DAs2D: 0
---- !u!114 &4172016964222623668
+--- !u!114 &2470603436158780526
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -924,8 +983,8 @@ MonoBehaviour:
   glowImg: {fileID: 7165504909561225621}
   pressEffect: {fileID: 5043721618523179628}
   backGroundImg: {fileID: 4850159573055930376}
-  cardEdgeRenderer: {fileID: 2039930896037697759}
-  sortingGroup: {fileID: 2150335881280746207}
+  cardEdgeRenderer: {fileID: 9057550732802179634}
+  sortingGroup: {fileID: 2320311806844999586}
   liftScale: 1.1
   liftDuration: 0.12
   snapDuration: 0.18
@@ -933,33 +992,6 @@ MonoBehaviour:
   dragSortingOrder: 100
   maxTiltAngle: 32
   tiltSmoothing: 20
---- !u!114 &2039930896037697759
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7472978493335716944}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bdbe88b96e37029459ad5501227723b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Card.CardEdgeRenderer
-  serializationData:
-    SerializedFormat: 2
-    SerializedBytes: 
-    ReferencedUnityObjects: []
-    SerializedBytesString: 
-    Prefab: {fileID: 0}
-    PrefabModificationsReferencedUnityObjects: []
-    PrefabModifications: []
-    SerializationNodes: []
-  edgeTop: {fileID: 71106441451590587}
-  edgeRight: {fileID: 5951113738200137585}
-  edgeBottom: {fileID: 8877256334708848204}
-  edgeLeft: {fileID: 3191838970184934510}
-  animateTransitions: 1
-  transitionDuration: 0.15
 --- !u!1 &9030097037308611020
 GameObject:
   m_ObjectHideFlags: 0
@@ -984,14 +1016,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9030097037308611020}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6219370599060420505}
   - {fileID: 4614708594727281365}
-  m_Father: {fileID: 3310447291470483294}
+  m_Father: {fileID: 667783847716098646}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &5042482994523678700
 PrefabInstance:
@@ -1187,7 +1219,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 199097723118793450, guid: b41158c4bd44ac94db0b20decf8ee89b, type: 3}
       propertyPath: m_SortingOrder
-      value: -636
+      value: -5
       objectReference: {fileID: 0}
     - target: {fileID: 199097723118793450, guid: b41158c4bd44ac94db0b20decf8ee89b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -1195,7 +1227,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 53008c7adecce2d47941d865f6ebdb2d, type: 2}
     - target: {fileID: 199197466593782846, guid: b41158c4bd44ac94db0b20decf8ee89b, type: 3}
       propertyPath: m_SortingOrder
-      value: -434
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 199221400328460616, guid: b41158c4bd44ac94db0b20decf8ee89b, type: 3}
       propertyPath: m_SortingLayer

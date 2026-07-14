@@ -26,7 +26,9 @@ namespace StampJourney.Gameplay
         [BoxGroup("Camera Framing")]
         [Min(0f)][SerializeField] private float horizontalPaddingPixels = 24f;
         [BoxGroup("Camera Framing")]
-        [Min(0f)][SerializeField] private float verticalPaddingPixels = 16f;
+        [Min(0f)][SerializeField] private float topPaddingPixels = 16f;
+        [BoxGroup("Camera Framing")]
+        [Min(0f)][SerializeField] private float botPaddingPixels = 16f;
         [BoxGroup("Camera Framing")]
         [SerializeField] private bool includeWaitingQueue = true;
 
@@ -225,16 +227,16 @@ namespace StampJourney.Gameplay
             Rect safeArea = Screen.safeArea;
             float left = Mathf.Max(cameraRect.xMin, safeArea.xMin) + horizontalPaddingPixels;
             float right = Mathf.Min(cameraRect.xMax, safeArea.xMax) - horizontalPaddingPixels;
-            float bottom = Mathf.Max(cameraRect.yMin, safeArea.yMin) + verticalPaddingPixels;
-            float top = Mathf.Min(cameraRect.yMax, safeArea.yMax) - verticalPaddingPixels;
+            float bottom = Mathf.Max(cameraRect.yMin, safeArea.yMin) + botPaddingPixels;
+            float top = Mathf.Min(cameraRect.yMax, safeArea.yMax) - topPaddingPixels;
 
             RectTransform header = gameplayUI != null ? gameplayUI.HeaderArea : null;
             if (header != null && header.gameObject.activeInHierarchy)
-                top = Mathf.Min(top, GetScreenRect(header).yMin - verticalPaddingPixels);
+                top = Mathf.Min(top, GetScreenRect(header).yMin - topPaddingPixels);
 
             RectTransform footer = gameplayUI != null ? gameplayUI.FooterArea : null;
             if (footer != null && footer.gameObject.activeInHierarchy)
-                bottom = Mathf.Max(bottom, GetScreenRect(footer).yMax + verticalPaddingPixels);
+                bottom = Mathf.Max(bottom, GetScreenRect(footer).yMax + botPaddingPixels);
 
             return Rect.MinMaxRect(left, bottom, right, top);
         }
@@ -322,9 +324,15 @@ namespace StampJourney.Gameplay
             if (GameManager.Instance.State != GameState.Playing) return;
 
             if (gameboard.IsBoardAndQueuesEmpty())
+            {
+                Debug.Log("Board and queues are empty! Triggering win.");
                 TriggerWin();
+            }
             else if (_hasMoveLimit && _remainingMoves <= 0)
+            {
+                Debug.Log("No moves left! Triggering lose.");
                 TriggerLose();
+            }
         }
 
         /// <summary>Each stamp group cleared increments the combo counter.</summary>

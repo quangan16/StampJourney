@@ -137,7 +137,7 @@ namespace StampJourney.Core
                 AndyUtil.Logger.LogError("Level data is null!");
                 return;
             }
-
+            CurrentLevel = targetLevel;
             await GameManager.Instance.LoadSceneAsync(SceneType.Gameplay);
             Debug.Log($"[LevelSystem] Started level {targetLevel}: {_cachedCurrentLevelData.levelID}");
         }
@@ -148,7 +148,7 @@ namespace StampJourney.Core
         {
             int nextLevel = CurrentLevel + 1;
             if (nextLevel <= TotalLevelCount)
-                StartLevel(nextLevel);
+                StartLevel(nextLevel).Forget();
         }
 
         #endregion
