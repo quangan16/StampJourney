@@ -57,7 +57,7 @@ namespace AndyUtil
             // Optionally assign labels, etc
             if (!string.IsNullOrEmpty(label))
             {
-                entry.labels.Add(label);
+                entry.SetLabel(label, true);
             }
 
 

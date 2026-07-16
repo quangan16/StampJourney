@@ -33,6 +33,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - level_data
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bbf44e8b5e2342a41b4de6a7babf4321
+    m_Address: Level_10
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - level_data
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c52e4d36ecf4a1141bc6bfa7fa928a5c
     m_Address: Level_6
     m_ReadOnly: 0

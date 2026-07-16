@@ -180,13 +180,13 @@ namespace StampJourney.Gameplay
 
                     var groupMembers = new List<CardModel>();
                     var queue = new Queue<CardModel>();
+                    groupMembers.Add(card);
                     queue.Enqueue(card);
                     visited.Add(card);
 
                     while (queue.Count > 0)
                     {
                         var curr = queue.Dequeue();
-                        groupMembers.Add(curr);
 
                         var neighbors = new[]
                         {
@@ -198,8 +198,11 @@ namespace StampJourney.Gameplay
 
                         foreach (var n in neighbors)
                         {
-                            if (n != null && !visited.Contains(n) && CardGroup.AreMatchingNeighbors(curr, n))
+                            if (n != null &&
+                                !visited.Contains(n) &&
+                                CardGroup.CanFormTopicSquareGroup(groupMembers, n))
                             {
+                                groupMembers.Add(n);
                                 visited.Add(n);
                                 queue.Enqueue(n);
                             }

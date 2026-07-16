@@ -76,13 +76,7 @@ namespace StampJourney.Card
             if (candidate == null) return false;
             if (candidate.Topic.TopicId != Topic.TopicId) return false;
             if (candidate.Group == this) return false;
-
-            foreach (var member in _members)
-            {
-                if (AreMatchingNeighbors(member, candidate))
-                    return true;
-            }
-            return false;
+            return CanFormTopicSquareGroup(_members, candidate);
         }
 
         /// <summary>Adds a card to this group. Sets card.Group = this.</summary>
@@ -156,6 +150,36 @@ namespace StampJourney.Card
             int dBoardRow = b.BoardRow - a.BoardRow;
             // Must be orthogonally adjacent on the board (no diagonals)
             return Mathf.Abs(dBoardCol) + Mathf.Abs(dBoardRow) == 1;
+        }
+
+        /// <summary>
+        /// Checks whether adding a card keeps a same-topic group capable of becoming a 2x2 square.
+        /// Invalid lines and duplicate authored items stay separate so the player can rearrange them.
+        /// </summary>
+        public static bool CanFormTopicSquareGroup(IReadOnlyCollection<CardModel> members, CardModel candidate)
+        {
+            if (candidate == null || members == null || members.Count == 0) return false;
+            if (members.Count >= StampData.RequiredItemCount) return false;
+
+            bool isAdjacent = false;
+            int minCol = candidate.BoardCol;
+            int maxCol = candidate.BoardCol;
+            int minRow = candidate.BoardRow;
+            int maxRow = candidate.BoardRow;
+
+            foreach (CardModel member in members)
+            {
+                if (member == null || member.Topic.TopicId != candidate.Topic.TopicId) return false;
+                if (member.ItemIndex == candidate.ItemIndex) return false;
+
+                isAdjacent |= AreMatchingNeighbors(member, candidate);
+                minCol = Mathf.Min(minCol, member.BoardCol);
+                maxCol = Mathf.Max(maxCol, member.BoardCol);
+                minRow = Mathf.Min(minRow, member.BoardRow);
+                maxRow = Mathf.Max(maxRow, member.BoardRow);
+            }
+
+            return isAdjacent && maxCol - minCol < 2 && maxRow - minRow < 2;
         }
 
         #endregion

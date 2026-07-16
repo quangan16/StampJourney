@@ -544,31 +544,32 @@ namespace StampJourney.Gameplay
                 {
                     foreach (var group in matches)
                     {
+                        var clearedCards = new List<CardModel>(group.Members);
+
                         // Calculate group center for ripple effect
                         Vector2 gridCenter = Vector2.zero;
-                        foreach (var tile in group.Members)
+                        foreach (var tile in clearedCards)
                             gridCenter += new Vector2(tile.BoardCol, tile.BoardRow);
 
-                        if (group.Members.Count > 0)
-                            gridCenter /= group.Members.Count;
+                        if (clearedCards.Count > 0)
+                            gridCenter /= clearedCards.Count;
 
                         // Ripple effect on non-cleared tiles
                         ApplyRippleEffect(group, gridCenter);
 
                         // Clear tiles from grid
-                        foreach (var tile in group.Members)
+                        foreach (var tile in clearedCards)
                             _tiles[tile.BoardCol, tile.BoardRow].SetCard(null);
 
                         await cardFactory.DespawnStampGroupAsync(group);
-                        OnStampCleared?.Invoke(new List<CardModel>(group.Members));
+                        OnStampCleared?.Invoke(clearedCards);
                     }
 
                     await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
                 }
 
                 // Apply gravity then fill empty cells
-                gravitySystem.ApplyGravityAsync().Forget();
-                await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
+                await gravitySystem.ApplyGravityAsync();
                 await FillEmptyCellsAsync();
 
             } while (anyCleared);

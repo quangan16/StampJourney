@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 86b92eef2d6667c4286dcda3046c059d, type: 3}
-  m_Name: Level_1
+  m_Name: Level_10
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
-  levelID: 1
-  boardCols: 4
-  boardRows: 4
+  levelID: 10
+  boardCols: 5
+  boardRows: 7
   maxMoves: -1
   timeLimitSeconds: 0
   stamps:
@@ -22,13 +22,13 @@ MonoBehaviour:
     stampName: Animal
     stampColor: {r: 1, g: 1, b: 1, a: 1}
     itemSprites:
-    - {fileID: 5463704798289644582, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
     - {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
     - {fileID: -1972163535, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
     - {fileID: -1659732611, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
+    - {fileID: -1273491934, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
   maxStampTypesOnBoard: 3
   fillStrategy: 0
   useAuthoredLayout: 0
   boardLayout: []
   queueLayout: []
-  authoredQueueRows: 2
+  authoredQueueRows: 1
