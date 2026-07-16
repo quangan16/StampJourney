@@ -5,21 +5,18 @@ namespace StampJourney.Card
 {
     /// <summary>
     /// Runtime model for a card on the board.
-    /// Stamp and piece position are immutable after construction;
+    /// Topic and item identity are immutable after construction;
     /// board position changes are managed through the Gameboard.
     /// </summary>
     public class CardModel
     {
-        #region Stamp Identity (Immutable)
+        #region Topic Identity (Immutable)
 
-        /// <summary>The stamp type this card belongs to.</summary>
-        public readonly StampData Stamp;
+        /// <summary>The topic this item belongs to.</summary>
+        public readonly StampData Topic;
 
-        /// <summary>Column position of this piece within its stamp (0-based).</summary>
-        public readonly int PieceCol;
-
-        /// <summary>Row position of this piece within its stamp (0-based).</summary>
-        public readonly int PieceRow;
+        /// <summary>Index of the complete item picture within its topic (0-based).</summary>
+        public readonly int ItemIndex;
 
         #endregion
 
@@ -59,11 +56,10 @@ namespace StampJourney.Card
 
         #region Constructor
 
-        public CardModel(StampData stamp, int pieceCol, int pieceRow)
+        public CardModel(StampData topic, int itemIndex)
         {
-            Stamp = stamp;
-            PieceCol = pieceCol;
-            PieceRow = pieceRow;
+            Topic = topic;
+            ItemIndex = itemIndex;
             TileId = _nextId++;
             FlipState = FlipState.Down;
         }
@@ -71,7 +67,7 @@ namespace StampJourney.Card
         #endregion
 
         public override string ToString() =>
-            $"Tile[{TileId}] stamp={Stamp.stampName} piece=({PieceCol},{PieceRow}) board=({BoardCol},{BoardRow})";
+            $"Tile[{TileId}] topic={Topic.TopicName} item={ItemIndex} board=({BoardCol},{BoardRow})";
     }
 
     public enum FlipState

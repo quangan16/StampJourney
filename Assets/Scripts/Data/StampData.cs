@@ -1,141 +1,88 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace StampJourney.Data
 {
     /// <summary>
-    /// Defines a postage stamp type.
-    /// Each stamp has a grid size (cols × rows), a full image, and a recognition color.
-    /// Piece sprites are sliced from fullImage at editor time.
+    /// Defines one collectible topic. Every sprite is a complete item picture; cards are
+    /// grouped by topic ID. A topic authors exactly four complete item pictures; those
+    /// four cards must be arranged as a 2x2 square to complete the topic.
+    ///
+    /// The class name is retained so existing LevelData assets keep their serialized topic
+    /// references while the project transitions to complete item pictures.
     /// </summary>
     [Serializable]
     public class StampData
     {
+        public const int RequiredItemCount = 4;
+
         #region Identity
 
         [BoxGroup("Identity")]
-        [LabelText("Stamp ID")]
+        [LabelText("Topic ID")]
         public int stampId;
 
         [BoxGroup("Identity")]
-        [LabelText("Stamp Name")]
-        public string stampName = "New Stamp";
+        [LabelText("Topic Name")]
+        public string stampName = "New Topic";
 
         [BoxGroup("Identity")]
-        [LabelText("Border Color")]
+        [LabelText("Topic Color")]
         [ColorPalette]
         public Color stampColor = Color.white;
 
         #endregion
 
-        #region Layout
+        #region Items
 
-        [BoxGroup("Layout")]
-        [LabelText("Columns")]
-        [Range(1, 5)]
-        public int cols = 2;
-
-        [BoxGroup("Layout")]
-        [LabelText("Rows")]
-        [Range(1, 5)]
-        public int rows = 2;
-
-        #endregion
-
-        #region Visuals
-
-        [BoxGroup("Visuals")]
-        [LabelText("Full Stamp Image")]
-        [PreviewField(100)]
-        [Required]
-        public Sprite fullImage;
-
-        [BoxGroup("Visuals")]
-        [LabelText("Piece Sprites (col-major: [col + row*cols])")]
+        [BoxGroup("Items")]
+        [LabelText("Authored Item Pictures")]
         [ListDrawerSettings(ShowIndexLabels = true)]
-        [InfoBox("Must have exactly cols × rows sprites. Index = col + row * cols.")]
-        public Sprite[] pieceSprites;
+        [InfoBox("Add exactly four complete item pictures. In gameplay they complete the topic when arranged as a 2x2 square.")]
+        public Sprite[] itemSprites = Array.Empty<Sprite>();
 
         #endregion
 
         #region Computed
 
-        /// <summary>Total piece count = cols × rows.</summary>
-        public int TotalPieces => cols * rows;
+        public int TopicId => stampId;
+        public string TopicName => stampName;
+        public Color TopicColor => stampColor;
 
-        /// <summary>Gets the sprite for the piece at (col, row) within this stamp.</summary>
-        public Sprite GetPieceSprite(int col, int row)
+        /// <summary>Number of complete, non-null item pictures authored for this topic.</summary>
+        public int TotalItems => itemSprites?.Count(sprite => sprite != null) ?? 0;
+
+        public bool HasRequiredItemCount => TotalItems == RequiredItemCount;
+
+        public Sprite GetItemSprite(int itemIndex)
         {
-            int index = col + row * cols;
-            if (pieceSprites == null || index < 0 || index >= pieceSprites.Length)
+            if (itemIndex < 0) return null;
+
+            if (itemSprites != null)
             {
-                return CreateRuntimePiece(col, row);
-            }
-            return pieceSprites[index] != null ? pieceSprites[index] : CreateRuntimePiece(col, row);
-        }
-
-        /// <summary>
-        /// Creates a slice when authored piece sprites are not present. This lets the level
-        /// authoring tool work directly from a single source image (including Single-mode
-        /// sprite imports) without requiring designers to manually slice every image first.
-        /// </summary>
-        private Sprite CreateRuntimePiece(int col, int row)
-        {
-            if (fullImage == null || col < 0 || col >= cols || row < 0 || row >= rows)
-                return fullImage;
-
-            // The level designer allows rows/columns to change after a stamp has been used.
-            // Discard stale runtime slices rather than indexing the old cache with new dimensions.
-            if (pieceSprites == null || pieceSprites.Length != TotalPieces)
-                pieceSprites = new Sprite[TotalPieces];
-            int index = col + row * cols;
-            if (pieceSprites[index] != null) return pieceSprites[index];
-
-            Rect source = fullImage.rect;
-            float width = source.width / cols;
-            float height = source.height / rows;
-            // Sprite rects use bottom-left origin; game rows use top-left origin.
-            Rect pieceRect = new Rect(source.x + col * width, source.y + (rows - 1 - row) * height, width, height);
-            pieceSprites[index] = Sprite.Create(fullImage.texture, pieceRect, new Vector2(.5f, .5f), fullImage.pixelsPerUnit);
-            return pieceSprites[index];
-        }
-
-        #endregion
-
-#if UNITY_EDITOR
-        #region Editor Tools
-
-        [BoxGroup("Visuals")]
-        [Button("Auto-Slice Pieces from Full Image")]
-        [InfoBox("Slices fullImage into cols×rows sprites and assigns them to pieceSprites.")]
-        private void AutoSlicePieces()
-        {
-            if (fullImage == null) { Debug.LogError("fullImage is null!"); return; }
-
-            pieceSprites = new Sprite[TotalPieces];
-            var tex = fullImage.texture;
-            Rect sourceRect = fullImage.rect;
-            float w = sourceRect.width / (float)cols;
-            float h = sourceRect.height / (float)rows;
-
-            for (int r = 0; r < rows; r++)
-            {
-                for (int c = 0; c < cols; c++)
+                int authoredIndex = 0;
+                foreach (Sprite sprite in itemSprites)
                 {
-                    float x = sourceRect.x + c * w;
-                    float y = sourceRect.y + (rows - 1 - r) * h; // Unity UV is bottom-up
-                    var rect = new Rect(x, y, w, h);
-                    var pivot = new Vector2(0.5f, 0.5f);
-                    pieceSprites[c + r * cols] = Sprite.Create(tex, rect, pivot,
-                        fullImage.pixelsPerUnit);
+                    if (sprite == null) continue;
+                    if (authoredIndex == itemIndex) return sprite;
+                    authoredIndex++;
                 }
             }
 
-            Debug.Log($"[StampData] Sliced {TotalPieces} pieces for '{stampName}'.");
+            return null;
+        }
+
+        public bool IsValidItemIndex(int itemIndex) => itemIndex >= 0 && itemIndex < TotalItems;
+
+        public bool HasCompleteItemSet(IEnumerable<int> itemIndices)
+        {
+            if (!HasRequiredItemCount || itemIndices == null) return false;
+            return itemIndices.Where(IsValidItemIndex).Distinct().Count() == RequiredItemCount;
         }
 
         #endregion
-#endif
     }
 }

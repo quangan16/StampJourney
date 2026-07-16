@@ -6,7 +6,7 @@ using UnityEngine;
 namespace StampJourney.Card
 {
     /// <summary>
-    /// A group of same-stamp tiles that have "stuck" together on the board.
+    /// A group of adjacent items with the same topic ID that have stuck together.
     /// When dragging one member, the entire group moves.
     /// Edges between group members are hidden.
     /// </summary>
@@ -21,7 +21,7 @@ namespace StampJourney.Card
         #region Identity
 
         public int GroupId { get; private set; }
-        public StampData Stamp { get; private set; }
+        public StampData Topic { get; private set; }
 
         /// <summary>The transform used as parent for group member views.</summary>
         public Transform GroupTransform => transform;
@@ -57,10 +57,10 @@ namespace StampJourney.Card
 
         #region Initialization
 
-        public void Init(StampData stamp)
+        public void Init(StampData topic)
         {
             GroupId = _nextGroupId++;
-            Stamp = stamp;
+            Topic = topic;
         }
 
         #endregion
@@ -69,12 +69,12 @@ namespace StampJourney.Card
 
         /// <summary>
         /// Checks if a candidate card can join this group.
-        /// Requirements: same stampId, adjacent to at least one member, matching piece offset.
+        /// Requirements: same topic ID and adjacent to at least one member.
         /// </summary>
         public bool CanAccept(CardModel candidate)
         {
             if (candidate == null) return false;
-            if (candidate.Stamp.stampId != Stamp.stampId) return false;
+            if (candidate.Topic.TopicId != Topic.TopicId) return false;
             if (candidate.Group == this) return false;
 
             foreach (var member in _members)
@@ -109,8 +109,14 @@ namespace StampJourney.Card
             }
         }
 
-        /// <summary>Whether this group contains all pieces of its stamp.</summary>
-        public bool IsStampComplete => _members.Count == Stamp.TotalPieces;
+        /// <summary>
+        /// True when the four authored items occupy every cell of a 2x2 board square.
+        /// </summary>
+        public bool IsTopicComplete =>
+            Count == StampData.RequiredItemCount &&
+            Width == 2 &&
+            Height == 2 &&
+            Topic.HasCompleteItemSet(_members.Select(member => member.ItemIndex));
 
         /// <summary>Merges another group into this one. All members of other transfer to this.</summary>
         public void Absorb(CardGroup other)
@@ -139,23 +145,17 @@ namespace StampJourney.Card
 
         /// <summary>
         /// Checks if two cards are valid matching neighbors.
-        /// Valid = same stampId + adjacent on board + piece offset matches board offset.
+        /// Valid = same topic ID + orthogonally adjacent on the board.
         /// </summary>
         public static bool AreMatchingNeighbors(CardModel a, CardModel b)
         {
             if (a == null || b == null) return false;
-            if (a.Stamp.stampId != b.Stamp.stampId) return false;
+            if (a.Topic.TopicId != b.Topic.TopicId) return false;
 
             int dBoardCol = b.BoardCol - a.BoardCol;
             int dBoardRow = b.BoardRow - a.BoardRow;
-            int dPieceCol = b.PieceCol - a.PieceCol;
-            int dPieceRow = b.PieceRow - a.PieceRow;
-
             // Must be orthogonally adjacent on the board (no diagonals)
-            if (Mathf.Abs(dBoardCol) + Mathf.Abs(dBoardRow) != 1) return false;
-
-            // Board offset must match piece offset
-            return dBoardCol == dPieceCol && dBoardRow == dPieceRow;
+            return Mathf.Abs(dBoardCol) + Mathf.Abs(dBoardRow) == 1;
         }
 
         #endregion
@@ -187,6 +187,6 @@ namespace StampJourney.Card
         #endregion
 
         public override string ToString() =>
-            $"Group[{GroupId}] stamp={Stamp.stampName} members={_members.Count} bounds=({MinCol},{MinRow})-({MaxCol},{MaxRow})";
+            $"Group[{GroupId}] topic={Topic.TopicName} members={_members.Count} bounds=({MinCol},{MinRow})-({MaxCol},{MaxRow})";
     }
 }

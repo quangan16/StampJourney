@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using StampJourney.Core;
 using StampJourney.Data;
 using UnityEditor;
@@ -22,8 +21,7 @@ namespace StampJourney.EditorTools
         private const float CardWidth = 100;
         private const float CardHeight = 100f;
         private const float CardGap = 10f;
-        // Compact enough for several stamp variants while still showing how every piece reconnects.
-        private const float PalettePieceSize = 64f;
+        private const float PaletteItemSize = 64f;
         private const float PaletteCardWidth = 286f;
         private const string DragTitle = "Stamp card";
         private const string LevelDataFolder = "Assets/LevelData";
@@ -31,7 +29,6 @@ namespace StampJourney.EditorTools
         private const string LevelDataAddressableLabel = "level_data";
         private static readonly System.Random LayoutRandom = new();
 
-        private static readonly Regex DimensionsInName = new(@"_(?<cols>[1-4])x(?<rows>[1-4])$", RegexOptions.IgnoreCase);
         private static readonly Color HeaderColor = new(0.10f, 0.17f, 0.28f);
         private static readonly Color QueueColor = new(0.17f, 0.41f, 0.65f);
         private static readonly Color BoardColor = new(0.21f, 0.63f, 0.43f);
@@ -319,14 +316,14 @@ namespace StampJourney.EditorTools
                 TrimInvalidSlots(config);
                 MarkDirty();
             }
-            EditorGUILayout.HelpBox("Drag a card to another card to swap them. Drag it to an empty space to move it. Drag a palette piece onto a slot to add or replace it. Right-click any card to remove it.", MessageType.None);
+            EditorGUILayout.HelpBox("Drag a card to another card to swap them. Drag it to an empty space to move it. Drag a topic item onto a slot to add or replace it. Right-click any card to remove it.", MessageType.None);
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space(8);
         }
 
         #endregion
 
-        #region Topic and stamp palette
+        #region Topic item palette
 
         private void DrawStampLibrary(LevelData config)
         {
@@ -336,7 +333,7 @@ namespace StampJourney.EditorTools
             _topicFolder = EditorGUILayout.TextField("Topic folder", _topicFolder);
             if (GUILayout.Button("Scan folder", GUILayout.Width(100))) RefreshTopicSprites();
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.LabelField("Use one folder per theme: Assets/Arts/Animals, Assets/Arts/Summer, Assets/Arts/WorldLandmarks. Add _2x3, _3x4, etc. to the image filename to set its default stamp size.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Use one folder per topic with exactly four complete item sprites. Match the four cards into a 2x2 square.", EditorStyles.wordWrappedMiniLabel);
 
             if (_topicTypes != null && _topicTypes.Length > 0)
             {
@@ -374,15 +371,23 @@ namespace StampJourney.EditorTools
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndScrollView();
 
+            if (_selectedTopicIndex > 0 && _topicSprites.Length > 0 &&
+                GUILayout.Button($"Add all visible items to {_topicTypes[_selectedTopicIndex]}", GUILayout.Height(24)))
+            {
+                foreach (Sprite sprite in _topicSprites)
+                    AddItemToLevel(config, sprite, false);
+                MarkDirty();
+            }
+
             config.stamps ??= Array.Empty<StampData>();
             if (config.stamps.Length == 0)
             {
-                EditorGUILayout.HelpBox("Click an image above to add a stamp to this level.", MessageType.Info);
+                EditorGUILayout.HelpBox("Click an image above, or add the filtered folder, to create a topic and its authored items.", MessageType.Info);
             }
             else
             {
                 EditorGUILayout.Space(4);
-                EditorGUILayout.LabelField("STAMP PIECE PALETTE", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("TOPIC ITEM PALETTE", EditorStyles.boldLabel);
                 int itemsPerRow = 6;
                 StampData[] stamps = config.stamps.ToArray();
                 int numRows = Mathf.CeilToInt((float)stamps.Length / itemsPerRow);
@@ -414,49 +419,50 @@ namespace StampJourney.EditorTools
         private void DrawTopicImageButton(LevelData config, Sprite sprite)
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(92));
-            Texture preview = AssetPreview.GetAssetPreview(sprite) ?? sprite.texture;
             bool isAlreadyAdded = IsSpriteAlreadyInPalette(config, sprite);
             string tooltip = isAlreadyAdded
-                ? $"{sprite.name} is already in the Stamp Piece Palette."
-                : $"Add {sprite.name}";
-            if (GUILayout.Button(new GUIContent(preview, tooltip), GUILayout.Width(86), GUILayout.Height(62)))
-                AddStampToLevel(config, sprite);
+                ? $"{sprite.name} is already an authored topic item."
+                : $"Add complete item {sprite.name}";
+
+            // AssetPreview is generated asynchronously and can temporarily return null during
+            // repaints. Drawing from sprite.rect keeps sub-sprite thumbnails stable on every frame.
+            Rect thumbnailRect = GUILayoutUtility.GetRect(86, 62, GUILayout.Width(86), GUILayout.Height(62));
+            bool clicked = GUI.Button(thumbnailRect, new GUIContent(string.Empty, tooltip), GUIStyle.none);
+            GUI.Box(thumbnailRect, GUIContent.none);
+            DrawSprite(thumbnailRect, sprite, 1f, 3f);
+            EditorGUIUtility.AddCursorRect(thumbnailRect, MouseCursor.Link);
+            if (clicked)
+                AddItemToLevel(config, sprite);
+
             EditorGUILayout.LabelField(isAlreadyAdded ? "Already added" : sprite.name, EditorStyles.miniLabel, GUILayout.Width(86));
             EditorGUILayout.EndVertical();
         }
 
         private void DrawStampPalette(LevelData config, StampData stamp)
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandWidth(false));
-            // Keep the source image's real row/column arrangement. This deliberately has no
-            // layout gaps, so a 2x3 / 3x4 palette visually reconstructs the complete stamp.
-            float mosaicWidth = stamp.cols * PalettePieceSize;
-            float mosaicHeight = stamp.rows * PalettePieceSize;
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            Rect mosaicRect = GUILayoutUtility.GetRect(mosaicWidth, mosaicHeight, GUILayout.Width(mosaicWidth), GUILayout.Height(mosaicHeight));
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
-            EditorGUI.DrawRect(mosaicRect, new Color(0f, 0f, 0f, .18f));
-            for (int row = 0; row < stamp.rows; row++)
-            {
-                for (int col = 0; col < stamp.cols; col++)
-                {
-                    CardPlacement piece = new() { stamp = stamp, pieceCol = col, pieceRow = row };
-                    Rect pieceRect = new(
-                        mosaicRect.x + col * PalettePieceSize,
-                        mosaicRect.y + row * PalettePieceSize,
-                        PalettePieceSize,
-                        PalettePieceSize);
-                    DrawPiece(pieceRect, piece, 1f, 0f);
-                    DrawOutline(pieceRect, new Color(0f, 0f, 0f, .18f), 1f);
-                    _paletteHits.Add(new PaletteHit(pieceRect, piece));
-                    EditorGUIUtility.AddCursorRect(pieceRect, MouseCursor.Link);
-                }
-            }
-            DrawOutline(mosaicRect, new Color(.22f, .55f, .92f, .75f), 1f);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(PaletteCardWidth));
+            const int itemsPerRow = 4;
+            int rowCount = Mathf.Max(1, Mathf.CeilToInt(stamp.TotalItems / (float)itemsPerRow));
+            float itemAreaHeight = rowCount * PaletteItemSize;
+            Rect itemArea = GUILayoutUtility.GetRect(PaletteCardWidth - 12f, itemAreaHeight, GUILayout.Height(itemAreaHeight));
+            EditorGUI.DrawRect(itemArea, new Color(0f, 0f, 0f, .08f));
 
-            // Controls stay below the image so the stamp can be read as one complete picture.
+            for (int itemIndex = 0; itemIndex < stamp.TotalItems; itemIndex++)
+            {
+                int column = itemIndex % itemsPerRow;
+                int row = itemIndex / itemsPerRow;
+                Rect itemRect = new(
+                    itemArea.x + column * PaletteItemSize,
+                    itemArea.y + row * PaletteItemSize,
+                    PaletteItemSize,
+                    PaletteItemSize);
+                CardPlacement item = new() { stamp = stamp, itemIndex = itemIndex };
+                DrawPiece(itemRect, item, 1f, 3f);
+                DrawOutline(itemRect, new Color(.22f, .55f, .92f, .75f), 1f);
+                _paletteHits.Add(new PaletteHit(itemRect, item));
+                EditorGUIUtility.AddCursorRect(itemRect, MouseCursor.Link);
+            }
+
             EditorGUILayout.Space(3);
 
 
@@ -466,12 +472,9 @@ namespace StampJourney.EditorTools
 
             EditorGUI.BeginChangeCheck();
             stamp.stampName = EditorGUILayout.TextField("Name", stamp.stampName);
-
-
-            EditorGUILayout.BeginHorizontal();
-            stamp.cols = Mathf.Clamp(EditorGUILayout.IntField("Cols", stamp.cols), 1, 4);
-            stamp.rows = Mathf.Clamp(EditorGUILayout.IntField("Rows", stamp.rows), 1, 4);
-            EditorGUILayout.EndHorizontal();
+            stamp.stampId = Mathf.Max(1, EditorGUILayout.IntField("ID", stamp.stampId));
+            stamp.stampColor = EditorGUILayout.ColorField("Color", stamp.stampColor);
+            EditorGUILayout.LabelField($"{stamp.TotalItems} authored items", EditorStyles.miniLabel);
 
 
             if (EditorGUI.EndChangeCheck()) MarkDirty();
@@ -481,7 +484,7 @@ namespace StampJourney.EditorTools
 
 
             EditorGUILayout.Space(2);
-            if (GUILayout.Button("Remove", GUILayout.Height(22)))
+            if (GUILayout.Button("Remove topic", GUILayout.Height(22)))
             {
                 RemoveStamp(config, stamp);
                 GUIUtility.ExitGUI();
@@ -577,7 +580,7 @@ namespace StampJourney.EditorTools
 
             Rect caption = new(rect.x + 6, rect.yMax - 25, rect.width - 12, 20);
             GUI.Label(caption, card.stamp.stampName, LabelStyle(10, new Color(.12f, .16f, .24f), FontStyle.Bold));
-            GUI.Label(new Rect(rect.x + 6, rect.yMax - 12, rect.width - 12, 11), $"Piece {card.pieceCol + 1},{card.pieceRow + 1}", LabelStyle(8, new Color(.34f, .39f, .47f)));
+            GUI.Label(new Rect(rect.x + 6, rect.yMax - 12, rect.width - 12, 11), $"Item {card.itemIndex + 1}/{card.stamp.TotalItems}", LabelStyle(8, new Color(.34f, .39f, .47f)));
         }
 
         private void DrawEmptySlot(Rect rect, LayoutSlot slot)
@@ -603,14 +606,19 @@ namespace StampJourney.EditorTools
 
         private static void DrawPiece(Rect rect, CardPlacement card, float alpha, float padding)
         {
-            if (card?.stamp?.fullImage == null) return;
-            Sprite sprite = card.stamp.fullImage;
+            Sprite sprite = card?.stamp?.GetItemSprite(card.itemIndex);
+            DrawSprite(rect, sprite, alpha, padding);
+        }
+
+        private static void DrawSprite(Rect rect, Sprite sprite, float alpha, float padding)
+        {
+            if (sprite == null || sprite.texture == null) return;
             Rect source = sprite.rect;
-            float cellWidth = source.width / card.stamp.cols;
-            float cellHeight = source.height / card.stamp.rows;
-            float tx = (source.x + card.pieceCol * cellWidth) / sprite.texture.width;
-            float ty = (source.y + (card.stamp.rows - 1 - card.pieceRow) * cellHeight) / sprite.texture.height;
-            Rect uv = new(tx, ty, cellWidth / sprite.texture.width, cellHeight / sprite.texture.height);
+            Rect uv = new(
+                source.x / sprite.texture.width,
+                source.y / sprite.texture.height,
+                source.width / sprite.texture.width,
+                source.height / sprite.texture.height);
             Color old = GUI.color;
             GUI.color = new Color(1f, 1f, 1f, alpha);
             GUI.DrawTextureWithTexCoords(new Rect(rect.x + padding, rect.y + padding, rect.width - padding * 2f, rect.height - padding * 2f), sprite.texture, uv);
@@ -787,8 +795,7 @@ namespace StampJourney.EditorTools
                 config.queueLayout.Add(new QueueCardPlacement
                 {
                     stamp = card.stamp,
-                    pieceCol = card.pieceCol,
-                    pieceRow = card.pieceRow,
+                    itemIndex = card.itemIndex,
                     column = slot.Column,
                     row = -1,
                     order = slot.Index
@@ -804,44 +811,50 @@ namespace StampJourney.EditorTools
 
         private static string GetSlotBadge(LayoutSlot slot) => slot.Kind == SlotKind.Queue ? $"Q{slot.Index + 1}" : $"{slot.Column + 1}:{slot.Index + 1}";
 
-        private void AddStampToLevel(LevelData config, Sprite sprite)
+        private void AddItemToLevel(LevelData config, Sprite sprite, bool showFeedback = true)
         {
             config.stamps ??= Array.Empty<StampData>();
             if (IsSpriteAlreadyInPalette(config, sprite))
             {
-                string warning = $"[Stamp Level Designer] Cannot add '{sprite.name}' again: each picture may appear only once in the Stamp Piece Palette.";
-                Debug.LogWarning(warning, sprite);
-                _validationMessage = warning;
+                if (showFeedback)
+                    _validationMessage = $"{sprite.name} is already an authored item.";
                 return;
             }
 
-            Match dimensions = DimensionsInName.Match(sprite.name);
-            int cols;
-            int rows;
-            if (dimensions.Success)
+            string topicName = GetTopicName(sprite);
+            StampData stamp = config.stamps.FirstOrDefault(topic => topic != null &&
+                string.Equals(topic.stampName, topicName, StringComparison.OrdinalIgnoreCase));
+            if (stamp == null)
             {
-                Debug.Log(1);
-                cols = int.Parse(dimensions.Groups["cols"].Value);
-                rows = int.Parse(dimensions.Groups["rows"].Value);
-            }
-            else
-            {
-                Debug.Log(sprite.rect.width);
-                cols = (int)(sprite.rect.width / _gameManager.GameConfig.spritePixelPerUnit);
-                rows = (int)(sprite.rect.height / _gameManager.GameConfig.spritePixelPerUnit);
+                stamp = new StampData
+                {
+                    stampId = GetNextStampId(config.stamps),
+                    stampName = topicName,
+                    stampColor = Color.white,
+                    itemSprites = Array.Empty<Sprite>()
+                };
+                config.stamps = config.stamps.Append(stamp).ToArray();
             }
 
-            StampData stamp = new()
-            {
-                stampId = GetNextStampId(config.stamps),
-                stampName = Regex.Replace(sprite.name, @"_[1-4]x[1-4]$", ""),
-                fullImage = sprite,
-                cols = cols,
-                rows = rows,
-                stampColor = Color.white
-            };
-            config.stamps = config.stamps.Append(stamp).ToArray();
+            stamp.itemSprites = (stamp.itemSprites ?? Array.Empty<Sprite>()).Append(sprite).ToArray();
+            if (showFeedback)
+                _validationMessage = $"Added {sprite.name} to topic {stamp.stampName}.";
             MarkDirty();
+        }
+
+        private string GetTopicName(Sprite sprite)
+        {
+            string assetPath = AssetDatabase.GetAssetPath(sprite).Replace('\\', '/');
+            string root = _topicFolder.TrimEnd('/') + "/";
+            if (assetPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+            {
+                string relative = assetPath.Substring(root.Length);
+                int separator = relative.IndexOf('/');
+                if (separator > 0) return relative.Substring(0, separator);
+            }
+
+            string directory = System.IO.Path.GetDirectoryName(assetPath)?.Replace('\\', '/');
+            return string.IsNullOrWhiteSpace(directory) ? "Uncategorized" : System.IO.Path.GetFileName(directory);
         }
 
         private static int GetNextStampId(IEnumerable<StampData> stamps)
@@ -854,7 +867,7 @@ namespace StampJourney.EditorTools
 
         private static bool IsSpriteAlreadyInPalette(LevelData config, Sprite sprite)
         {
-            return config?.stamps?.Any(stamp => stamp != null && stamp.fullImage == sprite) == true;
+            return config?.stamps?.Any(stamp => stamp?.itemSprites?.Contains(sprite) == true) == true;
         }
 
         private void RemoveStamp(LevelData config, StampData stamp)
@@ -898,7 +911,7 @@ namespace StampJourney.EditorTools
         {
             EnsureCollections(config);
             Undo.RecordObject(config, "Generate solvable stamp layout");
-            ReassignContinuousStampIds(config.stamps);
+            ReassignContinuousTopicIds(config.stamps);
             if (!TryBuildGuaranteedLayout(config, out List<CardPlacement> board, out List<QueueCardPlacement> queue, out string error))
             {
                 _validationMessage = error;
@@ -915,11 +928,11 @@ namespace StampJourney.EditorTools
             MarkDirty();
         }
 
-        private static void ReassignContinuousStampIds(IEnumerable<StampData> stamps)
+        private static void ReassignContinuousTopicIds(IEnumerable<StampData> topics)
         {
             int nextId = 1;
-            foreach (StampData stamp in stamps.Where(stamp => stamp != null))
-                stamp.stampId = nextId++;
+            foreach (StampData topic in topics.Where(topic => topic != null))
+                topic.stampId = nextId++;
         }
 
         private static bool TryBuildGuaranteedLayout(
@@ -934,40 +947,39 @@ namespace StampJourney.EditorTools
 
             if (config.stamps == null || config.stamps.Length == 0)
             {
-                error = "Add at least one stamp image before generating.";
+                error = "Add at least one topic before generating.";
                 return false;
             }
 
             List<StampData> eligible = config.stamps.Where(stamp => stamp != null).ToList();
             if (eligible.Count == 0)
             {
-                error = "Add at least one valid stamp image before generating.";
+                error = "Add at least one valid topic before generating.";
                 return false;
             }
 
-            StampData stampThatDoesNotFit = eligible.FirstOrDefault(stamp =>
-                stamp.cols <= 0 || stamp.rows <= 0 ||
-                stamp.cols > config.boardCols || stamp.rows > config.boardRows);
-            if (stampThatDoesNotFit != null)
+            StampData invalidTopic = eligible.FirstOrDefault(topic => !topic.HasRequiredItemCount);
+            if (invalidTopic != null)
             {
-                error = $"{stampThatDoesNotFit.stampName} does not fit inside this board. Every palette image must fit because all images are included.";
-                return false;
-            }
-
-            IGrouping<int, StampData> duplicateIdGroup = eligible.GroupBy(stamp => stamp.stampId).FirstOrDefault(group => group.Count() > 1);
-            if (duplicateIdGroup != null)
-            {
-                error = $"Stamp ID {duplicateIdGroup.Key} is duplicated. Runtime matching requires every stamp ID to be unique.";
+                error = $"{invalidTopic.stampName} has {invalidTopic.TotalItems} item pictures. Every topic must have exactly {StampData.RequiredItemCount}.";
                 return false;
             }
 
             int boardCardCount = config.boardCols * config.boardRows;
+
+            IGrouping<int, StampData> duplicateIdGroup = eligible.GroupBy(stamp => stamp.stampId).FirstOrDefault(group => group.Count() > 1);
+            if (duplicateIdGroup != null)
+            {
+                error = $"Topic ID {duplicateIdGroup.Key} is duplicated. Runtime matching requires every topic ID to be unique.";
+                return false;
+            }
+
             List<List<CardPlacement>> completeSets = BuildPaletteSetsForBottomPackedQueue(eligible, boardCardCount);
             int totalCardCount = completeSets.Sum(set => set.Count);
             int queueCardCount = totalCardCount - boardCardCount;
             if (queueCardCount < 0)
             {
-                error = "Could not create enough complete stamp sets to fill the board.";
+                error = $"The level has {totalCardCount} authored items but needs at least {boardCardCount} to fill the board. Add more items; the generator does not duplicate authored pictures.";
                 return false;
             }
 
@@ -995,8 +1007,7 @@ namespace StampJourney.EditorTools
 
                 List<CardPlacement> candidateBoard = CreateBoardLayout(boardPieces, config.boardCols, config.boardRows);
                 List<QueueCardPlacement> candidateQueue = CreateBottomPackedQueueLayout(queuePieces, config.boardCols);
-                if (!eligible.All(stamp => stamp.TotalPieces == 1) &&
-                    ContainsCompletedStamp(candidateBoard, config.boardCols, config.boardRows))
+                if (ContainsCompletedStamp(candidateBoard, config.boardCols, config.boardRows))
                     continue;
 
                 if (!CanSolveLayout(candidateBoard, candidateQueue, config.boardCols, config.boardRows, out _))
@@ -1007,7 +1018,7 @@ namespace StampJourney.EditorTools
                 return true;
             }
 
-            error = "Could not find a solvable bottom-packed queue after 512 attempts. Try increasing the board or reducing incompatible stamp dimensions.";
+            error = "Could not find a solvable bottom-packed queue after 512 attempts. Try adding more four-item topics or increasing the board.";
             return false;
         }
 
@@ -1016,25 +1027,15 @@ namespace StampJourney.EditorTools
             int boardCardCount)
         {
             List<List<CardPlacement>> result = new();
-            int totalCardCount = 0;
-
-            // Include every palette image once, then repeat complete palette passes only
-            // when more cards are needed to fill the playable board.
-            while (totalCardCount < boardCardCount || result.Count < stamps.Count)
-            {
-                foreach (StampData stamp in stamps)
-                {
-                    List<CardPlacement> set = BuildCompleteStampSet(stamp);
-                    result.Add(set);
-                    totalCardCount += set.Count;
-                }
-            }
+            // Each authored item is unique in a level; do not silently duplicate pictures.
+            foreach (StampData topic in stamps)
+                result.Add(BuildCompleteStampSet(topic));
 
             return result;
         }
 
         private static List<CardPlacement> CreateBoardLayout(
-            IReadOnlyList<CardPlacement> pieces,
+            IReadOnlyList<CardPlacement> items,
             int boardCols,
             int boardRows)
         {
@@ -1042,27 +1043,26 @@ namespace StampJourney.EditorTools
             int index = 0;
             for (int row = 0; row < boardRows; row++)
                 for (int col = 0; col < boardCols; col++)
-                    result.Add(CopyPlacement(pieces[index++], col, row));
+                    result.Add(CopyPlacement(items[index++], col, row));
             return result;
         }
 
         private static List<QueueCardPlacement> CreateBottomPackedQueueLayout(
-            IReadOnlyList<CardPlacement> pieces,
+            IReadOnlyList<CardPlacement> items,
             int boardCols)
         {
-            List<QueueCardPlacement> result = new(pieces.Count);
+            List<QueueCardPlacement> result = new(items.Count);
             int index = 0;
-            int queueRows = Mathf.CeilToInt(pieces.Count / (float)boardCols);
-            for (int order = 0; order < queueRows && index < pieces.Count; order++)
+            int queueRows = Mathf.CeilToInt(items.Count / (float)boardCols);
+            for (int order = 0; order < queueRows && index < items.Count; order++)
             {
-                for (int col = 0; col < boardCols && index < pieces.Count; col++)
+                for (int col = 0; col < boardCols && index < items.Count; col++)
                 {
-                    CardPlacement piece = pieces[index++];
+                    CardPlacement item = items[index++];
                     result.Add(new QueueCardPlacement
                     {
-                        stamp = piece.stamp,
-                        pieceCol = piece.pieceCol,
-                        pieceRow = piece.pieceRow,
+                        stamp = item.stamp,
+                        itemIndex = item.itemIndex,
                         column = col,
                         row = -1,
                         order = order
@@ -1075,7 +1075,7 @@ namespace StampJourney.EditorTools
 
         private static List<CardPlacement> BuildCompleteStampSet(StampData stamp)
         {
-            List<CardPlacement> result = new(stamp.TotalPieces);
+            List<CardPlacement> result = new(stamp.TotalItems);
             AddCompleteStampSet(result, stamp);
             return result;
         }
@@ -1085,8 +1085,7 @@ namespace StampJourney.EditorTools
             return new CardPlacement
             {
                 stamp = source.stamp,
-                pieceCol = source.pieceCol,
-                pieceRow = source.pieceRow,
+                itemIndex = source.itemIndex,
                 column = column,
                 row = row
             };
@@ -1098,31 +1097,27 @@ namespace StampJourney.EditorTools
             foreach (CardPlacement card in boardLayout)
                 board[card.column, card.row] = card;
 
-            for (int row = 0; row < boardRows; row++)
+            for (int row = 0; row < boardRows - 1; row++)
             {
-                for (int col = 0; col < boardCols; col++)
+                for (int col = 0; col < boardCols - 1; col++)
                 {
-                    CardPlacement anchor = board[col, row];
-                    if (anchor == null || anchor.pieceCol != 0 || anchor.pieceRow != 0) continue;
-                    StampData stamp = anchor.stamp;
-                    if (col + stamp.cols > boardCols || row + stamp.rows > boardRows) continue;
+                    CardPlacement topLeft = board[col, row];
+                    CardPlacement topRight = board[col + 1, row];
+                    CardPlacement bottomLeft = board[col, row + 1];
+                    CardPlacement bottomRight = board[col + 1, row + 1];
+                    if (topLeft == null || topRight == null || bottomLeft == null || bottomRight == null) continue;
 
-                    bool complete = true;
-                    for (int pieceRow = 0; pieceRow < stamp.rows && complete; pieceRow++)
-                    {
-                        for (int pieceCol = 0; pieceCol < stamp.cols; pieceCol++)
+                    int topicId = topLeft.stamp.stampId;
+                    if (topRight.stamp.stampId != topicId ||
+                        bottomLeft.stamp.stampId != topicId ||
+                        bottomRight.stamp.stampId != topicId) continue;
+
+                    if (topLeft.stamp.HasCompleteItemSet(new[]
                         {
-                            CardPlacement piece = board[col + pieceCol, row + pieceRow];
-                            if (piece == null || piece.stamp.stampId != stamp.stampId ||
-                                piece.pieceCol != pieceCol || piece.pieceRow != pieceRow)
-                            {
-                                complete = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (complete) return true;
+                            topLeft.itemIndex, topRight.itemIndex,
+                            bottomLeft.itemIndex, bottomRight.itemIndex
+                        }))
+                        return true;
                 }
             }
 
@@ -1131,9 +1126,8 @@ namespace StampJourney.EditorTools
 
         private static void AddCompleteStampSet(ICollection<CardPlacement> result, StampData stamp)
         {
-            for (int row = 0; row < stamp.rows; row++)
-                for (int col = 0; col < stamp.cols; col++)
-                    result.Add(new CardPlacement { stamp = stamp, pieceCol = col, pieceRow = row });
+            for (int itemIndex = 0; itemIndex < stamp.TotalItems; itemIndex++)
+                result.Add(new CardPlacement { stamp = stamp, itemIndex = itemIndex });
         }
 
         private static void Shuffle<T>(IList<T> items)
@@ -1148,10 +1142,8 @@ namespace StampJourney.EditorTools
         private sealed class SolverStamp
         {
             public int Id;
-            public int Cols;
-            public int Rows;
+            public int ItemCount;
             public int Offset;
-            public int PieceCount => Cols * Rows;
         }
 
         private static bool CanSolveLayout(
@@ -1165,7 +1157,7 @@ namespace StampJourney.EditorTools
             List<CardPlacement> allCards = boardLayout.Cast<CardPlacement>().Concat(queueLayout).Where(card => card != null).ToList();
             List<SolverStamp> stamps = new();
             Dictionary<int, SolverStamp> stampById = new();
-            int pieceSlotCount = 0;
+            int itemSlotCount = 0;
 
             foreach (IGrouping<int, CardPlacement> group in allCards.GroupBy(card => card.stamp.stampId))
             {
@@ -1173,20 +1165,19 @@ namespace StampJourney.EditorTools
                 SolverStamp solverStamp = new()
                 {
                     Id = stamp.stampId,
-                    Cols = stamp.cols,
-                    Rows = stamp.rows,
-                    Offset = pieceSlotCount
+                    ItemCount = stamp.TotalItems,
+                    Offset = itemSlotCount
                 };
-                pieceSlotCount += solverStamp.PieceCount;
+                itemSlotCount += solverStamp.ItemCount;
                 stamps.Add(solverStamp);
                 stampById.Add(solverStamp.Id, solverStamp);
             }
 
-            int[] boardCounts = new int[pieceSlotCount];
+            int[] boardCounts = new int[itemSlotCount];
             foreach (CardPlacement card in boardLayout)
             {
                 SolverStamp stamp = stampById[card.stamp.stampId];
-                boardCounts[stamp.Offset + card.pieceCol + card.pieceRow * stamp.Cols]++;
+                boardCounts[stamp.Offset + card.itemIndex]++;
             }
 
             int[][] queues = new int[boardCols][];
@@ -1198,7 +1189,7 @@ namespace StampJourney.EditorTools
                     .Select(card =>
                     {
                         SolverStamp stamp = stampById[card.stamp.stampId];
-                        return stamp.Offset + card.pieceCol + card.pieceRow * stamp.Cols;
+                        return stamp.Offset + card.itemIndex;
                     })
                     .ToArray();
             }
@@ -1241,35 +1232,35 @@ namespace StampJourney.EditorTools
             string stateKey = string.Join(",", boardCounts) + "|" + string.Join(",", queueIndices);
             if (failedStates.Contains(stateKey)) return false;
 
-            foreach (SolverStamp stamp in stamps.OrderByDescending(candidate => candidate.PieceCount))
+            foreach (SolverStamp stamp in stamps.OrderByDescending(candidate => candidate.ItemCount))
             {
                 bool completeSetAvailable = true;
-                for (int piece = 0; piece < stamp.PieceCount; piece++)
+                for (int item = 0; item < stamp.ItemCount; item++)
                 {
-                    if (boardCounts[stamp.Offset + piece] > 0) continue;
+                    if (boardCounts[stamp.Offset + item] > 0) continue;
                     completeSetAvailable = false;
                     break;
                 }
                 if (!completeSetAvailable) continue;
 
-                List<int> startColumns = Enumerable.Range(0, boardCols - stamp.Cols + 1)
-                    .OrderByDescending(start => CountQueueCardsReleased(start, stamp, queueIndices, queues))
-                    .ToList();
-                foreach (int startColumn in startColumns)
-                {
-                    int[] nextBoardCounts = (int[])boardCounts.Clone();
-                    int[] nextQueueIndices = (int[])queueIndices.Clone();
-                    for (int piece = 0; piece < stamp.PieceCount; piece++)
-                        nextBoardCounts[stamp.Offset + piece]--;
+                int[] clearedBoardCounts = (int[])boardCounts.Clone();
+                for (int item = 0; item < stamp.ItemCount; item++)
+                    clearedBoardCounts[stamp.Offset + item]--;
 
-                    for (int column = startColumn; column < startColumn + stamp.Cols; column++)
+                int remainingQueueCards = Enumerable.Range(0, boardCols)
+                    .Sum(column => queues[column].Length - queueIndices[column]);
+                int releaseCount = Mathf.Min(stamp.ItemCount, remainingQueueCards);
+                foreach (int[] releasesByColumn in BuildQueueReleaseOptions(
+                             releaseCount, queueIndices, queues, boardCols, boardRows))
+                {
+                    int[] nextBoardCounts = (int[])clearedBoardCounts.Clone();
+                    int[] nextQueueIndices = (int[])queueIndices.Clone();
+                    for (int column = 0; column < boardCols; column++)
                     {
-                        int released = 0;
-                        while (released < stamp.Rows && nextQueueIndices[column] < queues[column].Length)
+                        for (int released = 0; released < releasesByColumn[column]; released++)
                         {
-                            int pieceSlot = queues[column][nextQueueIndices[column]++];
-                            nextBoardCounts[pieceSlot]++;
-                            released++;
+                            int itemSlot = queues[column][nextQueueIndices[column]++];
+                            nextBoardCounts[itemSlot]++;
                         }
                     }
 
@@ -1292,16 +1283,42 @@ namespace StampJourney.EditorTools
             return false;
         }
 
-        private static int CountQueueCardsReleased(
-            int startColumn,
-            SolverStamp stamp,
+        private static IReadOnlyList<int[]> BuildQueueReleaseOptions(
+            int releaseCount,
             IReadOnlyList<int> queueIndices,
-            IReadOnlyList<int[]> queues)
+            IReadOnlyList<int[]> queues,
+            int boardCols,
+            int boardRows)
         {
-            int result = 0;
-            for (int column = startColumn; column < startColumn + stamp.Cols; column++)
-                result += Mathf.Min(stamp.Rows, queues[column].Length - queueIndices[column]);
-            return result;
+            var results = new List<int[]>();
+            var current = new int[boardCols];
+            BuildQueueReleaseOptionsRecursive(0, releaseCount, queueIndices, queues, boardRows, current, results);
+            return results;
+        }
+
+        private static void BuildQueueReleaseOptionsRecursive(
+            int column,
+            int remaining,
+            IReadOnlyList<int> queueIndices,
+            IReadOnlyList<int[]> queues,
+            int boardRows,
+            int[] current,
+            ICollection<int[]> results)
+        {
+            if (column == current.Length)
+            {
+                if (remaining == 0) results.Add((int[])current.Clone());
+                return;
+            }
+
+            int available = queues[column].Length - queueIndices[column];
+            int maxRelease = Mathf.Min(remaining, Mathf.Min(boardRows, available));
+            for (int count = maxRelease; count >= 0; count--)
+            {
+                current[column] = count;
+                BuildQueueReleaseOptionsRecursive(column + 1, remaining - count, queueIndices, queues, boardRows, current, results);
+            }
+            current[column] = 0;
         }
 
         private void Validate(LevelData config)
@@ -1322,42 +1339,34 @@ namespace StampJourney.EditorTools
             }
 
             CardPlacement invalid = allCards.FirstOrDefault(card => !card.IsValid);
-            if (invalid != null) { _validationMessage = "Invalid card: a selected stamp was removed or its dimensions changed."; return; }
+            if (invalid != null) { _validationMessage = "Invalid card: its topic was removed or its authored item index no longer exists."; return; }
 
-            StampData missingPaletteStamp = config.stamps
-                .Where(stamp => stamp != null)
-                .FirstOrDefault(stamp => allCards.All(card => card.stamp.stampId != stamp.stampId));
-            if (missingPaletteStamp != null)
+            IGrouping<int, StampData> duplicateTopicId = config.stamps
+                .Where(topic => topic != null)
+                .GroupBy(topic => topic.stampId)
+                .FirstOrDefault(group => group.Count() > 1);
+            if (duplicateTopicId != null)
             {
-                _validationMessage = $"Not solvable as authored: {missingPaletteStamp.stampName} from the palette is missing from gameplay.";
+                _validationMessage = $"Not solvable: topic ID {duplicateTopicId.Key} is assigned more than once.";
                 return;
             }
 
-            IGrouping<int, CardPlacement> inconsistentStamp = allCards
-                .GroupBy(card => card.stamp.stampId)
-                .FirstOrDefault(group => group.Select(card => (card.stamp.cols, card.stamp.rows)).Distinct().Count() > 1);
-            if (inconsistentStamp != null)
+            foreach (StampData topic in config.stamps.Where(topic => topic != null))
             {
-                _validationMessage = $"Not solvable: stamp ID {inconsistentStamp.Key} is used with different dimensions.";
-                return;
-            }
-
-            foreach (IGrouping<int, CardPlacement> stampGroup in allCards.GroupBy(card => card.stamp.stampId))
-            {
-                StampData stamp = stampGroup.First().stamp;
-                if (stamp.cols > config.boardCols || stamp.rows > config.boardRows)
+                if (!topic.HasRequiredItemCount)
                 {
-                    _validationMessage = $"Not solvable: {stamp.stampName} is larger than the board.";
+                    _validationMessage = $"Not ready: {topic.stampName} must have exactly {StampData.RequiredItemCount} authored item pictures; it currently has {topic.TotalItems}.";
                     return;
                 }
 
-                Dictionary<int, int> counts = stampGroup
-                    .GroupBy(card => card.pieceCol + card.pieceRow * stamp.cols)
-                    .ToDictionary(group => group.Key, group => group.Count());
-                bool hasCompleteEqualSets = counts.Count == stamp.TotalPieces && counts.Values.Distinct().Count() == 1;
-                if (!hasCompleteEqualSets)
+                List<CardPlacement> topicCards = allCards
+                    .Where(card => card.stamp.stampId == topic.stampId)
+                    .ToList();
+                bool hasEveryItemExactlyOnce = topicCards.Count == topic.TotalItems &&
+                    topicCards.Select(card => card.itemIndex).Distinct().Count() == topic.TotalItems;
+                if (!hasEveryItemExactlyOnce)
                 {
-                    _validationMessage = $"Not solvable: {stamp.stampName} does not have matching counts for every piece.";
+                    _validationMessage = $"Not solvable: place each of the {topic.TotalItems} authored items from {topic.stampName} exactly once.";
                     return;
                 }
             }
@@ -1385,18 +1394,25 @@ namespace StampJourney.EditorTools
 
             if (!CanSolveLayout(config.boardLayout, config.queueLayout, config.boardCols, config.boardRows, out int clearCount))
             {
-                _validationMessage = "Not solvable: queue simulation reaches a state where no complete stamp set is available on the board.";
+                _validationMessage = "Not solvable: queue simulation reaches a state where a topic cannot bring all four items onto the board.";
                 return;
             }
 
             string limitWarning = config.maxMoves > 0 || config.HasTimeLimit
                 ? " Move/time limits are not included in this structural guarantee."
                 : string.Empty;
-            _validationMessage = $"Solvable: all palette images are included, the queue is packed bottom-up, and the simulated clear path removes {clearCount} stamp sets.{limitWarning}";
+            _validationMessage = $"Solvable: every topic has four items, the queue is packed bottom-up, and the simulated clear path completes {clearCount} topics. Players complete each topic by making a 2x2 square.{limitWarning}";
         }
 
+        /// <summary>
+        /// Rebuilds the topic and split filter options from the configured folder, then loads
+        /// every Sprite asset matching the active filters into the editor image library.
+        /// Expected hierarchy: Topic Root / Topic / optional Split / sprite assets.
+        /// </summary>
         private void RefreshTopicSprites()
         {
+            // Stop early when the configured root is missing. Clearing all cached values also
+            // prevents the window from continuing to display sprites from the previous folder.
             if (!AssetDatabase.IsValidFolder(_topicFolder))
             {
                 _topicTypes = Array.Empty<string>();
@@ -1405,44 +1421,62 @@ namespace StampJourney.EditorTools
                 return;
             }
 
+            // Every direct child of the root is treated as a topic. The leading "All" entry
+            // represents the root itself, which makes AssetDatabase search every topic below it.
             string[] subfolders = AssetDatabase.GetSubFolders(_topicFolder);
             List<string> typeNames = new List<string> { "All" };
             typeNames.AddRange(subfolders.Select(f => System.IO.Path.GetFileName(f)));
             _topicTypes = typeNames.ToArray();
 
+            // Folder contents may have changed since the last refresh, so keep the selected
+            // popup index inside the newly rebuilt topic list.
             if (_selectedTopicIndex < 0 || _selectedTopicIndex >= _topicTypes.Length)
                 _selectedTopicIndex = 0;
 
+            // Topic index 0 means search the complete root. Other popup entries map to the
+            // direct subfolders array, hence the -1 offset for the synthetic "All" entry.
             string searchFolder = _selectedTopicIndex == 0 ? _topicFolder : subfolders[_selectedTopicIndex - 1];
 
+            // Build the second-level split filter. When all topics are selected, collect split
+            // folders from every topic; otherwise only inspect the selected topic's children.
             string[] splitFolders = _selectedTopicIndex == 0
                 ? subfolders.SelectMany(f => AssetDatabase.GetSubFolders(f)).ToArray()
                 : AssetDatabase.GetSubFolders(searchFolder);
 
+            // Different topics may use the same split name, so show each name only once in the
+            // popup while retaining all matching folder paths for the eventual asset search.
             string[] splitNamesDistinct = splitFolders.Select(f => System.IO.Path.GetFileName(f)).Distinct().ToArray();
             List<string> splitNamesList = new List<string> { "All" };
             splitNamesList.AddRange(splitNamesDistinct);
             _splitTypes = splitNamesList.ToArray();
 
+            // Reset a stale split selection if the chosen topic has a different set of splits.
             if (_selectedSplitIndex < 0 || _selectedSplitIndex >= _splitTypes.Length)
                 _selectedSplitIndex = 0;
 
+            // With no split filter, search the selected topic/root recursively. With a split
+            // selected, search every folder whose final path segment has that split name.
             string[] finalSearchFolders = _selectedSplitIndex == 0
                 ? new[] { searchFolder }
                 : splitFolders.Where(f => System.IO.Path.GetFileName(f) == _splitTypes[_selectedSplitIndex]).ToArray();
 
+            // A selected split may not exist under the current topic after folders are changed.
             if (finalSearchFolders.Length == 0)
             {
                 _topicSprites = Array.Empty<Sprite>();
             }
             else
             {
+                // FindAssets returns GUIDs. Convert them to unique asset paths, then load every
+                // Sprite at each path so multi-sprite texture assets are included as well.
                 _topicSprites = AssetDatabase.FindAssets("t:Sprite", finalSearchFolders)
                     .Select(AssetDatabase.GUIDToAssetPath)
                     .Distinct()
                     .SelectMany(path => AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>())
                     .ToArray();
             }
+
+            // Refresh the visible library immediately after rebuilding its cached sprite list.
             Repaint();
         }
 

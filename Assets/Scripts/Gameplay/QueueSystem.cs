@@ -59,7 +59,7 @@ namespace StampJourney.Gameplay
                 for (int c = 0; c < cols; c++)
                 {
                     foreach (var card in _levelData.GetQueueCards(c))
-                        AddCardToQueue(c, new CardModel(card.stamp, card.pieceCol, card.pieceRow));
+                        AddCardToQueue(c, new CardModel(card.stamp, card.itemIndex));
                 }
                 return;
             }
@@ -150,10 +150,9 @@ namespace StampJourney.Gameplay
         private CardModel CreateRandomCard(int col, int queueIndex)
         {
             var stamps = _levelData.stamps;
-            var stamp = stamps[UnityEngine.Random.Range(0, stamps.Length)];
-            int pc = UnityEngine.Random.Range(0, stamp.cols);
-            int pr = UnityEngine.Random.Range(0, stamp.rows);
-            var model = new CardModel(stamp, pc, pr);
+            var topic = stamps[UnityEngine.Random.Range(0, stamps.Length)];
+            int itemIndex = UnityEngine.Random.Range(0, topic.TotalItems);
+            var model = new CardModel(topic, itemIndex);
             _gameboard.cardFactory.SpawnCardInQueue(model, col, queueIndex);
             return model;
         }

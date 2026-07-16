@@ -9,9 +9,9 @@ using UnityEngine;
 namespace StampJourney.Gameplay
 {
     /// <summary>
-    /// Manages all CardGroups on the board and detects completed stamps.
+    /// Manages all CardGroups on the board and detects completed topics.
     /// Rebuilds groups after each swap/gravity; provides API for group swap.
-    /// A completed stamp = n×m adjacent cells, each matching the correct stamp and piece position.
+    /// A completed topic = its four authored item cards arranged as a 2x2 square.
     /// </summary>
     public class StampDetector : SerializedMonoBehaviour
     {
@@ -137,54 +137,16 @@ namespace StampJourney.Gameplay
         #region Stamp Detection
 
         /// <summary>
-        /// Scans the entire grid and returns groups that form completed stamps.
-        /// Each result element is a CardGroup of tiles forming one completed stamp.
+        /// Scans the entire grid and returns groups that form completed topics.
+        /// Each result element is a CardGroup of cards forming one completed topic.
         /// </summary>
         public List<CardGroup> FindCompletedStamps(Tile[,] tiles, int boardCols, int boardRows)
         {
             var results = new List<CardGroup>();
-            bool[,] used = new bool[boardCols, boardRows];
-
-            // Shortcut: check existing groups that are already complete
             foreach (var group in _groups.Values)
             {
-                if (group.IsStampComplete)
-                {
+                if (group.IsTopicComplete)
                     results.Add(group);
-                    foreach (var t in group.Members)
-                        used[t.BoardCol, t.BoardRow] = true;
-                }
-            }
-
-            // Grid scan for tiles not yet in any group
-            for (int r = 0; r < boardRows; r++)
-            {
-                for (int c = 0; c < boardCols; c++)
-                {
-                    if (used[c, r]) continue;
-
-                    var tileModel = tiles[c, r];
-                    var tile = tileModel?.Card;
-                    if (tile == null) continue;
-
-                    // Only consider tiles that are the top-left corner of a stamp
-                    if (tile.PieceCol != 0 || tile.PieceRow != 0) continue;
-
-                    var stamp = tile.Stamp;
-                    var match = TryMatchStamp(tiles, boardCols, boardRows, c, r, stamp, used);
-                    if (match != null)
-                    {
-                        var go = new GameObject();
-                        var newGroup = go.AddComponent<CardGroup>();
-                        newGroup.Init(stamp);
-                        foreach (var t in match)
-                            newGroup.Add(t);
-
-                        results.Add(newGroup);
-                        foreach (var t in match)
-                            used[t.BoardCol, t.BoardRow] = true;
-                    }
-                }
             }
 
             return results;
@@ -276,7 +238,7 @@ namespace StampJourney.Gameplay
                     // Create a new group
                     var go = new GameObject();
                     var newGroup = go.AddComponent<CardGroup>();
-                    newGroup.Init(logicalGroup[0].Stamp);
+                    newGroup.Init(logicalGroup[0].Topic);
                     foreach (var member in logicalGroup)
                         newGroup.Add(member);
 
@@ -322,7 +284,7 @@ namespace StampJourney.Gameplay
             group.transform.localScale = Vector3.one;
             group.transform.rotation = Quaternion.identity;
 
-            group.gameObject.name = $"Group_{group.GroupId}_{group.Stamp.stampName}";
+            group.gameObject.name = $"Group_{group.GroupId}_{group.Topic.TopicName}";
 
             // Ensure SortingGroup exists
             var sortingGroup = group.gameObject.GetComponent<UnityEngine.Rendering.SortingGroup>();
@@ -412,45 +374,6 @@ namespace StampJourney.Gameplay
         #endregion
 
         #region Private — Stamp Matching
-
-        /// <summary>
-        /// Tries to match a stamp starting from the top-left anchor (anchorCol, anchorRow).
-        /// Returns the list of matching tiles, or null if no match.
-        /// </summary>
-        private List<CardModel> TryMatchStamp(
-            Tile[,] tiles, int boardCols, int boardRows,
-            int anchorCol, int anchorRow, StampData stamp, bool[,] used)
-        {
-            int sc = stamp.cols;
-            int sr = stamp.rows;
-
-            if (anchorCol + sc > boardCols) return null;
-            if (anchorRow + sr > boardRows) return null;
-
-            var group = new List<CardModel>(sc * sr);
-
-            for (int pr = 0; pr < sr; pr++)
-            {
-                for (int pc = 0; pc < sc; pc++)
-                {
-                    int bc = anchorCol + pc;
-                    int br = anchorRow + pr;
-
-                    if (used[bc, br]) return null;
-
-                    var tModel = tiles[bc, br];
-                    var t = tModel?.Card;
-                    if (t == null) return null;
-                    if (t.Stamp.stampId != stamp.stampId) return null;
-                    if (t.PieceCol != pc) return null;
-                    if (t.PieceRow != pr) return null;
-
-                    group.Add(t);
-                }
-            }
-
-            return group;
-        }
 
         #endregion
     }

@@ -108,7 +108,7 @@ namespace StampJourney.Card
 
             _originPos = transform.position;
             SetSortingOrder(baseSortingOrder);
-            backGroundImg.color = Model.Stamp.stampColor;
+            backGroundImg.color = Model.Topic.TopicColor;
             RefreshVisual();
 
             if (cardEdgeRenderer != null)
@@ -118,10 +118,11 @@ namespace StampJourney.Card
         public void RefreshVisual()
         {
             if (_model == null) return;
-            contentImg.sprite = _model.Stamp.GetPieceSprite(_model.PieceCol, _model.PieceRow);
+            contentImg.sprite = _model.Topic.GetItemSprite(_model.ItemIndex);
             contentImg.color = Color.white;
             pressEffect.SetActive(false);
-            FitSpriteContent(1, 1);
+            if (contentImg.sprite != null)
+                FitSpriteContent(1, 1);
         }
 
         #endregion

@@ -69,10 +69,10 @@ namespace StampJourney.Card
         {
             if (_model == null) return;
 
-            SetEdge(edgeTop, IsConnected(0, -1, 0, -1));
-            SetEdge(edgeRight, IsConnected(1, 0, 1, 0));
-            SetEdge(edgeBottom, IsConnected(0, 1, 0, 1));
-            SetEdge(edgeLeft, IsConnected(-1, 0, -1, 0));
+            SetEdge(edgeTop, IsConnected(0, -1));
+            SetEdge(edgeRight, IsConnected(1, 0));
+            SetEdge(edgeBottom, IsConnected(0, 1));
+            SetEdge(edgeLeft, IsConnected(-1, 0));
         }
 
         /// <summary>Adds a sorting order offset to all edge renderers.</summary>
@@ -114,21 +114,20 @@ namespace StampJourney.Card
 
         /// <summary>
         /// Checks if this edge connects to a tile in the same group.
-        /// Connected = same group + correct piece offset.
+        /// Connected = same topic group + adjacent board position.
         /// Edges are only hidden when tiles truly belong to the same group.
         /// </summary>
-        private bool IsConnected(int dBoardCol, int dBoardRow, int dPieceCol, int dPieceRow)
+        private bool IsConnected(int dBoardCol, int dBoardRow)
         {
             if (_model.Group == null) return false;
 
-            int targetPieceCol = _model.PieceCol + dPieceCol;
-            int targetPieceRow = _model.PieceRow + dPieceRow;
+            int targetBoardCol = _model.BoardCol + dBoardCol;
+            int targetBoardRow = _model.BoardRow + dBoardRow;
 
             foreach (var member in _model.Group.Members)
             {
                 if (member == _model) continue;
-                if (member.PieceCol == targetPieceCol &&
-                    member.PieceRow == targetPieceRow)
+                if (member.BoardCol == targetBoardCol && member.BoardRow == targetBoardRow)
                     return true;
             }
             return false;

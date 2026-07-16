@@ -30,6 +30,7 @@ public class LevelData : ScriptableObject
     /// <summary>Whether this level has a move limit.</summary>
     public bool HasMoveLimit => maxMoves > 0;
 
+    [LabelText("Topics")]
     public StampData[] stamps;
 
     [Range(1, 8)]
@@ -75,21 +76,21 @@ public class LevelData : ScriptableObject
     public int TotalCells => boardCols * boardRows;
 }
 
-/// <summary>One stamp piece positioned on the playable board.</summary>
+/// <summary>One authored item positioned on the playable board.</summary>
 [System.Serializable]
 public class CardPlacement
 {
+    [LabelText("Topic")]
     public StampData stamp;
-    [MinValue(0)] public int pieceCol;
-    [MinValue(0)] public int pieceRow;
+    [MinValue(0)] public int itemIndex;
     [HideInInspector] public int column;
     [HideInInspector] public int row;
 
-    public bool IsValid => stamp != null && pieceCol >= 0 && pieceCol < stamp.cols && pieceRow >= 0 && pieceRow < stamp.rows;
-    public CardPlacement Clone() => new CardPlacement { stamp = stamp, pieceCol = pieceCol, pieceRow = pieceRow, column = column, row = row };
+    public bool IsValid => stamp != null && stamp.IsValidItemIndex(itemIndex);
+    public CardPlacement Clone() => new CardPlacement { stamp = stamp, itemIndex = itemIndex, column = column, row = row };
 }
 
-/// <summary>One stamp piece in a queue above a board column. Lower order drops first.</summary>
+/// <summary>One authored item in a queue above a board column. Lower order drops first.</summary>
 [System.Serializable]
 public class QueueCardPlacement : CardPlacement
 {
@@ -98,8 +99,7 @@ public class QueueCardPlacement : CardPlacement
     public new QueueCardPlacement Clone() => new QueueCardPlacement
     {
         stamp = stamp,
-        pieceCol = pieceCol,
-        pieceRow = pieceRow,
+        itemIndex = itemIndex,
         column = column,
         row = -1,
         order = order
@@ -108,7 +108,7 @@ public class QueueCardPlacement : CardPlacement
 
 public enum FillStrategy
 {
-    /// <summary>Random stamp type and random piece per cell.</summary>
+    /// <summary>Random topic and random item per cell.</summary>
     RandomFromAvailable,
 
     /// <summary>Ensures each stamp type appears with balanced distribution.</summary>

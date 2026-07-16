@@ -401,7 +401,7 @@ namespace StampJourney.Gameplay
                 for (int r = _rows - 1; r >= 0; r--)
                 {
                     if (!_levelData.TryGetBoardCard(c, r, out var card)) continue;
-                    queueSystem.AddCardToQueue(c, new CardModel(card.stamp, card.pieceCol, card.pieceRow));
+                    queueSystem.AddCardToQueue(c, new CardModel(card.stamp, card.itemIndex));
                 }
             }
         }
@@ -414,9 +414,8 @@ namespace StampJourney.Gameplay
                 for (int c = 0; c < _cols; c++)
                 {
                     var stamp = stamps[UnityEngine.Random.Range(0, stamps.Length)];
-                    int pc = UnityEngine.Random.Range(0, stamp.cols);
-                    int pr = UnityEngine.Random.Range(0, stamp.rows);
-                    var model = new CardModel(stamp, pc, pr);
+                    int itemIndex = UnityEngine.Random.Range(0, stamp.TotalItems);
+                    var model = new CardModel(stamp, itemIndex);
                     queueSystem.AddCardToQueue(c, model);
                 }
             }
@@ -424,17 +423,16 @@ namespace StampJourney.Gameplay
 
         private void FillBalanced()
         {
-            // Build a pool ensuring each stamp type has all its pieces represented
-            var pool = new List<(StampData stamp, int pc, int pr)>();
+            // Build a pool ensuring each topic has every authored item represented.
+            var pool = new List<(StampData topic, int itemIndex)>();
             var stamps = _levelData.stamps;
             int total = _cols * _rows;
 
             while (pool.Count < total)
             {
-                foreach (var stamp in stamps)
-                    for (int pr = 0; pr < stamp.rows; pr++)
-                        for (int pc = 0; pc < stamp.cols; pc++)
-                            pool.Add((stamp, pc, pr));
+                foreach (var topic in stamps)
+                    for (int itemIndex = 0; itemIndex < topic.TotalItems; itemIndex++)
+                        pool.Add((topic, itemIndex));
             }
 
             // Fisher-Yates shuffle
@@ -450,8 +448,8 @@ namespace StampJourney.Gameplay
                 {
                     int idx = c + r * _cols;
                     if (idx >= pool.Count) break;
-                    var (stamp, pc, pr) = pool[idx];
-                    var model = new CardModel(stamp, pc, pr);
+                    var (topic, itemIndex) = pool[idx];
+                    var model = new CardModel(topic, itemIndex);
                     queueSystem.AddCardToQueue(c, model);
                 }
             }
@@ -588,7 +586,7 @@ namespace StampJourney.Gameplay
                     if (model == null || clearedGroup.Members.Contains(model)) continue;
 
                     // Skip cards that belong to other completed stamps
-                    if (model.Group != null && model.Group.IsStampComplete) continue;
+                    if (model.Group != null && model.Group.IsTopicComplete) continue;
 
                     var view = cardFactory.GetView(model.TileId);
                     if (view != null)
