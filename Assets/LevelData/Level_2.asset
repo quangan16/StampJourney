@@ -19,320 +19,177 @@ MonoBehaviour:
   timeLimitSeconds: 0
   stamps:
   - stampId: 1
-    stampName: test4_11
+    stampName: "19_Sinh v\u1EADt bi\u1EC3n"
     stampColor: {r: 1, g: 1, b: 1, a: 1}
-    cols: 2
-    rows: 2
-    fullImage: {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-    pieceSprites: []
+    itemSprites:
+    - {fileID: 2774528845907692596, guid: ac95ac82349bfb247b4cf9b13a419a93, type: 3}
+    - {fileID: -7320058651417852913, guid: f6b8bac21f2f59449ba95bfd1da7f0f3, type: 3}
+    - {fileID: 6351315214484546128, guid: 912018bd6327950429aaa87311ce152a, type: 3}
+    - {fileID: -18072720943752483, guid: 2982819e4f8637042a9ad014d637c7e1, type: 3}
   - stampId: 2
-    stampName: test4_4
+    stampName: "25_Th\u1EC3 thao"
     stampColor: {r: 1, g: 1, b: 1, a: 1}
-    cols: 2
-    rows: 2
-    fullImage: {fileID: -1273491934, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-    pieceSprites: []
+    itemSprites:
+    - {fileID: -311306751392377396, guid: d0e0abb9d25742c41ab08b5055ff91ca, type: 3}
+    - {fileID: -3656493176195432429, guid: a7b1cecfd41f1064790bb840e1e52814, type: 3}
+    - {fileID: 1036850530992961896, guid: 7635728eccdd889469ad1f407ae281f0, type: 3}
+    - {fileID: -2921935952548822856, guid: 9913a05ce06d6474c998f23b78669b49, type: 3}
   - stampId: 3
-    stampName: test4_10
+    stampName: "18_Thi\xEAn nhi\xEAn"
     stampColor: {r: 1, g: 1, b: 1, a: 1}
-    cols: 2
-    rows: 2
-    fullImage: {fileID: 153388095, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-    pieceSprites: []
-  - stampId: 4
-    stampName: test4_7
-    stampColor: {r: 1, g: 1, b: 1, a: 1}
-    cols: 2
-    rows: 2
-    fullImage: {fileID: 1823338359, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-    pieceSprites: []
-  - stampId: 5
-    stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
-    stampColor: {r: 1, g: 1, b: 1, a: 1}
-    cols: 3
-    rows: 2
-    fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
-    pieceSprites: []
-  maxStampTypesOnBoard: 3
-  fillStrategy: 0
-  useAuthoredLayout: 1
+    itemSprites:
+    - {fileID: -9200894400997133514, guid: 6403961509a8b8d45a3cafd001b0229e, type: 3}
+    - {fileID: -8449776796719772744, guid: 14d6d87de13ed9b4188795bf12f97e57, type: 3}
+    - {fileID: 8718959668426576248, guid: 7622c939cc23c7749a33eaa8851aef69, type: 3}
+    - {fileID: -286375820850718963, guid: 6c90571e369c1a8408db14d523136f71, type: 3}
+  useAuthoredLayout: 0
   boardLayout:
   - stamp:
-      stampId: 2
-      stampName: test4_4
+      stampId: 1
+      stampName: "19_Sinh v\u1EADt bi\u1EC3n"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -1273491934, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 1
-    pieceRow: 1
+      itemSprites:
+      - {fileID: 2774528845907692596, guid: ac95ac82349bfb247b4cf9b13a419a93, type: 3}
+      - {fileID: -7320058651417852913, guid: f6b8bac21f2f59449ba95bfd1da7f0f3, type: 3}
+      - {fileID: 6351315214484546128, guid: 912018bd6327950429aaa87311ce152a, type: 3}
+      - {fileID: -18072720943752483, guid: 2982819e4f8637042a9ad014d637c7e1, type: 3}
+    itemIndex: 3
     column: 0
     row: 0
   - stamp:
-      stampId: 3
-      stampName: test4_10
+      stampId: 2
+      stampName: "25_Th\u1EC3 thao"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 153388095, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 0
-    pieceRow: 0
+      itemSprites:
+      - {fileID: -311306751392377396, guid: d0e0abb9d25742c41ab08b5055ff91ca, type: 3}
+      - {fileID: -3656493176195432429, guid: a7b1cecfd41f1064790bb840e1e52814, type: 3}
+      - {fileID: 1036850530992961896, guid: 7635728eccdd889469ad1f407ae281f0, type: 3}
+      - {fileID: -2921935952548822856, guid: 9913a05ce06d6474c998f23b78669b49, type: 3}
+    itemIndex: 2
     column: 1
     row: 0
   - stamp:
-      stampId: 3
-      stampName: test4_10
+      stampId: 2
+      stampName: "25_Th\u1EC3 thao"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 153388095, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 1
-    pieceRow: 1
+      itemSprites:
+      - {fileID: -311306751392377396, guid: d0e0abb9d25742c41ab08b5055ff91ca, type: 3}
+      - {fileID: -3656493176195432429, guid: a7b1cecfd41f1064790bb840e1e52814, type: 3}
+      - {fileID: 1036850530992961896, guid: 7635728eccdd889469ad1f407ae281f0, type: 3}
+      - {fileID: -2921935952548822856, guid: 9913a05ce06d6474c998f23b78669b49, type: 3}
+    itemIndex: 1
     column: 2
     row: 0
   - stamp:
-      stampId: 2
-      stampName: test4_4
+      stampId: 3
+      stampName: "18_Thi\xEAn nhi\xEAn"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -1273491934, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 0
-    pieceRow: 1
+      itemSprites:
+      - {fileID: -9200894400997133514, guid: 6403961509a8b8d45a3cafd001b0229e, type: 3}
+      - {fileID: -8449776796719772744, guid: 14d6d87de13ed9b4188795bf12f97e57, type: 3}
+      - {fileID: 8718959668426576248, guid: 7622c939cc23c7749a33eaa8851aef69, type: 3}
+      - {fileID: -286375820850718963, guid: 6c90571e369c1a8408db14d523136f71, type: 3}
+    itemIndex: 3
     column: 0
     row: 1
   - stamp:
       stampId: 3
-      stampName: test4_10
+      stampName: "18_Thi\xEAn nhi\xEAn"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 153388095, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 0
-    pieceRow: 1
+      itemSprites:
+      - {fileID: -9200894400997133514, guid: 6403961509a8b8d45a3cafd001b0229e, type: 3}
+      - {fileID: -8449776796719772744, guid: 14d6d87de13ed9b4188795bf12f97e57, type: 3}
+      - {fileID: 8718959668426576248, guid: 7622c939cc23c7749a33eaa8851aef69, type: 3}
+      - {fileID: -286375820850718963, guid: 6c90571e369c1a8408db14d523136f71, type: 3}
+    itemIndex: 0
     column: 1
     row: 1
   - stamp:
-      stampId: 5
-      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
+      stampId: 3
+      stampName: "18_Thi\xEAn nhi\xEAn"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 3
-      rows: 2
-      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
-      pieceSprites: []
-    pieceCol: 1
-    pieceRow: 0
+      itemSprites:
+      - {fileID: -9200894400997133514, guid: 6403961509a8b8d45a3cafd001b0229e, type: 3}
+      - {fileID: -8449776796719772744, guid: 14d6d87de13ed9b4188795bf12f97e57, type: 3}
+      - {fileID: 8718959668426576248, guid: 7622c939cc23c7749a33eaa8851aef69, type: 3}
+      - {fileID: -286375820850718963, guid: 6c90571e369c1a8408db14d523136f71, type: 3}
+    itemIndex: 2
     column: 2
     row: 1
   - stamp:
-      stampId: 2
-      stampName: test4_4
+      stampId: 3
+      stampName: "18_Thi\xEAn nhi\xEAn"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -1273491934, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 0
-    pieceRow: 0
+      itemSprites:
+      - {fileID: -9200894400997133514, guid: 6403961509a8b8d45a3cafd001b0229e, type: 3}
+      - {fileID: -8449776796719772744, guid: 14d6d87de13ed9b4188795bf12f97e57, type: 3}
+      - {fileID: 8718959668426576248, guid: 7622c939cc23c7749a33eaa8851aef69, type: 3}
+      - {fileID: -286375820850718963, guid: 6c90571e369c1a8408db14d523136f71, type: 3}
+    itemIndex: 1
     column: 0
     row: 2
   - stamp:
       stampId: 2
-      stampName: test4_4
+      stampName: "25_Th\u1EC3 thao"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -1273491934, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 1
-    pieceRow: 0
+      itemSprites:
+      - {fileID: -311306751392377396, guid: d0e0abb9d25742c41ab08b5055ff91ca, type: 3}
+      - {fileID: -3656493176195432429, guid: a7b1cecfd41f1064790bb840e1e52814, type: 3}
+      - {fileID: 1036850530992961896, guid: 7635728eccdd889469ad1f407ae281f0, type: 3}
+      - {fileID: -2921935952548822856, guid: 9913a05ce06d6474c998f23b78669b49, type: 3}
+    itemIndex: 0
     column: 1
     row: 2
   - stamp:
-      stampId: 3
-      stampName: test4_10
+      stampId: 2
+      stampName: "25_Th\u1EC3 thao"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 153388095, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 1
-    pieceRow: 0
+      itemSprites:
+      - {fileID: -311306751392377396, guid: d0e0abb9d25742c41ab08b5055ff91ca, type: 3}
+      - {fileID: -3656493176195432429, guid: a7b1cecfd41f1064790bb840e1e52814, type: 3}
+      - {fileID: 1036850530992961896, guid: 7635728eccdd889469ad1f407ae281f0, type: 3}
+      - {fileID: -2921935952548822856, guid: 9913a05ce06d6474c998f23b78669b49, type: 3}
+    itemIndex: 3
     column: 2
     row: 2
   queueLayout:
   - stamp:
       stampId: 1
-      stampName: test4_11
+      stampName: "19_Sinh v\u1EADt bi\u1EC3n"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 1
-    pieceRow: 1
+      itemSprites:
+      - {fileID: 2774528845907692596, guid: ac95ac82349bfb247b4cf9b13a419a93, type: 3}
+      - {fileID: -7320058651417852913, guid: f6b8bac21f2f59449ba95bfd1da7f0f3, type: 3}
+      - {fileID: 6351315214484546128, guid: 912018bd6327950429aaa87311ce152a, type: 3}
+      - {fileID: -18072720943752483, guid: 2982819e4f8637042a9ad014d637c7e1, type: 3}
+    itemIndex: 2
     column: 0
     row: -1
     order: 0
   - stamp:
-      stampId: 5
-      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
+      stampId: 1
+      stampName: "19_Sinh v\u1EADt bi\u1EC3n"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 3
-      rows: 2
-      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
-      pieceSprites: []
-    pieceCol: 0
-    pieceRow: 1
+      itemSprites:
+      - {fileID: 2774528845907692596, guid: ac95ac82349bfb247b4cf9b13a419a93, type: 3}
+      - {fileID: -7320058651417852913, guid: f6b8bac21f2f59449ba95bfd1da7f0f3, type: 3}
+      - {fileID: 6351315214484546128, guid: 912018bd6327950429aaa87311ce152a, type: 3}
+      - {fileID: -18072720943752483, guid: 2982819e4f8637042a9ad014d637c7e1, type: 3}
+    itemIndex: 0
     column: 1
     row: -1
     order: 0
   - stamp:
       stampId: 1
-      stampName: test4_11
+      stampName: "19_Sinh v\u1EADt bi\u1EC3n"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 1
-    pieceRow: 0
+      itemSprites:
+      - {fileID: 2774528845907692596, guid: ac95ac82349bfb247b4cf9b13a419a93, type: 3}
+      - {fileID: -7320058651417852913, guid: f6b8bac21f2f59449ba95bfd1da7f0f3, type: 3}
+      - {fileID: 6351315214484546128, guid: 912018bd6327950429aaa87311ce152a, type: 3}
+      - {fileID: -18072720943752483, guid: 2982819e4f8637042a9ad014d637c7e1, type: 3}
+    itemIndex: 1
     column: 2
     row: -1
     order: 0
-  - stamp:
-      stampId: 5
-      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 3
-      rows: 2
-      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
-      pieceSprites: []
-    pieceCol: 2
-    pieceRow: 1
-    column: 0
-    row: -1
-    order: 1
-  - stamp:
-      stampId: 5
-      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 3
-      rows: 2
-      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
-      pieceSprites: []
-    pieceCol: 2
-    pieceRow: 0
-    column: 1
-    row: -1
-    order: 1
-  - stamp:
-      stampId: 5
-      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 3
-      rows: 2
-      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
-      pieceSprites: []
-    pieceCol: 0
-    pieceRow: 0
-    column: 2
-    row: -1
-    order: 1
-  - stamp:
-      stampId: 4
-      stampName: test4_7
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1823338359, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 0
-    pieceRow: 1
-    column: 0
-    row: -1
-    order: 2
-  - stamp:
-      stampId: 1
-      stampName: test4_11
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 0
-    pieceRow: 0
-    column: 1
-    row: -1
-    order: 2
-  - stamp:
-      stampId: 4
-      stampName: test4_7
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1823338359, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 0
-    pieceRow: 0
-    column: 2
-    row: -1
-    order: 2
-  - stamp:
-      stampId: 1
-      stampName: test4_11
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 0
-    pieceRow: 1
-    column: 0
-    row: -1
-    order: 3
-  - stamp:
-      stampId: 5
-      stampName: 9b904edc-7cf8-48fc-90b0-674f38583200_13
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 3
-      rows: 2
-      fullImage: {fileID: -1050907271, guid: 92edfb498223c3842bd719f63ce8a305, type: 3}
-      pieceSprites: []
-    pieceCol: 1
-    pieceRow: 1
-    column: 1
-    row: -1
-    order: 3
-  - stamp:
-      stampId: 4
-      stampName: test4_7
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1823338359, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 1
-    pieceRow: 0
-    column: 2
-    row: -1
-    order: 3
-  - stamp:
-      stampId: 4
-      stampName: test4_7
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1823338359, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-      pieceSprites: []
-    pieceCol: 1
-    pieceRow: 1
-    column: 0
-    row: -1
-    order: 4
-  authoredQueueRows: 5
+  authoredQueueRows: 1

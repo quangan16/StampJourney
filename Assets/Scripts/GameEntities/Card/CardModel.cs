@@ -13,10 +13,13 @@ namespace StampJourney.Card
         #region Topic Identity (Immutable)
 
         /// <summary>The topic this item belongs to.</summary>
-        public readonly StampData Topic;
+        public StampData Topic { get; private set; }
 
         /// <summary>Index of the complete item picture within its topic (0-based).</summary>
-        public readonly int ItemIndex;
+        public int ItemIndex { get; private set; }
+
+        /// <summary>False only while an unauthored queue card is still face-down and undecided.</summary>
+        public bool HasAssignedContent => Topic != null && ItemIndex >= 0;
 
         #endregion
 
@@ -64,10 +67,22 @@ namespace StampJourney.Card
             FlipState = FlipState.Down;
         }
 
+        /// <summary>Assigns content to an undecided generated queue card immediately before drop.</summary>
+        public void AssignContent(StampData topic, int itemIndex)
+        {
+            if (topic == null || !topic.IsValidItemIndex(itemIndex))
+                throw new System.ArgumentException("Generated card content must reference a valid topic item.");
+
+            Topic = topic;
+            ItemIndex = itemIndex;
+        }
+
         #endregion
 
         public override string ToString() =>
-            $"Tile[{TileId}] topic={Topic.TopicName} item={ItemIndex} board=({BoardCol},{BoardRow})";
+            HasAssignedContent
+                ? $"Tile[{TileId}] topic={Topic.TopicName} item={ItemIndex} board=({BoardCol},{BoardRow})"
+                : $"Tile[{TileId}] pending-content board=({BoardCol},{BoardRow})";
     }
 
     public enum FlipState

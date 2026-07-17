@@ -87,7 +87,7 @@ namespace StampJourney.EditorTools
         }
 
         private GameManager _gameManager;
-        private string _topicFolder = "Assets/Arts/PictureTopics";
+        private string _topicFolder = "Assets/Arts/Topics";
         private string[] _topicTypes = Array.Empty<string>();
         private int _selectedTopicIndex = 0;
         private string[] _splitTypes = Array.Empty<string>();
@@ -311,12 +311,22 @@ namespace StampJourney.EditorTools
             config.timeLimitSeconds = EditorGUILayout.FloatField("Time limit (sec, 0 = off)", config.timeLimitSeconds);
             if (config.timeLimitSeconds < 0f)
                 config.timeLimitSeconds = 0f;
+            config.useAuthoredLayout = EditorGUILayout.Toggle(
+                new GUIContent(
+                    "Use authored layout",
+                    "Enabled: use this tool's exact board and queue layout. Disabled: runtime generates the layout from the configured topics."),
+                config.useAuthoredLayout);
             if (EditorGUI.EndChangeCheck())
             {
                 TrimInvalidSlots(config);
+                EditorUtility.SetDirty(config);
                 MarkDirty();
             }
-            EditorGUILayout.HelpBox("Drag a card to another card to swap them. Drag it to an empty space to move it. Drag a topic item onto a slot to add or replace it. Right-click any card to remove it.", MessageType.None);
+            EditorGUILayout.HelpBox(
+                config.useAuthoredLayout
+                    ? "This level will use the exact board and queue below. Drag cards to move or swap them. Right-click any card to remove it."
+                    : "This level will ignore the board and queue below at runtime. Gameplay will generate one four-item set from each configured topic.",
+                MessageType.None);
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space(8);
         }
@@ -459,6 +469,10 @@ namespace StampJourney.EditorTools
                 CardPlacement item = new() { stamp = stamp, itemIndex = itemIndex };
                 DrawPiece(itemRect, item, 1f, 3f);
                 DrawOutline(itemRect, new Color(.22f, .55f, .92f, .75f), 1f);
+                GUI.Label(
+                    itemRect,
+                    new GUIContent(string.Empty, $"{stamp.GetItemSprite(itemIndex)?.name}\nRight-click to remove from {stamp.stampName}."),
+                    GUIStyle.none);
                 _paletteHits.Add(new PaletteHit(itemRect, item));
                 EditorGUIUtility.AddCursorRect(itemRect, MouseCursor.Link);
             }
@@ -673,7 +687,14 @@ namespace StampJourney.EditorTools
             switch (input.type)
             {
                 case EventType.MouseDown when input.button == 1:
-                    if (TryFindSlot(input.mousePosition, out LayoutSlot removeSlot) && GetCard(config, removeSlot) != null)
+                    if (TryFindPalettePiece(input.mousePosition, out CardPlacement paletteItem))
+                    {
+                        RemoveItemFromTopic(config, paletteItem.stamp, paletteItem.itemIndex);
+                        _drag.Clear();
+                        input.Use();
+                        Repaint();
+                    }
+                    else if (TryFindSlot(input.mousePosition, out LayoutSlot removeSlot) && GetCard(config, removeSlot) != null)
                     {
                         ClearSlot(config, removeSlot);
                         MarkDirty();
@@ -727,7 +748,6 @@ namespace StampJourney.EditorTools
                 SetSlot(config, target, _drag.Card);
             }
 
-            config.useAuthoredLayout = true;
             EditorUtility.SetDirty(config);
             MarkDirty();
         }
@@ -870,11 +890,65 @@ namespace StampJourney.EditorTools
             return config?.stamps?.Any(stamp => stamp?.itemSprites?.Contains(sprite) == true) == true;
         }
 
+        private void RemoveItemFromTopic(LevelData config, StampData topic, int itemIndex)
+        {
+            if (config == null || topic == null || !topic.IsValidItemIndex(itemIndex)) return;
+
+            Sprite removedSprite = topic.GetItemSprite(itemIndex);
+            int serializedIndex = -1;
+            int authoredIndex = 0;
+            for (int i = 0; i < topic.itemSprites.Length; i++)
+            {
+                if (topic.itemSprites[i] == null) continue;
+                if (authoredIndex++ != itemIndex) continue;
+                serializedIndex = i;
+                break;
+            }
+            if (serializedIndex < 0) return;
+
+            Undo.RecordObject(config, "Remove topic item");
+            topic.itemSprites = topic.itemSprites
+                .Where((sprite, index) => index != serializedIndex)
+                .ToArray();
+
+            int topicId = topic.stampId;
+            RemoveAndReindexTopicCards(config.boardLayout, topic, topicId, itemIndex);
+            RemoveAndReindexTopicCards(config.queueLayout, topic, topicId, itemIndex);
+
+            EditorUtility.SetDirty(config);
+            MarkDirty();
+            _validationMessage = $"Removed {removedSprite?.name ?? $"item {itemIndex + 1}"} from {topic.stampName}. Add a replacement, then Auto-arrange or repair the authored layout.";
+        }
+
+        private static void RemoveAndReindexTopicCards<T>(
+            List<T> cards,
+            StampData canonicalTopic,
+            int topicId,
+            int removedItemIndex) where T : CardPlacement
+        {
+            if (cards == null) return;
+
+            cards.RemoveAll(card =>
+                card?.stamp != null &&
+                card.stamp.stampId == topicId &&
+                card.itemIndex == removedItemIndex);
+
+            foreach (T card in cards)
+            {
+                if (card?.stamp == null || card.stamp.stampId != topicId) continue;
+                card.stamp = canonicalTopic;
+                if (card.itemIndex > removedItemIndex)
+                    card.itemIndex--;
+            }
+        }
+
         private void RemoveStamp(LevelData config, StampData stamp)
         {
+            int topicId = stamp.stampId;
             config.stamps = config.stamps.Where(current => current != stamp).ToArray();
-            config.boardLayout.RemoveAll(card => card?.stamp == stamp);
-            config.queueLayout.RemoveAll(card => card?.stamp == stamp);
+            config.boardLayout.RemoveAll(card => card?.stamp?.stampId == topicId);
+            config.queueLayout.RemoveAll(card => card?.stamp?.stampId == topicId);
+            EditorUtility.SetDirty(config);
             MarkDirty();
         }
 
@@ -922,7 +996,6 @@ namespace StampJourney.EditorTools
             config.boardLayout = board;
             config.queueLayout = queue;
             config.authoredQueueRows = Mathf.Max(1, Mathf.CeilToInt(queue.Count / (float)config.boardCols));
-            config.useAuthoredLayout = true;
             EditorUtility.SetDirty(config);
             Validate(config);
             MarkDirty();

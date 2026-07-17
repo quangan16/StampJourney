@@ -33,13 +33,8 @@ public class LevelData : ScriptableObject
     [LabelText("Topics")]
     public StampData[] stamps;
 
-    [Range(1, 8)]
-    public int maxStampTypesOnBoard = 3;
-
-    public FillStrategy fillStrategy = FillStrategy.RandomFromAvailable;
-
     [Header("Authored Layout")]
-    [Tooltip("When enabled, the board and the above-board queues are loaded exactly as arranged in the Level Designer window.")]
+    [Tooltip("Enabled: use the exact Level Designer board and queues. Disabled: generate one complete four-item set per configured topic and show every topic once.")]
     public bool useAuthoredLayout;
 
     [Tooltip("One entry for each occupied board cell. Rows are top-down, columns are left-right.")]
@@ -104,13 +99,4 @@ public class QueueCardPlacement : CardPlacement
         row = -1,
         order = order
     };
-}
-
-public enum FillStrategy
-{
-    /// <summary>Random topic and random item per cell.</summary>
-    RandomFromAvailable,
-
-    /// <summary>Ensures each stamp type appears with balanced distribution.</summary>
-    BalancedDistribution,
 }

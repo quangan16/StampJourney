@@ -14,7 +14,7 @@ namespace StampJourney.Gameplay
     {
         [BoxGroup("Settings")]
         [LabelText("Drop Duration per Cell (seconds)")]
-        public float dropDurationPerCell = 0.08f;
+        public float dropDurationPerCell = 0.14f;
 
         private Gameboard _gameboard;
 
@@ -35,13 +35,46 @@ namespace StampJourney.Gameplay
                 return;
             }
 
+            // Most swaps happen on a full board. Avoid detaching/reparenting groups unless a
+            // card really has an empty cell somewhere beneath it in the same column.
+            if (!NeedsGravity()) return;
+
+            // Groups are logical connections, but gravity moves every card independently.
+            // Detach their views first so an old group parent or jelly tween cannot absorb or
+            // distort the individual world-space drop animations.
+            foreach (CardGroup group in _gameboard.stampDetector.AllGroups.Values)
+                _gameboard.stampDetector.UnparentGroupCards(group);
+
             bool anyMoved = DropAllTiles();
 
             if (anyMoved)
             {
+                _gameboard.HideBrokenLiquidBridges();
                 float maxDelay = dropDurationPerCell * _gameboard.Rows;
-                await UniTask.Delay(TimeSpan.FromSeconds(maxDelay + 0.1f));
+                // await UniTask.Delay(TimeSpan.FromSeconds(maxDelay + 0.1f));
             }
+        }
+
+        private bool NeedsGravity()
+        {
+            for (int column = 0; column < _gameboard.Cols; column++)
+            {
+                bool foundEmptyBelow = false;
+                for (int row = _gameboard.Rows - 1; row >= 0; row--)
+                {
+                    CardModel card = _gameboard.GetCard(column, row);
+                    if (card == null)
+                    {
+                        foundEmptyBelow = true;
+                    }
+                    else if (foundEmptyBelow)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         /// <summary>

@@ -30,6 +30,23 @@ namespace StampJourney.Card
         [BoxGroup("Settings")]
         public float dropEaseTime = 0.35f;
 
+        [BoxGroup("Settings")]
+        [LabelText("Drop Sorting Order")]
+        public int dropSortingOrder = 50;
+
+        [BoxGroup("Topic Complete")]
+        [LabelText("Background Cross Fade")]
+        public float completeBackgroundFadeDuration = 0.25f;
+
+        [BoxGroup("Topic Complete")]
+        [LabelText("Completed Background Hold")]
+        public float completeBackgroundHoldDuration = 0.15f;
+
+        [BoxGroup("Topic Complete")]
+        [LabelText("Completion Sorting Order")]
+        [Tooltip("Raised above normal, falling, and dragged cards while a completed topic is presented.")]
+        public int completeSortingOrder = 200;
+
         #endregion
 
         #region Pool
@@ -89,13 +106,14 @@ namespace StampJourney.Card
 
             model.IsAnimating = true;
             float duration = dropEaseTime + row * 0.03f;
+            view.SetSortingOrder(dropSortingOrder);
 
             view.transform.DOMove(targetPos, duration).SetEase(Ease.InQuad)
                 .OnComplete(() =>
                 {
                     model.CanDrag = true;
                     model.IsAnimating = false;
-                    view.SetSortingOrder(0);
+                    view.SetSortingOrder(view.baseSortingOrder);
                 });
 
             // Schedule flip animation mid-drop
@@ -112,12 +130,13 @@ namespace StampJourney.Card
 
             model.IsAnimating = true;
             float duration = dropEaseTime + row * 0.03f;
+            view.SetSortingOrder(dropSortingOrder);
 
             view.transform.DOMove(targetPos, duration).SetEase(Ease.InQuad)
                 .OnComplete(() =>
                 {
                     model.IsAnimating = false;
-                    view.SetSortingOrder(0);
+                    view.SetSortingOrder(view.baseSortingOrder);
                 });
         }
 
@@ -130,14 +149,27 @@ namespace StampJourney.Card
             view.transform.DOMove(targetPos, dropEaseTime).SetEase(Ease.OutQuad);
         }
 
+        /// <summary>Reveals the content chosen for a generated face-down queue card.</summary>
+        public void AssignGeneratedContent(CardModel model, StampJourney.Data.StampData topic, int itemIndex)
+        {
+            model.AssignContent(topic, itemIndex);
+            if (!_activeCards.TryGetValue(model.TileId, out var view)) return;
+            view.RefreshVisual();
+        }
+
         /// <summary>Animates a tile dropping to a new position (called by GravitySystem).</summary>
         public void AnimateTileDrop(CardModel model, Vector2 targetWorldPos, float duration)
         {
             if (!_activeCards.TryGetValue(model.TileId, out var view)) return;
 
             model.IsAnimating = true;
-            view.transform.DOMove(targetWorldPos, duration).SetEase(Ease.InQuad)
-                .OnComplete(() => model.IsAnimating = false);
+            view.SetSortingOrder(dropSortingOrder);
+            view.transform.DOMove(targetWorldPos, duration).SetEase(Ease.InOutBack)
+                .OnComplete(() =>
+                {
+                    model.IsAnimating = false;
+                    view.SetSortingOrder(view.baseSortingOrder);
+                });
         }
 
         #endregion
@@ -151,7 +183,7 @@ namespace StampJourney.Card
             _activeCards.Remove(model.TileId);
 
             var seq = DOTween.Sequence();
-            seq.Append(view.transform.DOScale(1.3f, 0.2f).SetEase(Ease.OutBack));
+            seq.Append(view.transform.DOScale(1.1f, 0.2f).SetEase(Ease.OutBack));
             seq.Append(view.transform.DOScale(0f, 0.2f).SetEase(Ease.InBack));
             seq.OnComplete(() =>
             {
@@ -186,7 +218,50 @@ namespace StampJourney.Card
                 }
             }
 
+            // Raise each card independently; the movement-only group parent intentionally has no
+            // SortingGroup. The combined background sits one order below the raised item cards.
+            foreach (CardView view in views)
+                view.SetSortingOrder(completeSortingOrder);
+
+            SpriteRenderer completedBackground = CreateCompletedGroupBackground(
+                group,
+                views,
+                completeSortingOrder - 1);
+            float backgroundFadeDuration = Mathf.Max(0f, completeBackgroundFadeDuration);
+            var backgroundTransition = DOTween.Sequence();
+
+            foreach (CardView view in views)
+            {
+                view.cardEdgeRenderer?.DisableAllLiquidBridgesImmediate();
+                if (view.backGroundImg == null) continue;
+
+                view.backGroundImg.DOKill();
+                backgroundTransition.Join(
+                    view.backGroundImg.DOFade(0f, backgroundFadeDuration).SetEase(Ease.Linear));
+            }
+
+            if (completedBackground != null)
+            {
+                Color visibleColor = completedBackground.color;
+                visibleColor.a = 1f;
+                completedBackground.color = new Color(
+                    visibleColor.r,
+                    visibleColor.g,
+                    visibleColor.b,
+                    0f);
+                backgroundTransition.Join(
+                    completedBackground.DOColor(visibleColor, backgroundFadeDuration)
+                        .SetEase(Ease.InOutSine));
+            }
+
+            // await backgroundTransition.AsyncWaitForCompletion();
+
+
+
             var seq = DOTween.Sequence();
+            seq.Append(group.transform.DOScale(1.15f, 0.2f).SetEase(Ease.OutBack));
+            // seq.Append(group.transform.DOShakeRotation(0.5f, 20f, 3, 0, true));
+            seq.AppendInterval(completeBackgroundHoldDuration);
             seq.Append(group.transform.DOScale(0f, 0.3f).SetEase(Ease.InBack));
             await seq.AsyncWaitForCompletion();
 
@@ -199,6 +274,50 @@ namespace StampJourney.Card
 
             if (group != null && group.gameObject != null)
                 Destroy(group.gameObject);
+        }
+
+        /// <summary>
+        /// Creates one sliced world-space background covering the completed 2x2 topic while
+        /// leaving the four authored item pictures visible above it.
+        /// </summary>
+        private static SpriteRenderer CreateCompletedGroupBackground(
+            CardGroup group,
+            IReadOnlyList<CardView> views,
+            int sortingOrder)
+        {
+            if (group == null || views == null) return null;
+
+            CardView sourceView = null;
+            foreach (CardView view in views)
+            {
+                if (view != null && view.backGroundImg != null)
+                {
+                    sourceView = view;
+                    break;
+                }
+            }
+
+            if (sourceView == null || sourceView.backGroundImg.sprite == null) return null;
+
+            var imageObject = new GameObject("Completed Topic Background");
+            imageObject.layer = sourceView.gameObject.layer;
+            imageObject.transform.SetParent(group.transform, false);
+            imageObject.transform.localPosition = Vector3.zero;
+
+            SpriteRenderer image = imageObject.AddComponent<SpriteRenderer>();
+            image.sprite = sourceView.backGroundImg.sprite;
+            image.sharedMaterial = sourceView.backGroundImg.sharedMaterial;
+            image.color = sourceView.GetLinkStateColor(4);
+            image.sortingLayerID = sourceView.backGroundImg.sortingLayerID;
+            image.sortingOrder = sortingOrder;
+            image.drawMode = SpriteDrawMode.Sliced;
+
+            var config = GameManager.Instance.GameConfig;
+            image.size = new Vector2(
+                config.cardWidth * 2f + config.cardGap,
+                config.cardHeight * 2f + config.cardGap);
+
+            return image;
         }
 
         /// <summary>

@@ -17,8 +17,25 @@ namespace StampJourney.Gameplay
     {
         private Gameboard _board;
 
+        [BoxGroup("Merge Jelly")]
+        [LabelText("Enable Group Jelly")]
+        public bool enableGroupJelly = true;
+
+        [BoxGroup("Merge Jelly")]
+        [ShowIf("enableGroupJelly")]
+        [Range(0.03f, 0.2f)]
+        public float groupJellyStrength = 0.1f;
+
+        [BoxGroup("Merge Jelly")]
+        [ShowIf("enableGroupJelly")]
+        [MinValue(0.15f)]
+        public float groupJellyDuration = 0.48f;
+
         [ShowInInspector, ReadOnly]
         private readonly Dictionary<int, CardGroup> _groups = new();
+        private readonly Dictionary<int, string> _lastGroupLayouts = new();
+
+        private bool _hasCompletedInitialRebuild;
 
         #region Public API
 
@@ -26,6 +43,8 @@ namespace StampJourney.Gameplay
         {
             _board = board;
             _groups.Clear();
+            _lastGroupLayouts.Clear();
+            _hasCompletedInitialRebuild = false;
         }
 
         public CardGroup GetGroup(int groupId) =>
@@ -46,6 +65,7 @@ namespace StampJourney.Gameplay
         public void RebuildGroups()
         {
             var oldGroups = _groups.Values.ToList();
+            var newlyFormedGroupIds = new HashSet<int>();
             _groups.Clear();
 
             // 1. Clear Group references on all tiles
@@ -55,14 +75,38 @@ namespace StampJourney.Gameplay
             var newLogicalGroups = FindLogicalGroups();
 
             // 3. Match old groups to new, reuse where possible
-            ReconcileGroups(newLogicalGroups, oldGroups);
+            ReconcileGroups(newLogicalGroups, oldGroups, newlyFormedGroupIds);
 
             // 4. Destroy orphaned old groups
             DestroyOrphanedGroups(oldGroups);
 
-            // 5. Update or create parent transforms for all groups
+            // 5. Update or create parent transforms for all groups. Compare member positions
+            // relative to the group's own bounds so internal changes replay jelly, while moving
+            // the whole unchanged group to another board position does not.
+            var currentGroupLayouts = new Dictionary<int, string>();
             foreach (var group in _groups.Values)
+            {
+                string currentLayout = BuildGroupLayoutSignature(group);
+                bool layoutChanged =
+                    _lastGroupLayouts.TryGetValue(group.GroupId, out string previousLayout) &&
+                    previousLayout != currentLayout;
+                currentGroupLayouts[group.GroupId] = currentLayout;
+
                 UpdateOrCreateGroupParent(group);
+
+                bool shouldPlayJelly =
+                    newlyFormedGroupIds.Contains(group.GroupId) || layoutChanged;
+                if (_hasCompletedInitialRebuild && shouldPlayJelly)
+                    PlayGroupMergeJelly(group);
+            }
+
+            _lastGroupLayouts.Clear();
+            foreach (var pair in currentGroupLayouts)
+                _lastGroupLayouts[pair.Key] = pair.Value;
+
+            UpdateAllLinkStateColors(_hasCompletedInitialRebuild);
+
+            _hasCompletedInitialRebuild = true;
 
             Debug.Log($"[StampDetector] RebuildGroups — Total: {_groups.Count}");
         }
@@ -166,6 +210,19 @@ namespace StampJourney.Gameplay
                 }
         }
 
+        private static string BuildGroupLayoutSignature(CardGroup group)
+        {
+            int originCol = group.Members.Min(member => member.BoardCol);
+            int originRow = group.Members.Min(member => member.BoardRow);
+
+            return string.Join(
+                "|",
+                group.Members
+                    .OrderBy(member => member.TileId)
+                    .Select(member =>
+                        $"{member.TileId}:{member.BoardCol - originCol}:{member.BoardRow - originRow}"));
+        }
+
         private List<List<CardModel>> FindLogicalGroups()
         {
             var result = new List<List<CardModel>>();
@@ -217,7 +274,10 @@ namespace StampJourney.Gameplay
             return result;
         }
 
-        private void ReconcileGroups(List<List<CardModel>> newLogicalGroups, List<CardGroup> oldGroups)
+        private void ReconcileGroups(
+            List<List<CardModel>> newLogicalGroups,
+            List<CardGroup> oldGroups,
+            HashSet<int> newlyFormedGroupIds)
         {
             foreach (var logicalGroup in newLogicalGroups)
             {
@@ -246,6 +306,7 @@ namespace StampJourney.Gameplay
                         newGroup.Add(member);
 
                     _groups[newGroup.GroupId] = newGroup;
+                    newlyFormedGroupIds.Add(newGroup.GroupId);
                 }
             }
         }
@@ -289,12 +350,13 @@ namespace StampJourney.Gameplay
 
             group.gameObject.name = $"Group_{group.GroupId}_{group.Topic.TopicName}";
 
-            // Ensure SortingGroup exists
-            var sortingGroup = group.gameObject.GetComponent<UnityEngine.Rendering.SortingGroup>();
-            if (sortingGroup == null)
+            // Group parents are movement-only transforms. A parent SortingGroup would flatten
+            // every card and bridge into one render unit, allowing a bridge to cover cards in
+            // another group. Remove legacy runtime components left by an earlier rebuild.
+            if (group.gameObject.TryGetComponent<UnityEngine.Rendering.SortingGroup>(out var legacySortingGroup))
             {
-                sortingGroup = group.gameObject.AddComponent<UnityEngine.Rendering.SortingGroup>();
-                sortingGroup.sortingOrder = 10;
+                legacySortingGroup.enabled = false;
+                Destroy(legacySortingGroup);
             }
 
             // Reparent all member views under the group
@@ -306,6 +368,70 @@ namespace StampJourney.Gameplay
                     view.transform.SetParent(group.transform, true);
                     view.transform.localScale = Vector3.one;
                     view.transform.localRotation = Quaternion.identity;
+                    view.SetSortingOrder(view.baseSortingOrder);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Squashes and stretches a newly connected group like soft pudding.
+        /// The dominant axis follows the group's shape and each rebound loses energy.
+        /// </summary>
+        private void PlayGroupMergeJelly(CardGroup group)
+        {
+            if (!enableGroupJelly || group == null || group.GroupTransform == null) return;
+
+            Transform target = group.GroupTransform;
+            float strength = Mathf.Clamp(groupJellyStrength, 0.03f, 0.2f);
+            float duration = Mathf.Max(0.15f, groupJellyDuration);
+            bool horizontalGroup = group.Width >= group.Height;
+
+            Vector3 firstSquash = horizontalGroup
+                ? new Vector3(1f + strength, 1f - strength * 0.72f, 1f)
+                : new Vector3(1f - strength * 0.72f, 1f + strength, 1f);
+            Vector3 firstRebound = horizontalGroup
+                ? new Vector3(1f - strength * 0.55f, 1f + strength * 0.48f, 1f)
+                : new Vector3(1f + strength * 0.48f, 1f - strength * 0.55f, 1f);
+            Vector3 secondRebound = horizontalGroup
+                ? new Vector3(1f + strength * 0.24f, 1f - strength * 0.18f, 1f)
+                : new Vector3(1f - strength * 0.18f, 1f + strength * 0.24f, 1f);
+
+            target.DOKill(false);
+            target.localScale = Vector3.one;
+
+            DOTween.Sequence()
+                .SetTarget(target)
+                .Append(target.DOScale(firstSquash, duration * 0.22f).SetEase(Ease.OutQuad))
+                .Append(target.DOScale(firstRebound, duration * 0.28f).SetEase(Ease.InOutSine))
+                .Append(target.DOScale(secondRebound, duration * 0.23f).SetEase(Ease.InOutSine))
+                .Append(target.DOScale(Vector3.one, duration * 0.27f).SetEase(Ease.OutSine))
+                .OnKill(() =>
+                {
+                    if (target != null) target.localScale = Vector3.one;
+                })
+                .OnComplete(() =>
+                {
+                    if (target != null) target.localScale = Vector3.one;
+                });
+        }
+
+        /// <summary>
+        /// Applies blue/green/orange/purple state colors to every board card. Standalone cards
+        /// count as one, while connected cards use their current logical group size.
+        /// </summary>
+        private void UpdateAllLinkStateColors(bool animate)
+        {
+            for (int row = 0; row < _board.Rows; row++)
+            {
+                for (int col = 0; col < _board.Cols; col++)
+                {
+                    CardModel model = _board.GetCard(col, row);
+                    if (model == null) continue;
+
+                    CardView view = _board.cardFactory.GetView(model.TileId);
+                    if (view == null) continue;
+
+                    view.SetLinkedItemCount(model.Group?.Count ?? 1, animate);
                 }
             }
         }

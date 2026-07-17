@@ -13,305 +13,352 @@ MonoBehaviour:
   m_Name: Level_3
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
   levelID: 3
-  boardCols: 3
-  boardRows: 3
+  boardCols: 4
+  boardRows: 5
   maxMoves: -1
   timeLimitSeconds: 0
   stamps:
   - stampId: 1
-    stampName: sight 4_8
+    stampName: 21_Noel
     stampColor: {r: 1, g: 1, b: 1, a: 1}
-    cols: 2
-    rows: 2
-    fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-    pieceSprites: []
+    itemSprites:
+    - {fileID: 264164082803920664, guid: c4ced67e81fd89b4da65c398dfacf080, type: 3}
+    - {fileID: 8209555930913303346, guid: 1e8bfe4461b4f8c4987f2094873352e3, type: 3}
+    - {fileID: 6557196441783573823, guid: 35f7518f9bcefbb43865c29ce44d9177, type: 3}
+    - {fileID: 3799039068058795959, guid: a1d4e880760097d4dbaaead357221402, type: 3}
   - stampId: 2
-    stampName: sight 4_3
+    stampName: 31_Travel & Souvenirs
     stampColor: {r: 1, g: 1, b: 1, a: 1}
-    cols: 2
-    rows: 2
-    fullImage: {fileID: 1747446817, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-    pieceSprites: []
+    itemSprites:
+    - {fileID: -4734243666404121888, guid: 3d7012eee49b558409fa23895e5cd5fa, type: 3}
+    - {fileID: -766817131389036377, guid: 81eac56a8abdbd94794c0f5884ba6245, type: 3}
+    - {fileID: 864214261056358995, guid: a0d3365e60e6d134c9a3b3b2ed175b8b, type: 3}
+    - {fileID: 3721636649550770754, guid: 1c0ad2ea47f87c84b8ebb97dfef6aafc, type: 3}
   - stampId: 3
-    stampName: sight 4_5
+    stampName: "27_V\u1EADt d\u1EE5ng s\u1EEDa ch\u1EEFa"
     stampColor: {r: 1, g: 1, b: 1, a: 1}
-    cols: 2
-    rows: 2
-    fullImage: {fileID: 1772381717, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-    pieceSprites: []
+    itemSprites:
+    - {fileID: 7722598389126262775, guid: be508417b9ff8724eb40a8052389c594, type: 3}
+    - {fileID: -1893819315033706535, guid: 6f3da99bee7d72846b234b920037cdcf, type: 3}
+    - {fileID: 5479915035388937006, guid: 704b192ebf547b643851db1d49677ff2, type: 3}
+    - {fileID: -3900215330785691863, guid: a224966bef565634880c8f6c62d81edc, type: 3}
   - stampId: 4
-    stampName: sight 4_0
+    stampName: 34_Office
     stampColor: {r: 1, g: 1, b: 1, a: 1}
-    cols: 2
-    rows: 2
-    fullImage: {fileID: 1031225066076554309, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-    pieceSprites: []
-  maxStampTypesOnBoard: 3
-  fillStrategy: 0
+    itemSprites:
+    - {fileID: -4331672421012719794, guid: 52dd017a4d589354d994939b7ea6616d, type: 3}
+    - {fileID: 4647220504320231035, guid: 066f95f92c571514da0437afeb89e34c, type: 3}
+    - {fileID: -7873150069905979268, guid: 82d15ebceb992294aa05b4a073baf42d, type: 3}
+    - {fileID: 8567338512608448850, guid: 41b5f25d8588dcc4aa864202e41141ab, type: 3}
+  - stampId: 5
+    stampName: "25_Th\u1EC3 thao"
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    itemSprites:
+    - {fileID: 3459402516437157558, guid: 4bf76b69dbf66c84ebcb9bcf198456b1, type: 3}
+    - {fileID: -1728663273079213566, guid: a2b3fe485e981134cba91318618fb4e3, type: 3}
+    - {fileID: 4213179939402743230, guid: f29f733216ac9fa479d3e5a74c34f70e, type: 3}
+    - {fileID: -8189331958381067450, guid: ac1a99dc48c7b8d45ba9dbfc1237cea4, type: 3}
+  - stampId: 6
+    stampName: 35_Summer
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    itemSprites:
+    - {fileID: -6094046820247997597, guid: 7a1de6ee1e555bc47976b7c5c96b140c, type: 3}
+    - {fileID: -4973136559905427814, guid: 5029de3756f83dc449d056cc551ecd78, type: 3}
+    - {fileID: -4505045215663374401, guid: d5139c2dc6ab636478d7761e85c93bb9, type: 3}
+    - {fileID: -8285806953065967978, guid: b01cb520cf6bd9e4ea617983188ed416, type: 3}
   useAuthoredLayout: 1
   boardLayout:
   - stamp:
-      stampId: 2
-      stampName: sight 4_3
+      stampId: 5
+      stampName: "25_Th\u1EC3 thao"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1747446817, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 1
-    pieceRow: 1
+      itemSprites:
+      - {fileID: 3459402516437157558, guid: 4bf76b69dbf66c84ebcb9bcf198456b1, type: 3}
+      - {fileID: -1728663273079213566, guid: a2b3fe485e981134cba91318618fb4e3, type: 3}
+      - {fileID: 4213179939402743230, guid: f29f733216ac9fa479d3e5a74c34f70e, type: 3}
+      - {fileID: -8189331958381067450, guid: ac1a99dc48c7b8d45ba9dbfc1237cea4, type: 3}
+    itemIndex: 1
     column: 0
     row: 0
   - stamp:
-      stampId: 4
-      stampName: sight 4_0
+      stampId: 5
+      stampName: "25_Th\u1EC3 thao"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1031225066076554309, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 0
-    pieceRow: 1
+      itemSprites:
+      - {fileID: 3459402516437157558, guid: 4bf76b69dbf66c84ebcb9bcf198456b1, type: 3}
+      - {fileID: -1728663273079213566, guid: a2b3fe485e981134cba91318618fb4e3, type: 3}
+      - {fileID: 4213179939402743230, guid: f29f733216ac9fa479d3e5a74c34f70e, type: 3}
+      - {fileID: -8189331958381067450, guid: ac1a99dc48c7b8d45ba9dbfc1237cea4, type: 3}
+    itemIndex: 3
     column: 1
     row: 0
   - stamp:
-      stampId: 2
-      stampName: sight 4_3
+      stampId: 5
+      stampName: "25_Th\u1EC3 thao"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1747446817, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 0
-    pieceRow: 0
+      itemSprites:
+      - {fileID: 3459402516437157558, guid: 4bf76b69dbf66c84ebcb9bcf198456b1, type: 3}
+      - {fileID: -1728663273079213566, guid: a2b3fe485e981134cba91318618fb4e3, type: 3}
+      - {fileID: 4213179939402743230, guid: f29f733216ac9fa479d3e5a74c34f70e, type: 3}
+      - {fileID: -8189331958381067450, guid: ac1a99dc48c7b8d45ba9dbfc1237cea4, type: 3}
+    itemIndex: 2
     column: 2
     row: 0
   - stamp:
       stampId: 3
-      stampName: sight 4_5
+      stampName: "27_V\u1EADt d\u1EE5ng s\u1EEDa ch\u1EEFa"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1772381717, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 1
-    pieceRow: 0
+      itemSprites:
+      - {fileID: 7722598389126262775, guid: be508417b9ff8724eb40a8052389c594, type: 3}
+      - {fileID: -1893819315033706535, guid: 6f3da99bee7d72846b234b920037cdcf, type: 3}
+      - {fileID: 5479915035388937006, guid: 704b192ebf547b643851db1d49677ff2, type: 3}
+      - {fileID: -3900215330785691863, guid: a224966bef565634880c8f6c62d81edc, type: 3}
+    itemIndex: 0
+    column: 3
+    row: 0
+  - stamp:
+      stampId: 3
+      stampName: "27_V\u1EADt d\u1EE5ng s\u1EEDa ch\u1EEFa"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 7722598389126262775, guid: be508417b9ff8724eb40a8052389c594, type: 3}
+      - {fileID: -1893819315033706535, guid: 6f3da99bee7d72846b234b920037cdcf, type: 3}
+      - {fileID: 5479915035388937006, guid: 704b192ebf547b643851db1d49677ff2, type: 3}
+      - {fileID: -3900215330785691863, guid: a224966bef565634880c8f6c62d81edc, type: 3}
+    itemIndex: 2
     column: 0
     row: 1
   - stamp:
       stampId: 4
-      stampName: sight 4_0
+      stampName: 34_Office
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1031225066076554309, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 0
-    pieceRow: 0
+      itemSprites:
+      - {fileID: -4331672421012719794, guid: 52dd017a4d589354d994939b7ea6616d, type: 3}
+      - {fileID: 4647220504320231035, guid: 066f95f92c571514da0437afeb89e34c, type: 3}
+      - {fileID: -7873150069905979268, guid: 82d15ebceb992294aa05b4a073baf42d, type: 3}
+      - {fileID: 8567338512608448850, guid: 41b5f25d8588dcc4aa864202e41141ab, type: 3}
+    itemIndex: 1
     column: 1
     row: 1
   - stamp:
-      stampId: 4
-      stampName: sight 4_0
+      stampId: 3
+      stampName: "27_V\u1EADt d\u1EE5ng s\u1EEDa ch\u1EEFa"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1031225066076554309, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 1
-    pieceRow: 1
+      itemSprites:
+      - {fileID: 7722598389126262775, guid: be508417b9ff8724eb40a8052389c594, type: 3}
+      - {fileID: -1893819315033706535, guid: 6f3da99bee7d72846b234b920037cdcf, type: 3}
+      - {fileID: 5479915035388937006, guid: 704b192ebf547b643851db1d49677ff2, type: 3}
+      - {fileID: -3900215330785691863, guid: a224966bef565634880c8f6c62d81edc, type: 3}
+    itemIndex: 3
     column: 2
     row: 1
   - stamp:
-      stampId: 2
-      stampName: sight 4_3
+      stampId: 5
+      stampName: "25_Th\u1EC3 thao"
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1747446817, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 0
-    pieceRow: 1
+      itemSprites:
+      - {fileID: 3459402516437157558, guid: 4bf76b69dbf66c84ebcb9bcf198456b1, type: 3}
+      - {fileID: -1728663273079213566, guid: a2b3fe485e981134cba91318618fb4e3, type: 3}
+      - {fileID: 4213179939402743230, guid: f29f733216ac9fa479d3e5a74c34f70e, type: 3}
+      - {fileID: -8189331958381067450, guid: ac1a99dc48c7b8d45ba9dbfc1237cea4, type: 3}
+    itemIndex: 0
+    column: 3
+    row: 1
+  - stamp:
+      stampId: 4
+      stampName: 34_Office
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -4331672421012719794, guid: 52dd017a4d589354d994939b7ea6616d, type: 3}
+      - {fileID: 4647220504320231035, guid: 066f95f92c571514da0437afeb89e34c, type: 3}
+      - {fileID: -7873150069905979268, guid: 82d15ebceb992294aa05b4a073baf42d, type: 3}
+      - {fileID: 8567338512608448850, guid: 41b5f25d8588dcc4aa864202e41141ab, type: 3}
+    itemIndex: 0
     column: 0
     row: 2
   - stamp:
-      stampId: 2
-      stampName: sight 4_3
+      stampId: 1
+      stampName: 21_Noel
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1747446817, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 1
-    pieceRow: 0
+      itemSprites:
+      - {fileID: 264164082803920664, guid: c4ced67e81fd89b4da65c398dfacf080, type: 3}
+      - {fileID: 8209555930913303346, guid: 1e8bfe4461b4f8c4987f2094873352e3, type: 3}
+      - {fileID: 6557196441783573823, guid: 35f7518f9bcefbb43865c29ce44d9177, type: 3}
+      - {fileID: 3799039068058795959, guid: a1d4e880760097d4dbaaead357221402, type: 3}
+    itemIndex: 2
     column: 1
     row: 2
   - stamp:
-      stampId: 4
-      stampName: sight 4_0
+      stampId: 2
+      stampName: 31_Travel & Souvenirs
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1031225066076554309, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 1
-    pieceRow: 0
+      itemSprites:
+      - {fileID: -4734243666404121888, guid: 3d7012eee49b558409fa23895e5cd5fa, type: 3}
+      - {fileID: -766817131389036377, guid: 81eac56a8abdbd94794c0f5884ba6245, type: 3}
+      - {fileID: 864214261056358995, guid: a0d3365e60e6d134c9a3b3b2ed175b8b, type: 3}
+      - {fileID: 3721636649550770754, guid: 1c0ad2ea47f87c84b8ebb97dfef6aafc, type: 3}
+    itemIndex: 3
     column: 2
     row: 2
+  - stamp:
+      stampId: 1
+      stampName: 21_Noel
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 264164082803920664, guid: c4ced67e81fd89b4da65c398dfacf080, type: 3}
+      - {fileID: 8209555930913303346, guid: 1e8bfe4461b4f8c4987f2094873352e3, type: 3}
+      - {fileID: 6557196441783573823, guid: 35f7518f9bcefbb43865c29ce44d9177, type: 3}
+      - {fileID: 3799039068058795959, guid: a1d4e880760097d4dbaaead357221402, type: 3}
+    itemIndex: 0
+    column: 3
+    row: 2
+  - stamp:
+      stampId: 2
+      stampName: 31_Travel & Souvenirs
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -4734243666404121888, guid: 3d7012eee49b558409fa23895e5cd5fa, type: 3}
+      - {fileID: -766817131389036377, guid: 81eac56a8abdbd94794c0f5884ba6245, type: 3}
+      - {fileID: 864214261056358995, guid: a0d3365e60e6d134c9a3b3b2ed175b8b, type: 3}
+      - {fileID: 3721636649550770754, guid: 1c0ad2ea47f87c84b8ebb97dfef6aafc, type: 3}
+    itemIndex: 0
+    column: 0
+    row: 3
+  - stamp:
+      stampId: 2
+      stampName: 31_Travel & Souvenirs
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -4734243666404121888, guid: 3d7012eee49b558409fa23895e5cd5fa, type: 3}
+      - {fileID: -766817131389036377, guid: 81eac56a8abdbd94794c0f5884ba6245, type: 3}
+      - {fileID: 864214261056358995, guid: a0d3365e60e6d134c9a3b3b2ed175b8b, type: 3}
+      - {fileID: 3721636649550770754, guid: 1c0ad2ea47f87c84b8ebb97dfef6aafc, type: 3}
+    itemIndex: 2
+    column: 1
+    row: 3
+  - stamp:
+      stampId: 1
+      stampName: 21_Noel
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 264164082803920664, guid: c4ced67e81fd89b4da65c398dfacf080, type: 3}
+      - {fileID: 8209555930913303346, guid: 1e8bfe4461b4f8c4987f2094873352e3, type: 3}
+      - {fileID: 6557196441783573823, guid: 35f7518f9bcefbb43865c29ce44d9177, type: 3}
+      - {fileID: 3799039068058795959, guid: a1d4e880760097d4dbaaead357221402, type: 3}
+    itemIndex: 3
+    column: 2
+    row: 3
+  - stamp:
+      stampId: 1
+      stampName: 21_Noel
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 264164082803920664, guid: c4ced67e81fd89b4da65c398dfacf080, type: 3}
+      - {fileID: 8209555930913303346, guid: 1e8bfe4461b4f8c4987f2094873352e3, type: 3}
+      - {fileID: 6557196441783573823, guid: 35f7518f9bcefbb43865c29ce44d9177, type: 3}
+      - {fileID: 3799039068058795959, guid: a1d4e880760097d4dbaaead357221402, type: 3}
+    itemIndex: 1
+    column: 3
+    row: 3
+  - stamp:
+      stampId: 3
+      stampName: "27_V\u1EADt d\u1EE5ng s\u1EEDa ch\u1EEFa"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 7722598389126262775, guid: be508417b9ff8724eb40a8052389c594, type: 3}
+      - {fileID: -1893819315033706535, guid: 6f3da99bee7d72846b234b920037cdcf, type: 3}
+      - {fileID: 5479915035388937006, guid: 704b192ebf547b643851db1d49677ff2, type: 3}
+      - {fileID: -3900215330785691863, guid: a224966bef565634880c8f6c62d81edc, type: 3}
+    itemIndex: 1
+    column: 0
+    row: 4
+  - stamp:
+      stampId: 4
+      stampName: 34_Office
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -4331672421012719794, guid: 52dd017a4d589354d994939b7ea6616d, type: 3}
+      - {fileID: 4647220504320231035, guid: 066f95f92c571514da0437afeb89e34c, type: 3}
+      - {fileID: -7873150069905979268, guid: 82d15ebceb992294aa05b4a073baf42d, type: 3}
+      - {fileID: 8567338512608448850, guid: 41b5f25d8588dcc4aa864202e41141ab, type: 3}
+    itemIndex: 2
+    column: 1
+    row: 4
+  - stamp:
+      stampId: 2
+      stampName: 31_Travel & Souvenirs
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -4734243666404121888, guid: 3d7012eee49b558409fa23895e5cd5fa, type: 3}
+      - {fileID: -766817131389036377, guid: 81eac56a8abdbd94794c0f5884ba6245, type: 3}
+      - {fileID: 864214261056358995, guid: a0d3365e60e6d134c9a3b3b2ed175b8b, type: 3}
+      - {fileID: 3721636649550770754, guid: 1c0ad2ea47f87c84b8ebb97dfef6aafc, type: 3}
+    itemIndex: 1
+    column: 2
+    row: 4
+  - stamp:
+      stampId: 4
+      stampName: 34_Office
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -4331672421012719794, guid: 52dd017a4d589354d994939b7ea6616d, type: 3}
+      - {fileID: 4647220504320231035, guid: 066f95f92c571514da0437afeb89e34c, type: 3}
+      - {fileID: -7873150069905979268, guid: 82d15ebceb992294aa05b4a073baf42d, type: 3}
+      - {fileID: 8567338512608448850, guid: 41b5f25d8588dcc4aa864202e41141ab, type: 3}
+    itemIndex: 3
+    column: 3
+    row: 4
   queueLayout:
   - stamp:
-      stampId: 1
-      stampName: sight 4_8
+      stampId: 6
+      stampName: 35_Summer
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 1
-    pieceRow: 1
+      itemSprites:
+      - {fileID: -6094046820247997597, guid: 7a1de6ee1e555bc47976b7c5c96b140c, type: 3}
+      - {fileID: -4973136559905427814, guid: 5029de3756f83dc449d056cc551ecd78, type: 3}
+      - {fileID: -4505045215663374401, guid: d5139c2dc6ab636478d7761e85c93bb9, type: 3}
+      - {fileID: -8285806953065967978, guid: b01cb520cf6bd9e4ea617983188ed416, type: 3}
+    itemIndex: 3
     column: 0
     row: -1
     order: 0
   - stamp:
-      stampId: 1
-      stampName: sight 4_8
+      stampId: 6
+      stampName: 35_Summer
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 0
-    pieceRow: 1
+      itemSprites:
+      - {fileID: -6094046820247997597, guid: 7a1de6ee1e555bc47976b7c5c96b140c, type: 3}
+      - {fileID: -4973136559905427814, guid: 5029de3756f83dc449d056cc551ecd78, type: 3}
+      - {fileID: -4505045215663374401, guid: d5139c2dc6ab636478d7761e85c93bb9, type: 3}
+      - {fileID: -8285806953065967978, guid: b01cb520cf6bd9e4ea617983188ed416, type: 3}
+    itemIndex: 0
     column: 1
     row: -1
     order: 0
   - stamp:
-      stampId: 3
-      stampName: sight 4_5
+      stampId: 6
+      stampName: 35_Summer
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1772381717, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 1
-    pieceRow: 1
+      itemSprites:
+      - {fileID: -6094046820247997597, guid: 7a1de6ee1e555bc47976b7c5c96b140c, type: 3}
+      - {fileID: -4973136559905427814, guid: 5029de3756f83dc449d056cc551ecd78, type: 3}
+      - {fileID: -4505045215663374401, guid: d5139c2dc6ab636478d7761e85c93bb9, type: 3}
+      - {fileID: -8285806953065967978, guid: b01cb520cf6bd9e4ea617983188ed416, type: 3}
+    itemIndex: 2
     column: 2
     row: -1
     order: 0
   - stamp:
-      stampId: 3
-      stampName: sight 4_5
+      stampId: 6
+      stampName: 35_Summer
       stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1772381717, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 0
-    pieceRow: 0
-    column: 0
+      itemSprites:
+      - {fileID: -6094046820247997597, guid: 7a1de6ee1e555bc47976b7c5c96b140c, type: 3}
+      - {fileID: -4973136559905427814, guid: 5029de3756f83dc449d056cc551ecd78, type: 3}
+      - {fileID: -4505045215663374401, guid: d5139c2dc6ab636478d7761e85c93bb9, type: 3}
+      - {fileID: -8285806953065967978, guid: b01cb520cf6bd9e4ea617983188ed416, type: 3}
+    itemIndex: 1
+    column: 3
     row: -1
-    order: 1
-  - stamp:
-      stampId: 1
-      stampName: sight 4_8
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 1
-    pieceRow: 0
-    column: 1
-    row: -1
-    order: 1
-  - stamp:
-      stampId: 3
-      stampName: sight 4_5
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: 1772381717, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 0
-    pieceRow: 1
-    column: 2
-    row: -1
-    order: 1
-  - stamp:
-      stampId: 1
-      stampName: sight 4_8
-      stampColor: {r: 1, g: 1, b: 1, a: 1}
-      cols: 2
-      rows: 2
-      fullImage: {fileID: -1154116778, guid: 46c407c3d3a3f6d42b988eb3bddd2593, type: 3}
-      pieceSprites:
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-      - {fileID: 0}
-    pieceCol: 0
-    pieceRow: 0
-    column: 0
-    row: -1
-    order: 2
-  authoredQueueRows: 3
+    order: 0
+  authoredQueueRows: 1

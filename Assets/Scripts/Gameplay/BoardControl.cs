@@ -81,10 +81,12 @@ namespace StampJourney.Gameplay
             SpawnTiles();
 
             queueSystem?.ClearAllQueues();
+            if (!_levelData.useAuthoredLayout)
+                queueSystem?.PrepareGeneratedLevel(_cols, _rows);
             FillBoardInitial();
-            queueSystem?.SetupInitialQueues();
 
             await StartupEffectAsync();
+            queueSystem?.SetupInitialQueues();
 
             // Rebuild groups + edges after initial fill
             stampDetector?.RebuildGroups();
@@ -161,12 +163,11 @@ namespace StampJourney.Gameplay
             if (cardA == null || cardB == null) return;
 
             SwapInGrid(colA, rowA, colB, rowB);
+            HideBrokenLiquidBridges();
+            AnimateAllTilesToGridPositions(0.18f);
             OnSwapCompleted?.Invoke(cardA, cardB);
 
-            // Rebuild groups after swap
-            stampDetector.RebuildGroups();
-            UpdateAllEdges();
-            await CheckAndClearAsync();
+            await SettleAfterPlayerMoveAsync(0.18f);
         }
 
         /// <summary>Swaps an entire group by a grid delta. Called by CardView during group drag.</summary>
@@ -192,15 +193,13 @@ namespace StampJourney.Gameplay
 
             if (success)
             {
+                HideBrokenLiquidBridges();
                 AnimateAllTilesToGridPositions(0.25f);
 
                 if (cachedMembers.Count > 0)
                     OnSwapCompleted?.Invoke(cachedMembers[0], cachedMembers[0]);
 
-                stampDetector.RebuildGroups();
-                UpdateAllEdges();
-                await UniTask.WaitForSeconds(0.2f);
-                await CheckAndClearAsync();
+                await SettleAfterPlayerMoveAsync(0.25f);
             }
             else
             {
@@ -240,6 +239,7 @@ namespace StampJourney.Gameplay
             SetTile(origCol, origRow, targetCard);
             SetTile(newCol, newRow, card);
 
+            HideBrokenLiquidBridges();
             AnimateAllTilesToGridPositions(0.18f);
 
             if (targetCard != null)
@@ -247,11 +247,7 @@ namespace StampJourney.Gameplay
             else
                 OnSwapCompleted?.Invoke(card, card);
 
-            stampDetector.RebuildGroups();
-            UpdateAllEdges();
-
-            await UniTask.Delay(TimeSpan.FromSeconds(0.2f));
-            await CheckAndClearAsync();
+            await SettleAfterPlayerMoveAsync(0.2f);
         }
 
         #endregion
@@ -308,9 +304,7 @@ namespace StampJourney.Gameplay
             {
                 for (int col = 0; col < _cols; col++)
                 {
-                    int queueCardCount = _levelData.useAuthoredLayout
-                        ? _levelData.GetQueueCards(col).Count()
-                        : queueSystem.queueSize;
+                    int queueCardCount = queueSystem.GetQueueCount(col);
 
                     for (int queueIndex = 0; queueIndex < queueCardCount; queueIndex++)
                     {
@@ -387,10 +381,7 @@ namespace StampJourney.Gameplay
                 return;
             }
 
-            if (_levelData.fillStrategy == FillStrategy.BalancedDistribution)
-                FillBalanced();
-            else
-                FillRandom();
+            FillGeneratedBoard();
         }
 
         private void FillAuthoredBoard()
@@ -406,51 +397,31 @@ namespace StampJourney.Gameplay
             }
         }
 
-        private void FillRandom()
+        private void FillGeneratedBoard()
         {
-            var stamps = _levelData.stamps;
-            for (int r = 0; r < _rows; r++)
+            IReadOnlyList<CardModel> cards = queueSystem.GeneratedInitialCards;
+            for (int index = 0; index < cards.Count; index++)
             {
-                for (int c = 0; c < _cols; c++)
-                {
-                    var stamp = stamps[UnityEngine.Random.Range(0, stamps.Length)];
-                    int itemIndex = UnityEngine.Random.Range(0, stamp.TotalItems);
-                    var model = new CardModel(stamp, itemIndex);
-                    queueSystem.AddCardToQueue(c, model);
-                }
+                int column = index % _cols;
+                queueSystem.AddCardToQueue(column, cards[index]);
             }
         }
 
-        private void FillBalanced()
+        /// <summary>
+        /// Removes stale bridges immediately after logical board coordinates change, without
+        /// showing any newly possible bridges before the movement animation has settled.
+        /// </summary>
+        public void HideBrokenLiquidBridges()
         {
-            // Build a pool ensuring each topic has every authored item represented.
-            var pool = new List<(StampData topic, int itemIndex)>();
-            var stamps = _levelData.stamps;
-            int total = _cols * _rows;
-
-            while (pool.Count < total)
+            for (int c = 0; c < _cols; c++)
             {
-                foreach (var topic in stamps)
-                    for (int itemIndex = 0; itemIndex < topic.TotalItems; itemIndex++)
-                        pool.Add((topic, itemIndex));
-            }
-
-            // Fisher-Yates shuffle
-            for (int i = pool.Count - 1; i > 0; i--)
-            {
-                int j = UnityEngine.Random.Range(0, i + 1);
-                (pool[i], pool[j]) = (pool[j], pool[i]);
-            }
-
-            for (int r = 0; r < _rows; r++)
-            {
-                for (int c = 0; c < _cols; c++)
+                for (int r = 0; r < _rows; r++)
                 {
-                    int idx = c + r * _cols;
-                    if (idx >= pool.Count) break;
-                    var (topic, itemIndex) = pool[idx];
-                    var model = new CardModel(topic, itemIndex);
-                    queueSystem.AddCardToQueue(c, model);
+                    CardModel card = GetCard(c, r);
+                    if (card == null) continue;
+
+                    CardView view = cardFactory.GetView(card.TileId);
+                    view?.cardEdgeRenderer?.HideBrokenLiquidBridges();
                 }
             }
         }
@@ -539,12 +510,18 @@ namespace StampJourney.Gameplay
             {
                 var matches = stampDetector.FindCompletedStamps(_tiles, _cols, _rows);
                 anyCleared = matches.Count > 0;
+                int clearedCardCount = 0;
 
                 if (anyCleared)
                 {
+                    var clearAnimations = new List<UniTask>(matches.Count);
+                    var clearedCardBatches = new List<List<CardModel>>(matches.Count);
+
                     foreach (var group in matches)
                     {
                         var clearedCards = new List<CardModel>(group.Members);
+                        clearedCardBatches.Add(clearedCards);
+                        clearedCardCount += clearedCards.Count;
 
                         // Calculate group center for ripple effect
                         Vector2 gridCenter = Vector2.zero;
@@ -561,16 +538,26 @@ namespace StampJourney.Gameplay
                         foreach (var tile in clearedCards)
                             _tiles[tile.BoardCol, tile.BoardRow].SetCard(null);
 
-                        await cardFactory.DespawnStampGroupAsync(group);
-                        OnStampCleared?.Invoke(clearedCards);
+                        // Start every completed group's presentation in this frame. Waiting is
+                        // deferred until the whole batch has been launched so simultaneous
+                        // matches cross-fade and despawn together.
+                        clearAnimations.Add(cardFactory.DespawnStampGroupAsync(group));
                     }
+
+                    await UniTask.WhenAll(clearAnimations);
+
+                    foreach (var clearedCards in clearedCardBatches)
+                        OnStampCleared?.Invoke(clearedCards);
 
                     await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
                 }
 
-                // Apply gravity then fill empty cells
-                await gravitySystem.ApplyGravityAsync();
-                await FillEmptyCellsAsync();
+                if (anyCleared)
+                {
+                    // Apply gravity fully before choosing the next complete generated topic set.
+                    await gravitySystem.ApplyGravityAsync();
+                    await FillEmptyCellsAsync(clearedCardCount);
+                }
 
             } while (anyCleared);
 
@@ -600,20 +587,43 @@ namespace StampJourney.Gameplay
             }
         }
 
-        private async UniTask FillEmptyCellsAsync()
+        private async UniTask FillEmptyCellsAsync(int clearedCardCount)
         {
             bool spawnedAny = false;
+            var droppedCards = new List<CardModel>();
+            int generatedCardsToRelease = int.MaxValue;
+
+            if (!_levelData.useAuthoredLayout)
+            {
+                var emptyCellsByColumn = new int[_cols];
+                for (int c = 0; c < _cols; c++)
+                {
+                    for (int r = 0; r < _rows; r++)
+                        if (!_tiles[c, r].IsOccupied)
+                            emptyCellsByColumn[c]++;
+                }
+
+                generatedCardsToRelease = queueSystem.PrepareGeneratedRelease(
+                    emptyCellsByColumn,
+                    clearedCardCount);
+            }
+
+            // Both modes use the same forward per-column queue release after gravity.
             for (int c = 0; c < _cols; c++)
             {
                 int emptyCount = 0;
                 for (int r = _rows - 1; r >= 0; r--)
                 {
-                    if (!_tiles[c, r].IsOccupied && queueSystem.GetQueueCount(c) > 0)
+                    if (!_tiles[c, r].IsOccupied &&
+                        queueSystem.GetQueueCount(c) > 0 &&
+                        generatedCardsToRelease > 0)
                     {
                         var model = queueSystem.PopCard(c);
                         _tiles[c, r].SetCard(model);
                         cardFactory.AnimateDropAndFlip(model, c, r);
+                        droppedCards.Add(model);
                         emptyCount++;
+                        generatedCardsToRelease--;
                         spawnedAny = true;
                     }
                 }
@@ -629,10 +639,13 @@ namespace StampJourney.Gameplay
                 }
             }
 
+            // Do not rebuild connections while a card is still falling. Rebuilding here would
+            // enable the liquid bridge at its final grid coordinates before the visual reaches
+            // that cell, making the bridge appear detached from the moving card.
             if (spawnedAny)
-                await UniTask.Delay(TimeSpan.FromSeconds(0.4f));
+                await UniTask.WaitUntil(() => droppedCards.All(card => !card.IsAnimating));
 
-            // Rebuild groups for newly spawned tiles
+            // New liquid bridges may now animate from cards that are visually settled.
             stampDetector.RebuildGroups();
             UpdateAllEdges();
         }
@@ -640,6 +653,19 @@ namespace StampJourney.Gameplay
         #endregion
 
         #region Private — Helpers
+
+        /// <summary>
+        /// Waits for the placement tween, compacts every column, then releases waiting cards
+        /// into empty cells in their own columns. This settlement path runs even when no topic
+        /// was cleared, so moving a board card can immediately make room for its column queue.
+        /// </summary>
+        private async UniTask SettleAfterPlayerMoveAsync(float placementDuration)
+        {
+            await UniTask.Delay(TimeSpan.FromSeconds(placementDuration));
+            await gravitySystem.ApplyGravityAsync();
+            await FillEmptyCellsAsync(int.MaxValue);
+            await CheckAndClearAsync();
+        }
 
         private void SwapInGrid(int colA, int rowA, int colB, int rowB)
         {

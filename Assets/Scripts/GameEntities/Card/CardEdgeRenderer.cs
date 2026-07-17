@@ -1,5 +1,6 @@
 using DG.Tweening;
 using Sirenix.OdinInspector;
+using StampJourney.Core;
 using StampJourney.Gameplay;
 using UnityEngine;
 
@@ -43,12 +44,57 @@ namespace StampJourney.Card
         [ShowIf("animateTransitions")]
         public float transitionDuration = 0.15f;
 
+        [BoxGroup("Liquid Merge")]
+        [LabelText("Enable Liquid Merge")]
+        public bool enableLiquidMerge = true;
+
+        [BoxGroup("Liquid Merge")]
+        [ShowIf("enableLiquidMerge")]
+        [Required]
+        public Material liquidMergeMaterial;
+
+        [BoxGroup("Liquid Merge")]
+        [ShowIf("enableLiquidMerge")]
+        [MinValue(0.05f)]
+        public float liquidMergeDuration = 0.65f;
+
+        [BoxGroup("Liquid Merge")]
+        [ShowIf("enableLiquidMerge")]
+        [Range(0.5f, 1.2f)]
+        [Tooltip("Final bridge width relative to the card background. Use 1 for full width.")]
+        public float liquidThickness = 1f;
+
+        [BoxGroup("Liquid Merge")]
+        [ShowIf("enableLiquidMerge")]
+        [Range(0f, 0.15f)]
+        public float liquidWobble = 0.035f;
+
         #endregion
 
         #region Runtime
 
         private CardModel _model;
         private Gameboard _board;
+        private SpriteRenderer _rightLiquidBridge;
+        private SpriteRenderer _bottomLiquidBridge;
+        private MaterialPropertyBlock _liquidProperties;
+        private Tween _rightLiquidTween;
+        private Tween _bottomLiquidTween;
+        private float _rightLiquidProgress;
+        private float _bottomLiquidProgress;
+        private bool _rightLiquidConnected;
+        private bool _bottomLiquidConnected;
+        private Color _currentLiquidColor = Color.white;
+        private int _liquidBridgeSortingOrder;
+        private static Material _sharedLiquidMaterial;
+
+        private static readonly int LiquidColorId = Shader.PropertyToID("_LiquidColor");
+        private static readonly int ProgressId = Shader.PropertyToID("_Progress");
+        private static readonly int AspectId = Shader.PropertyToID("_Aspect");
+        private static readonly int CenterOffsetId = Shader.PropertyToID("_CenterOffset");
+        private static readonly int RadiusId = Shader.PropertyToID("_Radius");
+        private static readonly int MaxSmoothId = Shader.PropertyToID("_MaxSmooth");
+        private static readonly int WobbleId = Shader.PropertyToID("_Wobble");
 
         #endregion
 
@@ -58,7 +104,34 @@ namespace StampJourney.Card
         {
             _model = model;
             _board = board;
+            CardView cardView = GetComponentInParent<CardView>();
+            _currentLiquidColor = cardView != null && cardView.backGroundImg != null
+                ? cardView.backGroundImg.color
+                : Color.white;
+            ResetLiquidBridges();
             UpdateEdges();
+        }
+
+        /// <summary>Synchronizes active liquid bridges with the card background color tween.</summary>
+        public void SetLiquidColor(Color color)
+        {
+            _currentLiquidColor = color;
+            ApplyLiquidProperties(_rightLiquidBridge, _rightLiquidProgress, true);
+            ApplyLiquidProperties(_bottomLiquidBridge, _bottomLiquidProgress, false);
+        }
+
+        /// <summary>
+        /// Keeps the bridges at the same effective order as this card's background while
+        /// following the card when its SortingGroup is raised for dragging or dropping.
+        /// </summary>
+        public void SetLiquidBridgeSortingOrder(int cardSortingOrder)
+        {
+            _liquidBridgeSortingOrder = cardSortingOrder;
+
+            if (_rightLiquidBridge != null)
+                _rightLiquidBridge.sortingOrder = _liquidBridgeSortingOrder;
+            if (_bottomLiquidBridge != null)
+                _bottomLiquidBridge.sortingOrder = _liquidBridgeSortingOrder;
         }
 
         /// <summary>
@@ -69,10 +142,41 @@ namespace StampJourney.Card
         {
             if (_model == null) return;
 
+            bool connectedRight = IsConnected(1, 0);
+            bool connectedBottom = IsConnected(0, 1);
+
             SetEdge(edgeTop, IsConnected(0, -1));
-            SetEdge(edgeRight, IsConnected(1, 0));
-            SetEdge(edgeBottom, IsConnected(0, 1));
+            SetEdge(edgeRight, connectedRight);
+            SetEdge(edgeBottom, connectedBottom);
             SetEdge(edgeLeft, IsConnected(-1, 0));
+
+            if (enableLiquidMerge)
+            {
+                EnsureLiquidBridges();
+                SetRightLiquidConnected(connectedRight);
+                SetBottomLiquidConnected(connectedBottom);
+            }
+        }
+
+        /// <summary>
+        /// Immediately removes liquid bridges whose cards are no longer adjacent. This never
+        /// creates a new connection; new bridges remain deferred until groups are rebuilt after
+        /// the board has settled.
+        /// </summary>
+        public void HideBrokenLiquidBridges()
+        {
+            if (_model == null || !enableLiquidMerge) return;
+
+            if (_rightLiquidConnected && !IsConnected(1, 0))
+                SetRightLiquidConnected(false);
+            if (_bottomLiquidConnected && !IsConnected(0, 1))
+                SetBottomLiquidConnected(false);
+        }
+
+        /// <summary>Disables every liquid bridge on this card in the current frame.</summary>
+        public void DisableAllLiquidBridgesImmediate()
+        {
+            ResetLiquidBridges();
         }
 
         /// <summary>Adds a sorting order offset to all edge renderers.</summary>
@@ -131,6 +235,205 @@ namespace StampJourney.Card
                     return true;
             }
             return false;
+        }
+
+        private void EnsureLiquidBridges()
+        {
+            if (_rightLiquidBridge != null && _bottomLiquidBridge != null) return;
+
+            if (liquidMergeMaterial == null)
+            {
+                Debug.LogError("[CardEdgeRenderer] Liquid merge material is not assigned.", this);
+                enableLiquidMerge = false;
+                return;
+            }
+
+            if (_sharedLiquidMaterial == null)
+                _sharedLiquidMaterial = liquidMergeMaterial;
+
+            CardView cardView = GetComponentInParent<CardView>();
+            if (cardView == null || cardView.backGroundImg == null) return;
+
+            _liquidProperties ??= new MaterialPropertyBlock();
+            _rightLiquidBridge = CreateLiquidBridge("Liquid Merge Right", cardView.backGroundImg);
+            _bottomLiquidBridge = CreateLiquidBridge("Liquid Merge Bottom", cardView.backGroundImg);
+            ConfigureLiquidBridgeTransforms();
+            ApplyLiquidProperties(_rightLiquidBridge, 0f, true);
+            ApplyLiquidProperties(_bottomLiquidBridge, 0f, false);
+        }
+
+        private SpriteRenderer CreateLiquidBridge(string bridgeName, SpriteRenderer background)
+        {
+            var bridgeObject = new GameObject(bridgeName);
+            bridgeObject.layer = gameObject.layer;
+            bridgeObject.transform.SetParent(transform, false);
+
+            SpriteRenderer bridge = bridgeObject.AddComponent<SpriteRenderer>();
+            bridge.sprite = background.sprite;
+            bridge.sharedMaterial = _sharedLiquidMaterial;
+            bridge.sortingLayerID = background.sortingLayerID;
+            bridge.sortingOrder = 5;
+            bridge.enabled = false;
+            return bridge;
+        }
+
+        private void ConfigureLiquidBridgeTransforms()
+        {
+            if (_rightLiquidBridge == null || _bottomLiquidBridge == null) return;
+
+            GameConfig config = GameManager.Instance.GameConfig;
+            float strideX = config.cardWidth + config.cardGap;
+            float strideY = config.cardHeight + config.cardGap;
+            float horizontalThickness = Mathf.Max(0.01f, config.cardHeight * liquidThickness);
+            float verticalThickness = Mathf.Max(0.01f, config.cardWidth * liquidThickness);
+            Vector2 spriteSize = _rightLiquidBridge.sprite != null
+                ? _rightLiquidBridge.sprite.bounds.size
+                : Vector2.one;
+
+            _rightLiquidBridge.transform.localPosition = new Vector3(strideX * 0.5f, 0f, 0.01f);
+            _rightLiquidBridge.transform.localRotation = Quaternion.identity;
+            _rightLiquidBridge.transform.localScale = Vector3.one * liquidThickness;
+
+            _bottomLiquidBridge.transform.localPosition = new Vector3(0f, -strideY * 0.5f, 0.01f);
+            _bottomLiquidBridge.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+            _bottomLiquidBridge.transform.localScale = Vector3.one * liquidThickness;
+        }
+
+        private void SetRightLiquidConnected(bool connected)
+        {
+            if (_rightLiquidBridge == null || _rightLiquidConnected == connected) return;
+            _rightLiquidConnected = connected;
+            _rightLiquidTween?.Kill();
+
+            if (!connected)
+            {
+                _rightLiquidProgress = 0f;
+                ApplyLiquidProperties(_rightLiquidBridge, 0f, true);
+                _rightLiquidBridge.enabled = false;
+                _rightLiquidTween = null;
+                return;
+            }
+
+            if (!_rightLiquidBridge.enabled)
+                _rightLiquidProgress = 0f;
+
+            ApplyLiquidProperties(_rightLiquidBridge, _rightLiquidProgress, true);
+            _rightLiquidBridge.enabled = true;
+
+            _rightLiquidTween = DOTween.To(
+                    () => _rightLiquidProgress,
+                    value =>
+                    {
+                        _rightLiquidProgress = value;
+                        ApplyLiquidProperties(_rightLiquidBridge, value, true);
+                    },
+                    1f,
+                    liquidMergeDuration)
+                // The shader applies quintic easing to the visual phases.
+
+
+
+
+
+
+
+
+
+                .SetEase(Ease.Linear)
+                .OnComplete(() => _rightLiquidTween = null);
+        }
+
+        private void SetBottomLiquidConnected(bool connected)
+        {
+            if (_bottomLiquidBridge == null || _bottomLiquidConnected == connected) return;
+            _bottomLiquidConnected = connected;
+            _bottomLiquidTween?.Kill();
+
+            if (!connected)
+            {
+                _bottomLiquidProgress = 0f;
+                ApplyLiquidProperties(_bottomLiquidBridge, 0f, false);
+                _bottomLiquidBridge.enabled = false;
+                _bottomLiquidTween = null;
+                return;
+            }
+
+            if (!_bottomLiquidBridge.enabled)
+                _bottomLiquidProgress = 0f;
+
+            ApplyLiquidProperties(_bottomLiquidBridge, _bottomLiquidProgress, false);
+            _bottomLiquidBridge.enabled = true;
+
+            _bottomLiquidTween = DOTween.To(
+                    () => _bottomLiquidProgress,
+                    value =>
+                    {
+                        _bottomLiquidProgress = value;
+                        ApplyLiquidProperties(_bottomLiquidBridge, value, false);
+                    },
+                    1f,
+                    liquidMergeDuration)
+                // The shader applies quintic easing to the visual phases.
+
+
+
+
+
+
+
+
+
+                .SetEase(Ease.Linear)
+                .OnComplete(() => _bottomLiquidTween = null);
+        }
+
+        private void ApplyLiquidProperties(SpriteRenderer bridge, float progress, bool horizontal)
+        {
+            if (bridge == null || _model?.Topic == null) return;
+
+            GameConfig config = GameManager.Instance.GameConfig;
+            float length = horizontal
+                ? config.cardWidth + config.cardGap
+                : config.cardHeight + config.cardGap;
+            float cardAlongBridge = horizontal ? config.cardWidth : config.cardHeight;
+            float thickness = horizontal
+                ? config.cardHeight * liquidThickness
+                : config.cardWidth * liquidThickness;
+            thickness = Mathf.Max(0.01f, thickness);
+
+            float aspect = (length + cardAlongBridge * 0.1f) / thickness;
+            float centerOffset = length / thickness;
+            float radius = cardAlongBridge / thickness;
+            float gapDistance = Mathf.Max(0f, centerOffset - radius);
+            float maxSmooth = Mathf.Max(0.65f, gapDistance * 4.4f + 0.35f);
+
+            bridge.GetPropertyBlock(_liquidProperties);
+            _liquidProperties.SetColor(LiquidColorId, _currentLiquidColor);
+            _liquidProperties.SetFloat(ProgressId, Mathf.Clamp01(progress));
+            _liquidProperties.SetFloat(AspectId, aspect);
+            _liquidProperties.SetFloat(CenterOffsetId, centerOffset);
+            _liquidProperties.SetFloat(RadiusId, radius);
+            _liquidProperties.SetFloat(MaxSmoothId, maxSmooth);
+            _liquidProperties.SetFloat(WobbleId, liquidWobble);
+            bridge.SetPropertyBlock(_liquidProperties);
+        }
+
+        private void ResetLiquidBridges()
+        {
+            _rightLiquidTween?.Kill();
+            _bottomLiquidTween?.Kill();
+            _rightLiquidProgress = 0f;
+            _bottomLiquidProgress = 0f;
+            _rightLiquidConnected = false;
+            _bottomLiquidConnected = false;
+            if (_rightLiquidBridge != null) _rightLiquidBridge.enabled = false;
+            if (_bottomLiquidBridge != null) _bottomLiquidBridge.enabled = false;
+        }
+
+        private void OnDestroy()
+        {
+            _rightLiquidTween?.Kill();
+            _bottomLiquidTween?.Kill();
         }
 
         #endregion

@@ -47,6 +47,26 @@ namespace StampJourney.Card
         [BoxGroup("Settings")]
         public int dragSortingOrder = 100;
 
+        [BoxGroup("Link State Colors")]
+        [LabelText("1 Item - Blue")]
+        public Color oneItemColor = new Color32(77, 157, 224, 255);
+
+        [BoxGroup("Link State Colors")]
+        [LabelText("2 Items - Green")]
+        public Color twoItemColor = new Color32(91, 203, 119, 255);
+
+        [BoxGroup("Link State Colors")]
+        [LabelText("3 Items - Orange")]
+        public Color threeItemColor = new Color32(255, 159, 67, 255);
+
+        [BoxGroup("Link State Colors")]
+        [LabelText("4 Items - Purple")]
+        public Color fourItemColor = new Color32(155, 93, 229, 255);
+
+        [BoxGroup("Link State Colors")]
+        [MinValue(0f)]
+        public float linkColorTweenDuration = 0.24f;
+
         #endregion
 
         #region Inspector — Drag Effects
@@ -86,6 +106,8 @@ namespace StampJourney.Card
         private CardGroup _dragGroup;
         private Vector3 _prevDragPos;
         private float _currentTilt;
+        private int _currentLinkedItemCount = -1;
+        private Tween _backgroundColorTween;
 
         // Group drag state
         private Vector2 _groupDragOriginPos;
@@ -102,13 +124,14 @@ namespace StampJourney.Card
 
         public void Init(CardModel model, Gameboard board)
         {
+            _backgroundColorTween?.Kill();
+            _currentLinkedItemCount = -1;
             _model = model;
             _board = board;
             _mainCamera = Camera.main;
 
             _originPos = transform.position;
             SetSortingOrder(baseSortingOrder);
-            backGroundImg.color = Model.Topic.TopicColor;
             RefreshVisual();
 
             if (cardEdgeRenderer != null)
@@ -118,11 +141,78 @@ namespace StampJourney.Card
         public void RefreshVisual()
         {
             if (_model == null) return;
-            contentImg.sprite = _model.Topic.GetItemSprite(_model.ItemIndex);
+            if (_model.HasAssignedContent)
+                SetLinkedItemCount(_model.Group?.Count ?? 1, false);
+            else if (backGroundImg != null)
+                backGroundImg.color = Color.white;
+            contentImg.sprite = _model.HasAssignedContent
+                ? _model.Topic.GetItemSprite(_model.ItemIndex)
+                : null;
             contentImg.color = Color.white;
             pressEffect.SetActive(false);
             if (contentImg.sprite != null)
                 FitSpriteContent(1, 1);
+        }
+
+        #endregion
+
+        #region Link State Color
+
+        /// <summary>
+        /// Updates this card's background from the number of linked topic items.
+        /// The bridge receives every tweened color so the connected shape stays unified.
+        /// </summary>
+        public void SetLinkedItemCount(int linkedItemCount, bool animate)
+        {
+            if (_model == null || !_model.HasAssignedContent || backGroundImg == null) return;
+
+            int clampedCount = Mathf.Clamp(linkedItemCount, 1, 4);
+            Color targetColor = GetLinkStateColor(clampedCount);
+            if (_currentLinkedItemCount == clampedCount &&
+                Approximately(backGroundImg.color, targetColor))
+                return;
+
+            _currentLinkedItemCount = clampedCount;
+            _backgroundColorTween?.Kill();
+            cardEdgeRenderer?.SetLiquidColor(backGroundImg.color);
+
+            if (!animate || linkColorTweenDuration <= 0f)
+            {
+                backGroundImg.color = targetColor;
+                cardEdgeRenderer?.SetLiquidColor(targetColor);
+                return;
+            }
+
+            _backgroundColorTween = backGroundImg
+                .DOColor(targetColor, linkColorTweenDuration)
+                .SetEase(Ease.InOutSine)
+                .OnUpdate(() => cardEdgeRenderer?.SetLiquidColor(backGroundImg.color))
+                .OnComplete(() =>
+                {
+                    backGroundImg.color = targetColor;
+                    cardEdgeRenderer?.SetLiquidColor(targetColor);
+                    _backgroundColorTween = null;
+                });
+        }
+
+        public Color GetLinkStateColor(int linkedItemCount)
+        {
+            return Mathf.Clamp(linkedItemCount, 1, 4) switch
+            {
+                2 => twoItemColor,
+                3 => threeItemColor,
+                4 => fourItemColor,
+                _ => oneItemColor
+            };
+        }
+
+        private static bool Approximately(Color a, Color b)
+        {
+            const float tolerance = 0.001f;
+            return Mathf.Abs(a.r - b.r) < tolerance &&
+                   Mathf.Abs(a.g - b.g) < tolerance &&
+                   Mathf.Abs(a.b - b.b) < tolerance &&
+                   Mathf.Abs(a.a - b.a) < tolerance;
         }
 
         #endregion
@@ -164,6 +254,7 @@ namespace StampJourney.Card
                 return;
             }
             sortingGroup.sortingOrder = targetOrder;
+            cardEdgeRenderer?.SetLiquidBridgeSortingOrder(targetOrder);
         }
 
         #endregion
@@ -175,8 +266,9 @@ namespace StampJourney.Card
             Vector2 spriteSize = contentImg.sprite.bounds.size;
             float scaleX = maxWidth / spriteSize.x;
             float scaleY = maxHeight / spriteSize.y;
+            var targetScale = Mathf.Min(scaleX, scaleY);
 
-            contentImg.transform.localScale = new Vector3(scaleX, scaleY * GameManager.Instance.GameConfig.cardHeight, 1f);
+            contentImg.transform.localScale = new Vector3(targetScale, targetScale, 1f);
         }
 
         #endregion
@@ -348,19 +440,14 @@ namespace StampJourney.Card
             _groupDragOriginPos = _dragGroup.GroupTransform.position;
             _dragGroup.GroupTransform.DOScale(liftScale, liftDuration).SetEase(Ease.OutBack);
 
-            var groupSorting = _dragGroup.GroupTransform.GetComponent<SortingGroup>();
-            if (groupSorting != null)
+            // The group parent is movement-only. Raise each card's own SortingGroup so bridge
+            // renderers remain independent and cannot cover cards belonging to other groups.
+            foreach (var member in _dragGroup.Members)
             {
-                groupSorting.sortingOrder = dragSortingOrder;
-            }
-            else
-            {
-                foreach (var member in _dragGroup.Members)
-                {
-                    var view = _board.cardFactory.GetView(member.TileId);
-                    if (view != null)
-                        view.SetSortingOrder(dragSortingOrder);
-                }
+                if (member == null) continue;
+                var view = _board.cardFactory.GetView(member.TileId);
+                if (view != null)
+                    view.SetSortingOrder(dragSortingOrder);
             }
 
             _dragOffset = _dragGroup.GroupTransform.position - mouseWorldPos;
@@ -390,6 +477,17 @@ namespace StampJourney.Card
         private async UniTask HandleGroupRelease()
         {
             var gridDelta = CalculateGroupGridDelta();
+            var memberViews = new List<CardView>();
+            if (_dragGroup != null)
+            {
+                foreach (var member in _dragGroup.Members)
+                {
+                    if (member == null) continue;
+                    var view = _board.cardFactory.GetView(member.TileId);
+                    if (view != null) memberViews.Add(view);
+                }
+            }
+
             _dragGroup?.GroupTransform.DOKill(true);
 
             // Reset scale immediately to prevent gaps between cards
@@ -398,27 +496,21 @@ namespace StampJourney.Card
 
             _dragGroup?.GroupTransform.DORotateQuaternion(Quaternion.identity, snapDuration).SetEase(Ease.OutBack);
 
-            var groupSorting = _dragGroup?.GroupTransform.GetComponent<SortingGroup>();
-
             if (gridDelta.x != 0 || gridDelta.y != 0)
                 await DoGroupSwapAsync(gridDelta);
             else
                 await SnapBackGroupAsync();
 
-            if (groupSorting != null)
-            {
-                groupSorting.sortingOrder = baseSortingOrder;
-            }
-            else if (_dragGroup != null && _dragGroup.Members.Count > 0)
-            {
-                foreach (var member in _dragGroup.Members)
-                {
-                    if (member == null) continue;
-                    var view = _board.cardFactory.GetView(member.TileId);
-                    if (view != null)
-                        view.SetSortingOrder(baseSortingOrder);
-                }
-            }
+            // RebuildGroups can replace the CardGroup and clear _dragGroup during the await,
+            // so restore the cached member views rather than consulting the old parent.
+            foreach (var view in memberViews)
+                if (view != null) view.SetSortingOrder(view.baseSortingOrder);
+        }
+
+        private void OnDisable()
+        {
+            _backgroundColorTween?.Kill();
+            _backgroundColorTween = null;
         }
 
         private async UniTask HandleSingleRelease()

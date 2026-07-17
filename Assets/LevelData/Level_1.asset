@@ -15,20 +15,294 @@ MonoBehaviour:
   levelID: 1
   boardCols: 4
   boardRows: 4
-  maxMoves: -1
+  maxMoves: 20
   timeLimitSeconds: 0
   stamps:
   - stampId: 1
-    stampName: Animal
+    stampName: "12_\u0110\u1ED3 d\xF9ng h\u1ECDc t\u1EADp"
     stampColor: {r: 1, g: 1, b: 1, a: 1}
     itemSprites:
-    - {fileID: 5463704798289644582, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-    - {fileID: -2070520788, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-    - {fileID: -1972163535, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-    - {fileID: -1659732611, guid: ee14a50f399584c4c9edfc41b5b4dcf4, type: 3}
-  maxStampTypesOnBoard: 3
-  fillStrategy: 0
+    - {fileID: -8403304569227032026, guid: 520289936100f8349b8ee804058e7241, type: 3}
+    - {fileID: -3742588865463073738, guid: cf065e6f103ddf74784d6f67256e6a34, type: 3}
+    - {fileID: -3909630989799115209, guid: d14910d38ec368d4b890db35731821b3, type: 3}
+    - {fileID: -6369049500642958180, guid: 7211425f17310664aae8a474640c7ae6, type: 3}
+  - stampId: 2
+    stampName: "22_Ho\xE0ng gia"
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    itemSprites:
+    - {fileID: 3067846864928125641, guid: 2b3bfdebafb3f5844841358314e0b077, type: 3}
+    - {fileID: 2077713576439551895, guid: 9e67e7b81e655e942832296b853d1dea, type: 3}
+    - {fileID: 4171468899060535375, guid: 1029ffa76cebad84f8407896c4e54e39, type: 3}
+    - {fileID: -3862024016143055257, guid: 1f91afefe20aa5246a3d0289a8886685, type: 3}
+  - stampId: 3
+    stampName: "27_V\u1EADt d\u1EE5ng s\u1EEDa ch\u1EEFa"
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    itemSprites:
+    - {fileID: 7172633430495215043, guid: 41ad143db3e29884e83323d71c444ad6, type: 3}
+    - {fileID: -3840178189422589355, guid: f0240627f91ad5d41972955c77a516c9, type: 3}
+    - {fileID: -3900215330785691863, guid: a224966bef565634880c8f6c62d81edc, type: 3}
+    - {fileID: 5479915035388937006, guid: 704b192ebf547b643851db1d49677ff2, type: 3}
+  - stampId: 4
+    stampName: "30_Qu\u1EA7n \xE1o"
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    itemSprites:
+    - {fileID: 8190738948302794274, guid: ccc6ca8b5610ed6468fd7a0689ff6c4d, type: 3}
+    - {fileID: -1149880496391858715, guid: b788185ce0bd5ec459f5c8cd6d4b08f3, type: 3}
+    - {fileID: -4095406492810082051, guid: 6ef7becff1821204d80af446bb557813, type: 3}
+    - {fileID: 7162786490140758861, guid: 46e0eada219b075499abee5679ee11f9, type: 3}
+  - stampId: 5
+    stampName: 33_Winter
+    stampColor: {r: 1, g: 1, b: 1, a: 1}
+    itemSprites:
+    - {fileID: -2328379119625834658, guid: 65783e78b84cd304bb00f3c786db6338, type: 3}
+    - {fileID: -75182740581078636, guid: 3f79b1dfe7bf2bd409f50ca3e918b89c, type: 3}
+    - {fileID: -3464096822603222336, guid: 2c806cd8bac20824aa7bf901319b89fd, type: 3}
+    - {fileID: 1254743690004795209, guid: 0e75536c49ce95849bdadc0356cabbe0, type: 3}
   useAuthoredLayout: 0
-  boardLayout: []
-  queueLayout: []
-  authoredQueueRows: 2
+  boardLayout:
+  - stamp:
+      stampId: 3
+      stampName: "27_V\u1EADt d\u1EE5ng s\u1EEDa ch\u1EEFa"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 7172633430495215043, guid: 41ad143db3e29884e83323d71c444ad6, type: 3}
+      - {fileID: -3840178189422589355, guid: f0240627f91ad5d41972955c77a516c9, type: 3}
+      - {fileID: -3900215330785691863, guid: a224966bef565634880c8f6c62d81edc, type: 3}
+      - {fileID: 5479915035388937006, guid: 704b192ebf547b643851db1d49677ff2, type: 3}
+    itemIndex: 2
+    column: 0
+    row: 0
+  - stamp:
+      stampId: 1
+      stampName: "12_\u0110\u1ED3 d\xF9ng h\u1ECDc t\u1EADp"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -8403304569227032026, guid: 520289936100f8349b8ee804058e7241, type: 3}
+      - {fileID: -3742588865463073738, guid: cf065e6f103ddf74784d6f67256e6a34, type: 3}
+      - {fileID: -3909630989799115209, guid: d14910d38ec368d4b890db35731821b3, type: 3}
+      - {fileID: -6369049500642958180, guid: 7211425f17310664aae8a474640c7ae6, type: 3}
+    itemIndex: 2
+    column: 1
+    row: 0
+  - stamp:
+      stampId: 5
+      stampName: 33_Winter
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -2328379119625834658, guid: 65783e78b84cd304bb00f3c786db6338, type: 3}
+      - {fileID: -75182740581078636, guid: 3f79b1dfe7bf2bd409f50ca3e918b89c, type: 3}
+      - {fileID: -3464096822603222336, guid: 2c806cd8bac20824aa7bf901319b89fd, type: 3}
+      - {fileID: 1254743690004795209, guid: 0e75536c49ce95849bdadc0356cabbe0, type: 3}
+    itemIndex: 2
+    column: 2
+    row: 0
+  - stamp:
+      stampId: 5
+      stampName: 33_Winter
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -2328379119625834658, guid: 65783e78b84cd304bb00f3c786db6338, type: 3}
+      - {fileID: -75182740581078636, guid: 3f79b1dfe7bf2bd409f50ca3e918b89c, type: 3}
+      - {fileID: -3464096822603222336, guid: 2c806cd8bac20824aa7bf901319b89fd, type: 3}
+      - {fileID: 1254743690004795209, guid: 0e75536c49ce95849bdadc0356cabbe0, type: 3}
+    itemIndex: 3
+    column: 3
+    row: 0
+  - stamp:
+      stampId: 5
+      stampName: 33_Winter
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -2328379119625834658, guid: 65783e78b84cd304bb00f3c786db6338, type: 3}
+      - {fileID: -75182740581078636, guid: 3f79b1dfe7bf2bd409f50ca3e918b89c, type: 3}
+      - {fileID: -3464096822603222336, guid: 2c806cd8bac20824aa7bf901319b89fd, type: 3}
+      - {fileID: 1254743690004795209, guid: 0e75536c49ce95849bdadc0356cabbe0, type: 3}
+    itemIndex: 0
+    column: 0
+    row: 1
+  - stamp:
+      stampId: 2
+      stampName: "22_Ho\xE0ng gia"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 3067846864928125641, guid: 2b3bfdebafb3f5844841358314e0b077, type: 3}
+      - {fileID: 2077713576439551895, guid: 9e67e7b81e655e942832296b853d1dea, type: 3}
+      - {fileID: 4171468899060535375, guid: 1029ffa76cebad84f8407896c4e54e39, type: 3}
+      - {fileID: -3862024016143055257, guid: 1f91afefe20aa5246a3d0289a8886685, type: 3}
+    itemIndex: 0
+    column: 1
+    row: 1
+  - stamp:
+      stampId: 2
+      stampName: "22_Ho\xE0ng gia"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 3067846864928125641, guid: 2b3bfdebafb3f5844841358314e0b077, type: 3}
+      - {fileID: 2077713576439551895, guid: 9e67e7b81e655e942832296b853d1dea, type: 3}
+      - {fileID: 4171468899060535375, guid: 1029ffa76cebad84f8407896c4e54e39, type: 3}
+      - {fileID: -3862024016143055257, guid: 1f91afefe20aa5246a3d0289a8886685, type: 3}
+    itemIndex: 3
+    column: 2
+    row: 1
+  - stamp:
+      stampId: 2
+      stampName: "22_Ho\xE0ng gia"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 3067846864928125641, guid: 2b3bfdebafb3f5844841358314e0b077, type: 3}
+      - {fileID: 2077713576439551895, guid: 9e67e7b81e655e942832296b853d1dea, type: 3}
+      - {fileID: 4171468899060535375, guid: 1029ffa76cebad84f8407896c4e54e39, type: 3}
+      - {fileID: -3862024016143055257, guid: 1f91afefe20aa5246a3d0289a8886685, type: 3}
+    itemIndex: 2
+    column: 3
+    row: 1
+  - stamp:
+      stampId: 3
+      stampName: "27_V\u1EADt d\u1EE5ng s\u1EEDa ch\u1EEFa"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 7172633430495215043, guid: 41ad143db3e29884e83323d71c444ad6, type: 3}
+      - {fileID: -3840178189422589355, guid: f0240627f91ad5d41972955c77a516c9, type: 3}
+      - {fileID: -3900215330785691863, guid: a224966bef565634880c8f6c62d81edc, type: 3}
+      - {fileID: 5479915035388937006, guid: 704b192ebf547b643851db1d49677ff2, type: 3}
+    itemIndex: 3
+    column: 0
+    row: 2
+  - stamp:
+      stampId: 5
+      stampName: 33_Winter
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -2328379119625834658, guid: 65783e78b84cd304bb00f3c786db6338, type: 3}
+      - {fileID: -75182740581078636, guid: 3f79b1dfe7bf2bd409f50ca3e918b89c, type: 3}
+      - {fileID: -3464096822603222336, guid: 2c806cd8bac20824aa7bf901319b89fd, type: 3}
+      - {fileID: 1254743690004795209, guid: 0e75536c49ce95849bdadc0356cabbe0, type: 3}
+    itemIndex: 1
+    column: 1
+    row: 2
+  - stamp:
+      stampId: 1
+      stampName: "12_\u0110\u1ED3 d\xF9ng h\u1ECDc t\u1EADp"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -8403304569227032026, guid: 520289936100f8349b8ee804058e7241, type: 3}
+      - {fileID: -3742588865463073738, guid: cf065e6f103ddf74784d6f67256e6a34, type: 3}
+      - {fileID: -3909630989799115209, guid: d14910d38ec368d4b890db35731821b3, type: 3}
+      - {fileID: -6369049500642958180, guid: 7211425f17310664aae8a474640c7ae6, type: 3}
+    itemIndex: 0
+    column: 2
+    row: 2
+  - stamp:
+      stampId: 3
+      stampName: "27_V\u1EADt d\u1EE5ng s\u1EEDa ch\u1EEFa"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 7172633430495215043, guid: 41ad143db3e29884e83323d71c444ad6, type: 3}
+      - {fileID: -3840178189422589355, guid: f0240627f91ad5d41972955c77a516c9, type: 3}
+      - {fileID: -3900215330785691863, guid: a224966bef565634880c8f6c62d81edc, type: 3}
+      - {fileID: 5479915035388937006, guid: 704b192ebf547b643851db1d49677ff2, type: 3}
+    itemIndex: 1
+    column: 3
+    row: 2
+  - stamp:
+      stampId: 2
+      stampName: "22_Ho\xE0ng gia"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 3067846864928125641, guid: 2b3bfdebafb3f5844841358314e0b077, type: 3}
+      - {fileID: 2077713576439551895, guid: 9e67e7b81e655e942832296b853d1dea, type: 3}
+      - {fileID: 4171468899060535375, guid: 1029ffa76cebad84f8407896c4e54e39, type: 3}
+      - {fileID: -3862024016143055257, guid: 1f91afefe20aa5246a3d0289a8886685, type: 3}
+    itemIndex: 1
+    column: 0
+    row: 3
+  - stamp:
+      stampId: 1
+      stampName: "12_\u0110\u1ED3 d\xF9ng h\u1ECDc t\u1EADp"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -8403304569227032026, guid: 520289936100f8349b8ee804058e7241, type: 3}
+      - {fileID: -3742588865463073738, guid: cf065e6f103ddf74784d6f67256e6a34, type: 3}
+      - {fileID: -3909630989799115209, guid: d14910d38ec368d4b890db35731821b3, type: 3}
+      - {fileID: -6369049500642958180, guid: 7211425f17310664aae8a474640c7ae6, type: 3}
+    itemIndex: 1
+    column: 1
+    row: 3
+  - stamp:
+      stampId: 3
+      stampName: "27_V\u1EADt d\u1EE5ng s\u1EEDa ch\u1EEFa"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 7172633430495215043, guid: 41ad143db3e29884e83323d71c444ad6, type: 3}
+      - {fileID: -3840178189422589355, guid: f0240627f91ad5d41972955c77a516c9, type: 3}
+      - {fileID: -3900215330785691863, guid: a224966bef565634880c8f6c62d81edc, type: 3}
+      - {fileID: 5479915035388937006, guid: 704b192ebf547b643851db1d49677ff2, type: 3}
+    itemIndex: 0
+    column: 2
+    row: 3
+  - stamp:
+      stampId: 1
+      stampName: "12_\u0110\u1ED3 d\xF9ng h\u1ECDc t\u1EADp"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: -8403304569227032026, guid: 520289936100f8349b8ee804058e7241, type: 3}
+      - {fileID: -3742588865463073738, guid: cf065e6f103ddf74784d6f67256e6a34, type: 3}
+      - {fileID: -3909630989799115209, guid: d14910d38ec368d4b890db35731821b3, type: 3}
+      - {fileID: -6369049500642958180, guid: 7211425f17310664aae8a474640c7ae6, type: 3}
+    itemIndex: 3
+    column: 3
+    row: 3
+  queueLayout:
+  - stamp:
+      stampId: 4
+      stampName: "30_Qu\u1EA7n \xE1o"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 8190738948302794274, guid: ccc6ca8b5610ed6468fd7a0689ff6c4d, type: 3}
+      - {fileID: -1149880496391858715, guid: b788185ce0bd5ec459f5c8cd6d4b08f3, type: 3}
+      - {fileID: -4095406492810082051, guid: 6ef7becff1821204d80af446bb557813, type: 3}
+      - {fileID: 7162786490140758861, guid: 46e0eada219b075499abee5679ee11f9, type: 3}
+    itemIndex: 3
+    column: 0
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 4
+      stampName: "30_Qu\u1EA7n \xE1o"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 8190738948302794274, guid: ccc6ca8b5610ed6468fd7a0689ff6c4d, type: 3}
+      - {fileID: -1149880496391858715, guid: b788185ce0bd5ec459f5c8cd6d4b08f3, type: 3}
+      - {fileID: -4095406492810082051, guid: 6ef7becff1821204d80af446bb557813, type: 3}
+      - {fileID: 7162786490140758861, guid: 46e0eada219b075499abee5679ee11f9, type: 3}
+    itemIndex: 0
+    column: 1
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 4
+      stampName: "30_Qu\u1EA7n \xE1o"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 8190738948302794274, guid: ccc6ca8b5610ed6468fd7a0689ff6c4d, type: 3}
+      - {fileID: -1149880496391858715, guid: b788185ce0bd5ec459f5c8cd6d4b08f3, type: 3}
+      - {fileID: -4095406492810082051, guid: 6ef7becff1821204d80af446bb557813, type: 3}
+      - {fileID: 7162786490140758861, guid: 46e0eada219b075499abee5679ee11f9, type: 3}
+    itemIndex: 1
+    column: 2
+    row: -1
+    order: 0
+  - stamp:
+      stampId: 4
+      stampName: "30_Qu\u1EA7n \xE1o"
+      stampColor: {r: 1, g: 1, b: 1, a: 1}
+      itemSprites:
+      - {fileID: 8190738948302794274, guid: ccc6ca8b5610ed6468fd7a0689ff6c4d, type: 3}
+      - {fileID: -1149880496391858715, guid: b788185ce0bd5ec459f5c8cd6d4b08f3, type: 3}
+      - {fileID: -4095406492810082051, guid: 6ef7becff1821204d80af446bb557813, type: 3}
+      - {fileID: 7162786490140758861, guid: 46e0eada219b075499abee5679ee11f9, type: 3}
+    itemIndex: 2
+    column: 3
+    row: -1
+    order: 0
+  authoredQueueRows: 1
