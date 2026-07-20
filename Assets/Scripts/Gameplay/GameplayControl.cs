@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
 using StampJourney.Card;
 using StampJourney.Core;
@@ -65,12 +66,10 @@ namespace StampJourney.Gameplay
 
         public event Action<int> OnScoreChanged;
         public event Action<int> OnMovesChanged;
-        public event Action<int> OnComboChanged;
         public event Action<float> OnTimeChanged;
         public event Action<string> OnTopicCompleted;
         public event Action OnGameWon;
         public event Action OnGameLost;
-        public event Action OnGameplaySetupFinish;
 
         #endregion
 
@@ -88,12 +87,7 @@ namespace StampJourney.Gameplay
                 GameManager.Instance.OnSceneLoadedSuccess -= OnGameplaySceneLoaded;
             }
 
-            if (gameboard != null)
-            {
-                gameboard.OnSwapCompleted -= HandleSwapCompleted;
-                gameboard.OnStampCleared -= HandleStampCleared;
-                gameboard.OnBoardSettled -= HandleBoardSettled;
-            }
+            UnsubscribeFromBoard();
         }
 
         private void Update()
@@ -142,7 +136,7 @@ namespace StampJourney.Gameplay
             gameboard.Init(_levelData);
         }
 
-        public void Setup()
+        public async UniTask SetupAsync()
         {
             if (_levelData == null)
             {
@@ -162,18 +156,8 @@ namespace StampJourney.Gameplay
             _hasMoveLimit = _levelData.maxMoves > 0;
             _remainingTime = _hasTimeLimit ? _levelData.timeLimitSeconds : 0f;
 
-            gameboard.SetupAsync();
             GameManager.Instance.State = GameState.Playing;
-
-            // Subscribe to board events (unsubscribe first to avoid duplicates)
-            gameboard.OnSwapCompleted -= HandleSwapCompleted;
-            gameboard.OnSwapCompleted += HandleSwapCompleted;
-
-            gameboard.OnStampCleared -= HandleStampCleared;
-            gameboard.OnStampCleared += HandleStampCleared;
-
-            gameboard.OnBoardSettled -= HandleBoardSettled;
-            gameboard.OnBoardSettled += HandleBoardSettled;
+            SubscribeToBoard();
 
             // Broadcast initial state
             // Subscribe the UI before broadcasting initial values. Otherwise its move label
@@ -185,8 +169,24 @@ namespace StampJourney.Gameplay
             if (_hasTimeLimit) OnTimeChanged?.Invoke(_remainingTime);
 
             // Init UI after everything is ready — deterministic order
-            OnGameplaySetupFinish?.Invoke();
+            await gameboard.SetupAsync();
             FitGameplayCamera();
+        }
+
+        private void SubscribeToBoard()
+        {
+            UnsubscribeFromBoard();
+            gameboard.OnSwapCompleted += HandleSwapCompleted;
+            gameboard.OnStampCleared += HandleStampCleared;
+            gameboard.OnBoardSettled += HandleBoardSettled;
+        }
+
+        private void UnsubscribeFromBoard()
+        {
+            if (gameboard == null) return;
+            gameboard.OnSwapCompleted -= HandleSwapCompleted;
+            gameboard.OnStampCleared -= HandleStampCleared;
+            gameboard.OnBoardSettled -= HandleBoardSettled;
         }
 
         /// <summary>Fits the board and waiting queue inside the safe screen area between the HUD header and footer.</summary>
@@ -283,7 +283,7 @@ namespace StampJourney.Gameplay
 
             var levelData = GameManager.Instance.LevelSystem.CachedLevelData;
             Init(levelData);
-            Setup();
+            SetupAsync().Forget();
         }
 
         #endregion
@@ -353,7 +353,6 @@ namespace StampJourney.Gameplay
 
             _combo++;
             OnScoreChanged?.Invoke(_score);
-            OnComboChanged?.Invoke(_combo);
             AudioManager.Instance.PlayClear(_combo);
         }
 

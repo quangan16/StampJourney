@@ -126,10 +126,6 @@ namespace StampJourney.Gameplay
         public bool IsInBounds(int col, int row) =>
             col >= 0 && col < _cols && row >= 0 && row < _rows;
 
-        /// <summary>Whether the cell is empty.</summary>
-        public bool IsEmpty(int col, int row) =>
-            IsInBounds(col, row) && !_tiles[col, row].IsOccupied;
-
         public bool IsColumnBusy(int col)
         {
             if (col < 0 || col >= _cols) return true;
@@ -165,178 +161,23 @@ namespace StampJourney.Gameplay
 
         #endregion
 
-        #region Public API — Swap
-
-        #endregion
-
         #region Public API - Boosters
 
-        /// <summary>Checks whether the board currently contains four distinct items of one topic.</summary>
-        public bool CanAutoMerge(out string reason)
+        /// <summary>Finishes a booster-driven clear through the normal board settlement path.</summary>
+        public async UniTask SettleBoosterClearAsync(IReadOnlyCollection<CardModel> clearedCards)
         {
-            if (_tiles == null || stampDetector == null || cardFactory == null)
-            {
-                reason = "The board is not ready.";
-                return false;
-            }
-            if (HasAnimatingCards())
-            {
-                reason = "Wait for the board to finish moving.";
-                return false;
-            }
-            if (FindAutoMergeCandidates().Count == 0)
-            {
-                reason = "No topic currently has all four items on the board.";
-                return false;
-            }
+            if (clearedCards == null || clearedCards.Count == 0) return;
 
-            reason = string.Empty;
-            return true;
-        }
-
-        /// <summary>
-        /// Extracts one solvable topic without swapping, presents its four items as a centered
-        /// 2x2 merge, then runs the normal completion, gravity and queue-refill pipeline.
-        /// </summary>
-        public async UniTask<bool> AutoMergeOneTopicAsync()
-        {
-            List<List<CardModel>> candidates = FindAutoMergeCandidates();
-            if (candidates.Count == 0 || HasAnimatingCards()) return false;
-
-            List<CardModel> cards = candidates[UnityEngine.Random.Range(0, candidates.Count)]
-                .OrderBy(card => card.ItemIndex)
-                .ToList();
-
-            // Old group parents must release the chosen views before they move independently.
-            foreach (CardGroup oldGroup in cards
-                         .Select(card => card.Group)
-                         .Where(group => group != null)
-                         .Distinct()
-                         .ToList())
-            {
-                stampDetector.UnparentGroupCards(oldGroup);
-            }
-
-            foreach (CardModel card in cards)
-            {
-                int column = card.BoardCol;
-                int row = card.BoardRow;
-                CardView view = cardFactory.GetView(card.TileId);
-                view?.cardEdgeRenderer?.DisableAllLiquidBridgesImmediate();
-                SetTile(column, row, null);
-                card.CanDrag = false;
-                card.IsAnimating = true;
-            }
-
-            HideBrokenLiquidBridges();
-
-            Vector3 screenCenter = GetScreenCenterOnBoardPlane();
-            var mergeObject = new GameObject($"Auto Merge - {cards[0].Topic.TopicName}");
-            mergeObject.transform.SetParent(transform, true);
-            mergeObject.transform.position = screenCenter;
-            var mergeGroup = mergeObject.AddComponent<CardGroup>();
-            mergeGroup.Init(cards[0].Topic);
-            foreach (CardModel card in cards)
-                mergeGroup.Add(card);
-
-            var config = GameManager.Instance.GameConfig;
-            float halfStrideX = (config.cardWidth + config.cardGap) * 0.5f;
-            float halfStrideY = (config.cardHeight + config.cardGap) * 0.5f;
-            var mergeSequence = DOTween.Sequence();
-
-            for (int index = 0; index < cards.Count; index++)
-            {
-                CardModel card = cards[index];
-                CardView view = cardFactory.GetView(card.TileId);
-                if (view == null) continue;
-
-                view.transform.DOKill();
-                view.transform.SetParent(transform, true);
-                view.SetSortingOrder(view.completeSortingOrder);
-
-                int column = index % 2;
-                int row = index / 2;
-                Vector3 target = screenCenter + new Vector3(
-                    column == 0 ? -halfStrideX : halfStrideX,
-                    row == 0 ? halfStrideY : -halfStrideY,
-                    0f);
-
-                mergeSequence.Join(view.transform.DOMove(target, 0.48f).SetEase(Ease.InOutCubic));
-                mergeSequence.Join(view.transform.DOScale(1.08f, 0.24f)
-                    .SetLoops(2, LoopType.Yoyo)
-                    .SetEase(Ease.InOutSine));
-            }
-
-            await mergeSequence.AsyncWaitForCompletion();
-            foreach (CardModel card in cards)
-                card.IsAnimating = false;
-
-            await cardFactory.DespawnStampGroupAsync(mergeGroup);
+            var cards = new List<CardModel>(clearedCards);
             OnStampCleared?.Invoke(cards);
-
             await gravitySystem.ApplyGravityAsync();
             await FillEmptyCellsAsync(cards.Count);
             await CheckAndClearAsync();
-            return true;
-        }
-
-        private List<List<CardModel>> FindAutoMergeCandidates()
-        {
-            var boardCards = new List<CardModel>();
-            for (int c = 0; c < _cols; c++)
-                for (int r = 0; r < _rows; r++)
-                    if (GetCard(c, r) is CardModel card && card.HasAssignedContent)
-                        boardCards.Add(card);
-
-            var candidates = new List<List<CardModel>>();
-            foreach (IGrouping<int, CardModel> topicCards in boardCards.GroupBy(card => card.Topic.TopicId))
-            {
-                List<CardModel> distinctItems = topicCards
-                    .GroupBy(card => card.ItemIndex)
-                    .Select(items => items.First())
-                    .OrderBy(card => card.ItemIndex)
-                    .ToList();
-
-                if (distinctItems.Count != StampData.RequiredItemCount) continue;
-                if (!distinctItems[0].Topic.HasCompleteItemSet(
-                        distinctItems.Select(card => card.ItemIndex))) continue;
-
-                candidates.Add(distinctItems);
-            }
-
-            return candidates;
-        }
-
-        private Vector3 GetScreenCenterOnBoardPlane()
-        {
-            Camera camera = Camera.main;
-            if (camera == null) return transform.position;
-
-            Vector3 center = camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0f));
-            center.z = transform.position.z;
-            return center;
         }
 
         #endregion
 
         #region Public API - Swap
-
-        /// <summary>Attempts to swap two tiles by board position.</summary>
-        public async UniTask TrySwapAsync(int colA, int rowA, int colB, int rowB)
-        {
-            if (!IsInBounds(colA, rowA) || !IsInBounds(colB, rowB)) return;
-
-            var cardA = GetCard(colA, rowA);
-            var cardB = GetCard(colB, rowB);
-            if (cardA == null || cardB == null) return;
-
-            SwapInGrid(colA, rowA, colB, rowB);
-            HideBrokenLiquidBridges();
-            AnimateAllTilesToGridPositions(0.18f);
-            OnSwapCompleted?.Invoke(cardA, cardB);
-
-            await SettleAfterPlayerMoveAsync(0.18f);
-        }
 
         /// <summary>Swaps an entire group by a grid delta. Called by CardView during group drag.</summary>
         public async UniTask TrySwapGroupAsync(CardGroup group, int deltaCol, int deltaRow)
@@ -881,15 +722,6 @@ namespace StampJourney.Gameplay
             await gravitySystem.ApplyGravityAsync();
             await FillEmptyCellsAsync(int.MaxValue);
             await CheckAndClearAsync();
-        }
-
-        private void SwapInGrid(int colA, int rowA, int colB, int rowB)
-        {
-            var cardA = GetCard(colA, rowA);
-            var cardB = GetCard(colB, rowB);
-
-            _tiles[colA, rowA].SetCard(cardB);
-            _tiles[colB, rowB].SetCard(cardA);
         }
 
         #endregion

@@ -142,7 +142,7 @@ namespace StampJourney.Core
             Debug.Log($"[LevelSystem] Started level {targetLevel}: {_cachedCurrentLevelData.levelID}");
         }
 
-        public void RestartLevel() => StartLevel(CurrentLevel);
+        public void RestartLevel() => StartLevel(CurrentLevel).Forget();
 
         public void GoToNextLevel()
         {

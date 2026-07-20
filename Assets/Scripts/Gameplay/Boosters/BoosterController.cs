@@ -24,7 +24,6 @@ namespace StampJourney.Gameplay.Boosters
         public BoosterAction Action => action;
         public int Count => count;
 
-        public void SetCount(int value) => count = Mathf.Max(0, value);
         public bool TryConsume()
         {
             if (count <= 0) return false;
@@ -55,8 +54,6 @@ namespace StampJourney.Gameplay.Boosters
 
         public BoosterAction Selected => _selected;
         public BoosterControllerState State => _state;
-        public bool BlocksCardInput => _state != BoosterControllerState.Idle;
-        public IReadOnlyList<BoosterStock> Boosters => boosters;
 
         public event Action<BoosterAction> OnSelectionChanged;
         public event Action<BoosterControllerState> OnStateChanged;
@@ -164,17 +161,6 @@ namespace StampJourney.Gameplay.Boosters
             _stockById.TryGetValue(boosterId, out BoosterStock stock)
                 ? stock.Count
                 : 0;
-
-        public bool SetCount(string boosterId, int count)
-        {
-            if (string.IsNullOrWhiteSpace(boosterId) ||
-                !_stockById.TryGetValue(boosterId, out BoosterStock stock))
-                return false;
-
-            stock.SetCount(count);
-            OnCountChanged?.Invoke(stock.Action, stock.Count);
-            return true;
-        }
 
         private async UniTaskVoid ExecuteAsync(BoosterStock stock, CardModel targetCard)
         {

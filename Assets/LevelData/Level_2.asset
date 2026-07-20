@@ -15,7 +15,7 @@ MonoBehaviour:
   levelID: 2
   boardCols: 3
   boardRows: 3
-  maxMoves: -1
+  maxMoves: 30
   timeLimitSeconds: 0
   stamps:
   - stampId: 1

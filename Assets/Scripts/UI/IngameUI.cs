@@ -56,12 +56,6 @@ public class GameplayUI : MonoBehaviour, IScreen
     [FoldoutGroup("Lose Panel")]
     [Required] public TextMeshProUGUI loseScoreText;
 
-    // ---- Combo Popup ----
-    [FoldoutGroup("Combo")]
-    [Required] public TextMeshProUGUI comboText;
-    [FoldoutGroup("Combo")]
-    public float comboDuration = 1.2f;
-
     // ---- Completed Topic Banner ----
     [FoldoutGroup("Completed Topic")]
     [Tooltip("Optional authored banner. A runtime bar is created automatically when left empty.")]
@@ -82,7 +76,6 @@ public class GameplayUI : MonoBehaviour, IScreen
     private bool _completedTopicBarInitialized;
     private readonly HashSet<string> _visibleCompletedTopics = new();
     private readonly List<RectTransform> _completedTopicElements = new();
-    private readonly List<TextMeshProUGUI> _completedTopicLabels = new();
 
     public RectTransform HeaderArea => ResolveFramingArea(ref headerArea, "Header");
     public RectTransform FooterArea => ResolveFramingArea(ref footerArea, "Footer");
@@ -96,14 +89,26 @@ public class GameplayUI : MonoBehaviour, IScreen
             AndyUtil.Logger.LogError("Gameplay controler is null!");
             return;
         }
-        this._gameplayControl = gameplayControl;
+        UnsubscribeFromGameplay();
+        _gameplayControl = gameplayControl;
         UIManager.Instance.CurrentActiveScreen = this;
-        nextBtn?.onClick.AddListener(() => GameManager.Instance?.LevelSystem.GoToNextLevel());
-        ReplayBtn?.onClick.AddListener(() => OnRestartClicked());
-        Setup();
+        if (nextBtn != null)
+        {
+            nextBtn.onClick.RemoveListener(OnNextLevelClicked);
+            nextBtn.onClick.AddListener(OnNextLevelClicked);
+        }
+        if (ReplayBtn != null)
+        {
+            ReplayBtn.onClick.RemoveListener(OnRestartClicked);
+            ReplayBtn.onClick.AddListener(OnRestartClicked);
+        }
+
+        SubscribeToGameplay();
+        UpdateHudVisibility();
+        Show();
     }
 
-    public void Setup()
+    private void SubscribeToGameplay()
     {
         // Subscribe to data events
         _gameplayControl.OnScoreChanged += UpdateScore;
@@ -114,9 +119,17 @@ public class GameplayUI : MonoBehaviour, IScreen
         // Subscribe to game flow events — UI reacts to these instead of being called directly
         _gameplayControl.OnGameWon += HandleGameWon;
         _gameplayControl.OnGameLost += HandleGameLost;
-        _gameplayControl.OnGameplaySetupFinish += HandleSetupFinish;
+    }
 
-        Show();
+    private void UnsubscribeFromGameplay()
+    {
+        if (_gameplayControl == null) return;
+        _gameplayControl.OnScoreChanged -= UpdateScore;
+        _gameplayControl.OnMovesChanged -= UpdateMoves;
+        _gameplayControl.OnTimeChanged -= UpdateTimer;
+        _gameplayControl.OnTopicCompleted -= ShowCompletedTopic;
+        _gameplayControl.OnGameWon -= HandleGameWon;
+        _gameplayControl.OnGameLost -= HandleGameLost;
     }
 
     private RectTransform ResolveFramingArea(ref RectTransform area, string childName)
@@ -140,21 +153,16 @@ public class GameplayUI : MonoBehaviour, IScreen
 
     private void OnDestroy()
     {
-        if (_gameplayControl == null) return;
-        _gameplayControl.OnScoreChanged -= UpdateScore;
-        _gameplayControl.OnMovesChanged -= UpdateMoves;
-        _gameplayControl.OnTimeChanged -= UpdateTimer;
-        _gameplayControl.OnTopicCompleted -= ShowCompletedTopic;
-        _gameplayControl.OnGameWon -= HandleGameWon;
-        _gameplayControl.OnGameLost -= HandleGameLost;
-        _gameplayControl.OnGameplaySetupFinish -= HandleSetupFinish;
+        UnsubscribeFromGameplay();
+        if (nextBtn != null) nextBtn.onClick.RemoveListener(OnNextLevelClicked);
+        if (ReplayBtn != null) ReplayBtn.onClick.RemoveListener(OnRestartClicked);
         _completedTopicSequence?.Kill();
     }
 
     // ========================================================
     #region Game Flow Handlers
 
-    private void HandleSetupFinish()
+    private void UpdateHudVisibility()
     {
         // Show/hide HUD elements based on level config
         if (movesText != null)
@@ -279,35 +287,6 @@ public class GameplayUI : MonoBehaviour, IScreen
 
     #endregion
 
-    // ========================================================
-    #region Combo Popup
-
-    public void ShowComboText(int combo, int points)
-    {
-        if (comboText == null) return;
-
-        comboText.gameObject.SetActive(true);
-        comboText.text = combo > 1
-            ? $"COMBO x{combo}!\n+{points}"
-            : $"+{points}";
-
-        comboText.transform.localScale = Vector3.zero;
-
-        var seq = DOTween.Sequence();
-        seq.Append(comboText.transform.DOScale(1.2f, 0.2f).SetEase(Ease.OutBack));
-        seq.Append(comboText.transform.DOMoveY(
-            comboText.transform.position.y + 80f, comboDuration).SetEase(Ease.OutQuad));
-        seq.Join(comboText.DOFade(0f, comboDuration));
-        seq.OnComplete(() =>
-        {
-            comboText.gameObject.SetActive(false);
-            comboText.transform.localScale = Vector3.one;
-        });
-    }
-
-    #endregion
-
-    // ========================================================
     #region Completed Topic Banner
 
     public void ShowCompletedTopic(string topicName)
@@ -458,7 +437,6 @@ public class GameplayUI : MonoBehaviour, IScreen
         textRect.offsetMax = new Vector2(-24f, -8f);
 
         _completedTopicElements.Add(element);
-        _completedTopicLabels.Add(label);
         return element;
     }
 
@@ -552,7 +530,6 @@ public class GameplayUI : MonoBehaviour, IScreen
             Destroy(element.gameObject);
         }
         _completedTopicElements.Clear();
-        _completedTopicLabels.Clear();
     }
 
     #endregion

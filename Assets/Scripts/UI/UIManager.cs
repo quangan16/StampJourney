@@ -18,14 +18,14 @@ namespace StampJourney.UI
 
         protected override void OnSingletonInitialized()
         {
-            _cachedCanvas = FindObjectOfType<Canvas>();
+            _cachedCanvas = FindFirstObjectByType<Canvas>();
         }
 
         public void ShowToast(string message)
         {
             if (_cachedCanvas == null)
             {
-                _cachedCanvas = FindObjectOfType<Canvas>();
+                _cachedCanvas = FindFirstObjectByType<Canvas>();
                 if (_cachedCanvas == null) return;
             }
 

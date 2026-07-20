@@ -54,7 +54,7 @@ namespace StampJourney.Core
 
         public void StartGameplayLevel(int level)
         {
-            LevelSystem.StartLevel(level);
+            LevelSystem.StartLevel(level).Forget();
         }
 
         public void GoToMainMenu()
