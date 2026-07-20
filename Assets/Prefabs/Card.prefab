@@ -97,7 +97,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Card.CardEdgeRenderer
   serializationData:
-    SerializedFormat: 2
+    SerializedFormat: 0
     SerializedBytes: 
     ReferencedUnityObjects: []
     SerializedBytesString: 
@@ -113,7 +113,7 @@ MonoBehaviour:
   transitionDuration: 0.15
   enableLiquidMerge: 1
   liquidMergeMaterial: {fileID: 2100000, guid: f522c41bb0924bd9927626532fcc9fd6, type: 2}
-  liquidMergeDuration: 0.3
+  liquidMergeDuration: 0.24
   liquidThickness: 1
   liquidWobble: 0
 --- !u!1 &1946884046606638217

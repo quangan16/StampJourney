@@ -47,6 +47,8 @@ namespace StampJourney.Card
         [BoxGroup("Settings")]
         public int dragSortingOrder = 100;
 
+        public int completeSortingOrder = 50;
+
         [BoxGroup("Link State Colors")]
         [LabelText("1 Item - Blue")]
         public Color oneItemColor = new Color32(77, 157, 224, 255);
@@ -98,6 +100,7 @@ namespace StampJourney.Card
         private Gameboard _board;
         private bool _isDragging;
         private bool _isSnapping;
+        private bool _releaseInProgress;
         private Camera _mainCamera;
 
         // Drag state
@@ -266,7 +269,7 @@ namespace StampJourney.Card
             Vector2 spriteSize = contentImg.sprite.bounds.size;
             float scaleX = maxWidth / spriteSize.x;
             float scaleY = maxHeight / spriteSize.y;
-            var targetScale = Mathf.Min(scaleX, scaleY);
+            var targetScale = Mathf.Min(scaleX, scaleY) * 0.9f;
 
             contentImg.transform.localScale = new Vector3(targetScale, targetScale, 1f);
         }
@@ -278,6 +281,14 @@ namespace StampJourney.Card
         private void OnMouseDown()
         {
             if (_model == null || _model.IsAnimating || _isSnapping || !_model.CanDrag || _model.FlipState == FlipState.Down) return;
+            if (_model.Group != null && _model.Group.IsTopicComplete) return;
+
+            // A targeted booster gets first use of the card press. While a booster is executing,
+            // the controller also consumes presses so drag logic cannot mutate the same board.
+            if (_board != null && _board.Boosters != null &&
+                _board.Boosters.HandleCardPressed(_model))
+                return;
+
             if (_model.Group != null && _model.Group.HasCardAnimating) return;
             if (GameManager.Instance.State != GameState.Playing) return;
 
@@ -332,9 +343,27 @@ namespace StampJourney.Card
             _prevDragPos = newPosition;
         }
 
-        private async UniTaskVoid OnMouseUp()
+        private void OnMouseUp()
         {
-            if (!_isDragging || _isSnapping) return;
+            ReleaseDragAsync().Forget();
+        }
+
+        /// <summary>
+        /// Physics mouse messages can occasionally miss OnMouseUp when the dragged collider is
+        /// released directly over another card. Polling the physical button state guarantees
+        /// that every begun drag reaches the same release path exactly once.
+        /// </summary>
+        private void LateUpdate()
+        {
+            if (_isDragging && !_releaseInProgress && !Input.GetMouseButton(0))
+                ReleaseDragAsync().Forget();
+        }
+
+        private async UniTask ReleaseDragAsync()
+        {
+            if (!_isDragging || _releaseInProgress) return;
+
+            _releaseInProgress = true;
             _isDragging = false;
 
             if (glowImg) glowImg.DOFade(0f, snapDuration);
@@ -345,10 +374,26 @@ namespace StampJourney.Card
 
             _currentTilt = 0f;
 
-            if (_dragGroup != null && _dragGroup.Count > 1 && _dragGroup.GroupTransform != null)
-                await HandleGroupRelease();
-            else
-                await HandleSingleRelease();
+            try
+            {
+                if (_dragGroup != null && _dragGroup.Count > 1 && _dragGroup.GroupTransform != null)
+                    await HandleGroupRelease();
+                else
+                    await HandleSingleRelease();
+            }
+            catch (System.Exception exception)
+            {
+                // A UI/event subscriber runs inside the awaited board settlement path. Its
+                // failure must not leave this card permanently in a dragged/snapping state.
+                Debug.LogException(exception, this);
+            }
+            finally
+            {
+                _isDragging = false;
+                _isSnapping = false;
+                _releaseInProgress = false;
+                _currentTilt = 0f;
+            }
         }
 
         #endregion
@@ -358,8 +403,14 @@ namespace StampJourney.Card
         private async UniTask DoSingleGridSwapAsync(Vector2Int gridDelta)
         {
             _isSnapping = true;
-            await _board.TrySwapSingleGridAsync(_model, gridDelta.x, gridDelta.y);
-            _isSnapping = false;
+            try
+            {
+                await _board.TrySwapSingleGridAsync(_model, gridDelta.x, gridDelta.y);
+            }
+            finally
+            {
+                _isSnapping = false;
+            }
         }
 
         private async UniTask DoGroupSwapAsync(Vector2Int gridDelta)
@@ -367,8 +418,14 @@ namespace StampJourney.Card
             var group = _dragGroup;
             _isSnapping = true;
             _dragGroup = null;
-            await _board.TrySwapGroupAsync(group, gridDelta.x, gridDelta.y);
-            _isSnapping = false;
+            try
+            {
+                await _board.TrySwapGroupAsync(group, gridDelta.x, gridDelta.y);
+            }
+            finally
+            {
+                _isSnapping = false;
+            }
         }
 
         private async UniTask SnapBackSingleAsync()
@@ -496,21 +553,33 @@ namespace StampJourney.Card
 
             _dragGroup?.GroupTransform.DORotateQuaternion(Quaternion.identity, snapDuration).SetEase(Ease.OutBack);
 
-            if (gridDelta.x != 0 || gridDelta.y != 0)
-                await DoGroupSwapAsync(gridDelta);
-            else
-                await SnapBackGroupAsync();
-
-            // RebuildGroups can replace the CardGroup and clear _dragGroup during the await,
-            // so restore the cached member views rather than consulting the old parent.
-            foreach (var view in memberViews)
-                if (view != null) view.SetSortingOrder(view.baseSortingOrder);
+            try
+            {
+                if (gridDelta.x != 0 || gridDelta.y != 0)
+                    await DoGroupSwapAsync(gridDelta);
+                else
+                    await SnapBackGroupAsync();
+            }
+            finally
+            {
+                // RebuildGroups can replace the CardGroup and clear _dragGroup during the await,
+                // so restore cached views even if settlement or a UI callback throws.
+                foreach (var view in memberViews)
+                {
+                    SnapViewToCurrentGridImmediate(view);
+                    if (view != null) view.SetSortingOrder(view.baseSortingOrder);
+                }
+                _dragGroup = null;
+            }
         }
 
         private void OnDisable()
         {
             _backgroundColorTween?.Kill();
             _backgroundColorTween = null;
+            _isDragging = false;
+            _isSnapping = false;
+            _releaseInProgress = false;
         }
 
         private async UniTask HandleSingleRelease()
@@ -520,12 +589,37 @@ namespace StampJourney.Card
 
             var gridDelta = CalculateSingleGridDelta();
 
-            if (gridDelta.x != 0 || gridDelta.y != 0)
-                await DoSingleGridSwapAsync(gridDelta);
-            else
-                await SnapBackSingleAsync();
+            try
+            {
+                if (gridDelta.x != 0 || gridDelta.y != 0)
+                    await DoSingleGridSwapAsync(gridDelta);
+                else
+                    await SnapBackSingleAsync();
+            }
+            finally
+            {
+                SnapViewToCurrentGridImmediate(this);
+                SetSortingOrder(baseSortingOrder);
+                _dragGroup = null;
+            }
+        }
 
-            SetSortingOrder(baseSortingOrder);
+        private void SnapViewToCurrentGridImmediate(CardView view)
+        {
+            if (view == null || view.Model == null || _board == null ||
+                !view.gameObject.activeInHierarchy)
+                return;
+
+            view.transform.DOKill();
+            view.transform.position = _board.GetWorldPosition(
+                view.Model.BoardCol,
+                view.Model.BoardRow);
+            view.transform.localScale = Vector3.one;
+            view.transform.rotation = Quaternion.identity;
+
+            // Force-snapping kills any board DOMove before its OnComplete callback can run.
+            // Clear this explicitly or IsColumnBusy will permanently lock the card's column.
+            view.Model.IsAnimating = false;
         }
 
         /// <summary>Calculates the grid delta for a group based on parent transform offset.</summary>

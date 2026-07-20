@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Sirenix.OdinInspector;
 using StampJourney.Card;
@@ -45,13 +45,20 @@ namespace StampJourney.Gameplay
             foreach (CardGroup group in _gameboard.stampDetector.AllGroups.Values)
                 _gameboard.stampDetector.UnparentGroupCards(group);
 
-            bool anyMoved = DropAllTiles();
+            List<CardModel> movedCards = DropAllTiles();
 
-            if (anyMoved)
+            if (movedCards.Count > 0)
             {
                 _gameboard.HideBrokenLiquidBridges();
-                float maxDelay = dropDurationPerCell * _gameboard.Rows;
-                // await UniTask.Delay(TimeSpan.FromSeconds(maxDelay + 0.1f));
+
+                // Group rebuilding/reparenting must not begin while a gravity tween still owns
+                // a card transform. Waiting for the actual moved models is more reliable than a
+                // duration estimate because every card can fall a different number of rows.
+                await UniTask.WaitUntil(() => movedCards.TrueForAll(card => !card.IsAnimating));
+
+                // Commit exact world positions before queue cards drop or a new group parent is
+                // created. This prevents tiny tween/reparent offsets such as x = 0.4659674.
+                _gameboard.SnapAllTilesToGridPositionsImmediate();
             }
         }
 
@@ -81,9 +88,9 @@ namespace StampJourney.Gameplay
         /// Drops all tiles independently (column by column).
         /// Returns true if any tile moved.
         /// </summary>
-        private bool DropAllTiles()
+        private List<CardModel> DropAllTiles()
         {
-            bool anyMoved = false;
+            var movedCards = new List<CardModel>();
 
             for (int c = 0; c < _gameboard.Cols; c++)
             {
@@ -104,14 +111,14 @@ namespace StampJourney.Gameplay
                         Vector2 targetPos = _gameboard.GetWorldPosition(c, writeRow);
                         _gameboard.cardFactory.AnimateTileDrop(tile, targetPos, duration);
 
-                        anyMoved = true;
+                        movedCards.Add(tile);
                     }
 
                     writeRow--;
                 }
             }
 
-            return anyMoved;
+            return movedCards;
         }
     }
 }

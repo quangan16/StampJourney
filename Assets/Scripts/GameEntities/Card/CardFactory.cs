@@ -42,11 +42,6 @@ namespace StampJourney.Card
         [LabelText("Completed Background Hold")]
         public float completeBackgroundHoldDuration = 0.15f;
 
-        [BoxGroup("Topic Complete")]
-        [LabelText("Completion Sorting Order")]
-        [Tooltip("Raised above normal, falling, and dragged cards while a completed topic is presented.")]
-        public int completeSortingOrder = 200;
-
         #endregion
 
         #region Pool
@@ -195,6 +190,8 @@ namespace StampJourney.Card
         /// <summary>Despawns an entire stamp group with a combined scale-down animation.</summary>
         public async UniTask DespawnStampGroupAsync(CardGroup group)
         {
+            if (group == null) return;
+
             if (clearEffectPrefab != null)
             {
                 var effect = Instantiate(clearEffectPrefab, group.transform.position, Quaternion.identity);
@@ -218,62 +215,58 @@ namespace StampJourney.Card
                 }
             }
 
-            // Raise each card independently; the movement-only group parent intentionally has no
-            // SortingGroup. The combined background sits one order below the raised item cards.
-            foreach (CardView view in views)
-                view.SetSortingOrder(completeSortingOrder);
+            SpriteRenderer completedBackground = null;
+            Sequence backgroundTransition = null;
+            Sequence completionSequence = null;
 
-            SpriteRenderer completedBackground = CreateCompletedGroupBackground(
-                group,
-                views,
-                completeSortingOrder - 1);
-            float backgroundFadeDuration = Mathf.Max(0f, completeBackgroundFadeDuration);
-            var backgroundTransition = DOTween.Sequence();
-
-            foreach (CardView view in views)
+            try
             {
-                view.cardEdgeRenderer?.DisableAllLiquidBridgesImmediate();
-                if (view.backGroundImg == null) continue;
+                completedBackground = CreateCompletedGroupBackground(group, views);
+                float backgroundFadeDuration = Mathf.Max(0f, completeBackgroundFadeDuration);
+                backgroundTransition = DOTween.Sequence();
 
-                view.backGroundImg.DOKill();
-                backgroundTransition.Join(
-                    view.backGroundImg.DOFade(0f, backgroundFadeDuration).SetEase(Ease.Linear));
+                foreach (CardView view in views)
+                {
+                    view.cardEdgeRenderer?.DisableAllLiquidBridgesImmediate();
+                    if (view.backGroundImg == null) continue;
+                    view.SetSortingOrder(view.completeSortingOrder);
+                    view.backGroundImg.DOKill();
+                    backgroundTransition.Join(
+                        view.backGroundImg.DOFade(0f, backgroundFadeDuration).SetEase(Ease.Linear));
+                }
+
+                completionSequence = DOTween.Sequence();
+                completionSequence.Append(
+                    group.transform.DOScale(1.15f, 0.2f).SetEase(Ease.OutBack));
+                completionSequence.AppendInterval(completeBackgroundHoldDuration);
+                completionSequence.Append(
+                    group.transform.DOScale(0f, 0.3f).SetEase(Ease.InBack));
+                await completionSequence.AsyncWaitForCompletion();
             }
-
-            if (completedBackground != null)
+            finally
             {
-                Color visibleColor = completedBackground.color;
-                visibleColor.a = 1f;
-                completedBackground.color = new Color(
-                    visibleColor.r,
-                    visibleColor.g,
-                    visibleColor.b,
-                    0f);
-                backgroundTransition.Join(
-                    completedBackground.DOColor(visibleColor, backgroundFadeDuration)
-                        .SetEase(Ease.InOutSine));
+                // Cleanup must not depend on tween completion. Group rebuilds, restarts or
+                // simultaneous clear effects may kill a tween before its awaited callback.
+                backgroundTransition?.Kill(false);
+                completionSequence?.Kill(false);
+
+                if (completedBackground != null)
+                {
+                    completedBackground.DOKill();
+                    Destroy(completedBackground.gameObject);
+                }
+
+                foreach (CardView view in views)
+                {
+                    if (view == null) continue;
+                    view.transform.DOKill();
+                    view.transform.SetParent(transform, true);
+                    ReturnToPool(view);
+                }
+
+                if (group != null)
+                    Destroy(group.gameObject);
             }
-
-            // await backgroundTransition.AsyncWaitForCompletion();
-
-
-
-            var seq = DOTween.Sequence();
-            seq.Append(group.transform.DOScale(1.15f, 0.2f).SetEase(Ease.OutBack));
-            // seq.Append(group.transform.DOShakeRotation(0.5f, 20f, 3, 0, true));
-            seq.AppendInterval(completeBackgroundHoldDuration);
-            seq.Append(group.transform.DOScale(0f, 0.3f).SetEase(Ease.InBack));
-            await seq.AsyncWaitForCompletion();
-
-            // Clean up
-            foreach (var view in views)
-            {
-                view.transform.SetParent(transform, true);
-                ReturnToPool(view);
-            }
-
-            if (group != null && group.gameObject != null)
-                Destroy(group.gameObject);
         }
 
         /// <summary>
@@ -282,8 +275,7 @@ namespace StampJourney.Card
         /// </summary>
         private static SpriteRenderer CreateCompletedGroupBackground(
             CardGroup group,
-            IReadOnlyList<CardView> views,
-            int sortingOrder)
+            IReadOnlyList<CardView> views)
         {
             if (group == null || views == null) return null;
 
@@ -307,9 +299,10 @@ namespace StampJourney.Card
             SpriteRenderer image = imageObject.AddComponent<SpriteRenderer>();
             image.sprite = sourceView.backGroundImg.sprite;
             image.sharedMaterial = sourceView.backGroundImg.sharedMaterial;
-            image.color = sourceView.GetLinkStateColor(4);
+            image.color = sourceView.GetLinkStateColor(3);
+            image.DOColor(sourceView.GetLinkStateColor(4), 0.2f).SetEase(Ease.Linear);
             image.sortingLayerID = sourceView.backGroundImg.sortingLayerID;
-            image.sortingOrder = sortingOrder;
+            image.sortingOrder = sourceView.completeSortingOrder - 10;
             image.drawMode = SpriteDrawMode.Sliced;
 
             var config = GameManager.Instance.GameConfig;

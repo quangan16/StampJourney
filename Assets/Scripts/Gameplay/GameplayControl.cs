@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Sirenix.OdinInspector;
 using StampJourney.Card;
 using StampJourney.Core;
@@ -66,6 +67,7 @@ namespace StampJourney.Gameplay
         public event Action<int> OnMovesChanged;
         public event Action<int> OnComboChanged;
         public event Action<float> OnTimeChanged;
+        public event Action<string> OnTopicCompleted;
         public event Action OnGameWon;
         public event Action OnGameLost;
         public event Action OnGameplaySetupFinish;
@@ -174,12 +176,15 @@ namespace StampJourney.Gameplay
             gameboard.OnBoardSettled += HandleBoardSettled;
 
             // Broadcast initial state
+            // Subscribe the UI before broadcasting initial values. Otherwise its move label
+            // keeps the prefab text until the first player move changes the count.
+            if (gameplayUI != null) gameplayUI.Init(this);
+
             OnScoreChanged?.Invoke(_score);
             if (_hasMoveLimit) OnMovesChanged?.Invoke(_remainingMoves);
             if (_hasTimeLimit) OnTimeChanged?.Invoke(_remainingTime);
 
             // Init UI after everything is ready — deterministic order
-            if (gameplayUI != null) gameplayUI.Init(this);
             OnGameplaySetupFinish?.Invoke();
             FitGameplayCamera();
         }
@@ -339,6 +344,12 @@ namespace StampJourney.Gameplay
         private void HandleStampCleared(List<CardModel> clearedTiles)
         {
             if (GameManager.Instance.State != GameState.Playing) return;
+
+            string completedTopicName = clearedTiles?
+                .FirstOrDefault(tile => tile?.Topic != null)?
+                .Topic.TopicName;
+            if (!string.IsNullOrWhiteSpace(completedTopicName))
+                OnTopicCompleted?.Invoke(completedTopicName);
 
             _combo++;
             OnScoreChanged?.Invoke(_score);

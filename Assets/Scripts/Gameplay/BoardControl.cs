@@ -7,6 +7,7 @@ using Sirenix.OdinInspector;
 using StampJourney.Card;
 using StampJourney.Core;
 using StampJourney.Data;
+using StampJourney.Gameplay.Boosters;
 using UnityEngine;
 
 namespace StampJourney.Gameplay
@@ -29,6 +30,8 @@ namespace StampJourney.Gameplay
         public Tile tilePrefab;
         [BoxGroup("References")]
         public QueueSystem queueSystem;
+        [BoxGroup("References")]
+        [SerializeField] private BoosterController boosterController;
 
         #endregion
 
@@ -55,6 +58,7 @@ namespace StampJourney.Gameplay
 
         public int Cols => _cols;
         public int Rows => _rows;
+        public BoosterController Boosters => boosterController;
 
         #endregion
 
@@ -149,9 +153,173 @@ namespace StampJourney.Gameplay
             return true;
         }
 
+        public bool HasAnimatingCards()
+        {
+            for (int c = 0; c < _cols; c++)
+                for (int r = 0; r < _rows; r++)
+                    if (GetCard(c, r)?.IsAnimating == true)
+                        return true;
+
+            return false;
+        }
+
         #endregion
 
         #region Public API — Swap
+
+        #endregion
+
+        #region Public API - Boosters
+
+        /// <summary>Checks whether the board currently contains four distinct items of one topic.</summary>
+        public bool CanAutoMerge(out string reason)
+        {
+            if (_tiles == null || stampDetector == null || cardFactory == null)
+            {
+                reason = "The board is not ready.";
+                return false;
+            }
+            if (HasAnimatingCards())
+            {
+                reason = "Wait for the board to finish moving.";
+                return false;
+            }
+            if (FindAutoMergeCandidates().Count == 0)
+            {
+                reason = "No topic currently has all four items on the board.";
+                return false;
+            }
+
+            reason = string.Empty;
+            return true;
+        }
+
+        /// <summary>
+        /// Extracts one solvable topic without swapping, presents its four items as a centered
+        /// 2x2 merge, then runs the normal completion, gravity and queue-refill pipeline.
+        /// </summary>
+        public async UniTask<bool> AutoMergeOneTopicAsync()
+        {
+            List<List<CardModel>> candidates = FindAutoMergeCandidates();
+            if (candidates.Count == 0 || HasAnimatingCards()) return false;
+
+            List<CardModel> cards = candidates[UnityEngine.Random.Range(0, candidates.Count)]
+                .OrderBy(card => card.ItemIndex)
+                .ToList();
+
+            // Old group parents must release the chosen views before they move independently.
+            foreach (CardGroup oldGroup in cards
+                         .Select(card => card.Group)
+                         .Where(group => group != null)
+                         .Distinct()
+                         .ToList())
+            {
+                stampDetector.UnparentGroupCards(oldGroup);
+            }
+
+            foreach (CardModel card in cards)
+            {
+                int column = card.BoardCol;
+                int row = card.BoardRow;
+                CardView view = cardFactory.GetView(card.TileId);
+                view?.cardEdgeRenderer?.DisableAllLiquidBridgesImmediate();
+                SetTile(column, row, null);
+                card.CanDrag = false;
+                card.IsAnimating = true;
+            }
+
+            HideBrokenLiquidBridges();
+
+            Vector3 screenCenter = GetScreenCenterOnBoardPlane();
+            var mergeObject = new GameObject($"Auto Merge - {cards[0].Topic.TopicName}");
+            mergeObject.transform.SetParent(transform, true);
+            mergeObject.transform.position = screenCenter;
+            var mergeGroup = mergeObject.AddComponent<CardGroup>();
+            mergeGroup.Init(cards[0].Topic);
+            foreach (CardModel card in cards)
+                mergeGroup.Add(card);
+
+            var config = GameManager.Instance.GameConfig;
+            float halfStrideX = (config.cardWidth + config.cardGap) * 0.5f;
+            float halfStrideY = (config.cardHeight + config.cardGap) * 0.5f;
+            var mergeSequence = DOTween.Sequence();
+
+            for (int index = 0; index < cards.Count; index++)
+            {
+                CardModel card = cards[index];
+                CardView view = cardFactory.GetView(card.TileId);
+                if (view == null) continue;
+
+                view.transform.DOKill();
+                view.transform.SetParent(transform, true);
+                view.SetSortingOrder(view.completeSortingOrder);
+
+                int column = index % 2;
+                int row = index / 2;
+                Vector3 target = screenCenter + new Vector3(
+                    column == 0 ? -halfStrideX : halfStrideX,
+                    row == 0 ? halfStrideY : -halfStrideY,
+                    0f);
+
+                mergeSequence.Join(view.transform.DOMove(target, 0.48f).SetEase(Ease.InOutCubic));
+                mergeSequence.Join(view.transform.DOScale(1.08f, 0.24f)
+                    .SetLoops(2, LoopType.Yoyo)
+                    .SetEase(Ease.InOutSine));
+            }
+
+            await mergeSequence.AsyncWaitForCompletion();
+            foreach (CardModel card in cards)
+                card.IsAnimating = false;
+
+            await cardFactory.DespawnStampGroupAsync(mergeGroup);
+            OnStampCleared?.Invoke(cards);
+
+            await gravitySystem.ApplyGravityAsync();
+            await FillEmptyCellsAsync(cards.Count);
+            await CheckAndClearAsync();
+            return true;
+        }
+
+        private List<List<CardModel>> FindAutoMergeCandidates()
+        {
+            var boardCards = new List<CardModel>();
+            for (int c = 0; c < _cols; c++)
+                for (int r = 0; r < _rows; r++)
+                    if (GetCard(c, r) is CardModel card && card.HasAssignedContent)
+                        boardCards.Add(card);
+
+            var candidates = new List<List<CardModel>>();
+            foreach (IGrouping<int, CardModel> topicCards in boardCards.GroupBy(card => card.Topic.TopicId))
+            {
+                List<CardModel> distinctItems = topicCards
+                    .GroupBy(card => card.ItemIndex)
+                    .Select(items => items.First())
+                    .OrderBy(card => card.ItemIndex)
+                    .ToList();
+
+                if (distinctItems.Count != StampData.RequiredItemCount) continue;
+                if (!distinctItems[0].Topic.HasCompleteItemSet(
+                        distinctItems.Select(card => card.ItemIndex))) continue;
+
+                candidates.Add(distinctItems);
+            }
+
+            return candidates;
+        }
+
+        private Vector3 GetScreenCenterOnBoardPlane()
+        {
+            Camera camera = Camera.main;
+            if (camera == null) return transform.position;
+
+            Vector3 center = camera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, 0f));
+            center.z = transform.position.z;
+            return center;
+        }
+
+        #endregion
+
+        #region Public API - Swap
 
         /// <summary>Attempts to swap two tiles by board position.</summary>
         public async UniTask TrySwapAsync(int colA, int rowA, int colB, int rowB)
@@ -363,8 +531,36 @@ namespace StampJourney.Gameplay
                     var movingCard = card;
                     movingCard.IsAnimating = true;
                     view.transform.DOMove(targetPos, duration)
-                        .SetEase(Ease.OutCubic)
+                        .SetEase(Ease.OutQuad)
                         .OnComplete(() => movingCard.IsAnimating = false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Commits every active card view to the position stored in the board grid.
+        /// This is deliberately separate from the animated move: a card can be reparented when
+        /// groups are rebuilt, or its tween can be killed by another visual effect. In either
+        /// case the logical swap has already succeeded, so leaving the view at the mouse release
+        /// position would make it appear permanently stuck.
+        /// </summary>
+        public void SnapAllTilesToGridPositionsImmediate()
+        {
+            for (int c = 0; c < _cols; c++)
+            {
+                for (int r = 0; r < _rows; r++)
+                {
+                    CardModel card = GetCard(c, r);
+                    if (card == null) continue;
+
+                    CardView view = cardFactory.GetView(card.TileId);
+                    if (view == null || !view.gameObject.activeInHierarchy) continue;
+
+                    view.transform.DOKill();
+                    view.transform.position = GetWorldPosition(c, r);
+                    view.transform.localScale = Vector3.one;
+                    view.transform.rotation = Quaternion.identity;
+                    card.IsAnimating = false;
                 }
             }
         }
@@ -523,6 +719,15 @@ namespace StampJourney.Gameplay
                         clearedCardBatches.Add(clearedCards);
                         clearedCardCount += clearedCards.Count;
 
+                        // Completion presentation owns these cards from this frame onward.
+                        // Lock them before any awaited animation so CardView cannot begin a
+                        // drag during the brief interval before fade/despawn starts.
+                        foreach (CardModel card in clearedCards)
+                        {
+                            card.CanDrag = false;
+                            card.IsAnimating = true;
+                        }
+
                         // Calculate group center for ripple effect
                         Vector2 gridCenter = Vector2.zero;
                         foreach (var tile in clearedCards)
@@ -645,6 +850,11 @@ namespace StampJourney.Gameplay
             if (spawnedAny)
                 await UniTask.WaitUntil(() => droppedCards.All(card => !card.IsAnimating));
 
+            // DOMove has finished, but group parenting changes the transform space. Commit the
+            // exact grid coordinates first so no sub-frame tween residue becomes a local offset
+            // inside the newly created group.
+            SnapAllTilesToGridPositionsImmediate();
+
             // New liquid bridges may now animate from cards that are visually settled.
             stampDetector.RebuildGroups();
             UpdateAllEdges();
@@ -662,6 +872,12 @@ namespace StampJourney.Gameplay
         private async UniTask SettleAfterPlayerMoveAsync(float placementDuration)
         {
             await UniTask.Delay(TimeSpan.FromSeconds(placementDuration));
+
+            // Treat the logical grid as the source of truth once the placement animation has
+            // had time to finish. This also recovers a dragged card whose DOMove was interrupted
+            // by group reparenting while it was released over another card.
+            SnapAllTilesToGridPositionsImmediate();
+
             await gravitySystem.ApplyGravityAsync();
             await FillEmptyCellsAsync(int.MaxValue);
             await CheckAndClearAsync();
