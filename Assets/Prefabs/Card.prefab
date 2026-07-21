@@ -76,7 +76,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.90000004, y: 0.90000004, z: 0.90000004}
+  m_LocalScale: {x: 0.94000006, y: 0.94000006, z: 0.94000006}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 667783847716098646}
@@ -97,7 +97,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Card.CardEdgeRenderer
   serializationData:
-    SerializedFormat: 0
+    SerializedFormat: 2
     SerializedBytes: 
     ReferencedUnityObjects: []
     SerializedBytesString: 
@@ -1027,13 +1027,16 @@ MonoBehaviour:
   snapDuration: 0.18
   baseSortingOrder: 10
   dragSortingOrder: 100
+  completeSortingOrder: 50
   oneItemColor: {r: 0.3019608, g: 0.6156863, b: 0.8784314, a: 1}
   twoItemColor: {r: 0.35686275, g: 0.79607844, b: 0.46666667, a: 1}
   threeItemColor: {r: 1, g: 0.62352943, b: 0.2627451, a: 1}
   fourItemColor: {r: 0.60784316, g: 0.3647059, b: 0.8980392, a: 1}
   linkColorTweenDuration: 0.24
+  dragFollowSpeed: 30
   maxTiltAngle: 18
   tiltSmoothing: 12
+  tiltVelocityScale: 0.45
 --- !u!1 &9030097037308611020
 GameObject:
   m_ObjectHideFlags: 0

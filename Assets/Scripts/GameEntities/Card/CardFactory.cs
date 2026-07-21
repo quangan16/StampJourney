@@ -67,7 +67,7 @@ namespace StampJourney.Card
         {
             model.CanDrag = true;
             var view = GetFromPool();
-
+            view.transform.SetParent(_gameboard.MainboardHolder, true);
             Vector2 worldPos = _gameboard.GetWorldPosition(model.BoardCol, model.BoardRow);
             view.transform.position = worldPos;
 
@@ -80,6 +80,7 @@ namespace StampJourney.Card
         {
             model.CanDrag = false;
             var view = GetFromPool();
+            view.transform.SetParent(_gameboard.QueueHolder, true);
             Vector2 worldPos = _gameboard.queueSystem.GetQueueWorldPosition(col, queueIndex);
             view.transform.position = worldPos;
 
@@ -101,6 +102,7 @@ namespace StampJourney.Card
 
             model.IsAnimating = true;
             float duration = dropEaseTime + row * 0.03f;
+            view.transform.SetParent(_gameboard.MainboardHolder, true);
             view.SetSortingOrder(dropSortingOrder);
 
             view.transform.DOMove(targetPos, duration).SetEase(Ease.InQuad)
@@ -125,6 +127,7 @@ namespace StampJourney.Card
 
             model.IsAnimating = true;
             float duration = dropEaseTime + row * 0.03f;
+            view.transform.SetParent(_gameboard.MainboardHolder, true);
             view.SetSortingOrder(dropSortingOrder);
 
             view.transform.DOMove(targetPos, duration).SetEase(Ease.InQuad)
@@ -142,6 +145,15 @@ namespace StampJourney.Card
 
             view.SetSortingOrder(queueIndex);
             view.transform.DOMove(targetPos, dropEaseTime).SetEase(Ease.OutQuad);
+        }
+
+        public void SetQueuePositionImmediate(CardModel model, int col, int queueIndex)
+        {
+            if (!_activeCards.TryGetValue(model.TileId, out var view)) return;
+
+            view.transform.DOKill();
+            view.transform.position = _gameboard.queueSystem.GetQueueWorldPosition(col, queueIndex);
+            view.SetSortingOrder(queueIndex);
         }
 
         /// <summary>Reveals the content chosen for a generated face-down queue card.</summary>
@@ -260,7 +272,6 @@ namespace StampJourney.Card
                 {
                     if (view == null) continue;
                     view.transform.DOKill();
-                    view.transform.SetParent(transform, true);
                     ReturnToPool(view);
                 }
 
@@ -350,15 +361,19 @@ namespace StampJourney.Card
             {
                 var v = _pool.Dequeue();
                 v.gameObject.SetActive(true);
-                v.transform.SetParent(_gameboard.transform, true);
                 return v;
             }
 
-            return Instantiate(cardPrefab, _gameboard.transform);
+            return Instantiate(cardPrefab);
         }
 
         private void ReturnToPool(CardView view)
         {
+            view.transform.DOKill();
+            view.transform.SetParent(_gameboard.CardPoolHolder, false);
+            view.transform.localPosition = Vector3.zero;
+            view.transform.localRotation = Quaternion.identity;
+            view.transform.localScale = Vector3.one;
             view.gameObject.SetActive(false);
             _pool.Enqueue(view);
         }

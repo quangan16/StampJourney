@@ -32,6 +32,21 @@ namespace StampJourney.Gameplay
         public QueueSystem queueSystem;
         [BoxGroup("References")]
         [SerializeField] private BoosterController boosterController;
+        [BoxGroup("References")]
+        [SerializeField] private GameplayControl _gameplayControl;
+
+        #endregion
+
+        #region Hierarchy
+
+        [BoxGroup("Hierarchy")]
+        public Transform queue;
+        [BoxGroup("Hierarchy")]
+        public Transform Mainboard;
+        [BoxGroup("Hierarchy")]
+        public Transform Tiles;
+        [BoxGroup("Hierarchy")]
+        public Transform CardPool;
 
         #endregion
 
@@ -59,19 +74,26 @@ namespace StampJourney.Gameplay
         public int Cols => _cols;
         public int Rows => _rows;
         public BoosterController Boosters => boosterController;
+        public Transform TilesHolder => Tiles != null ? Tiles : transform;
+        public Transform QueueHolder => queue != null ? queue : transform;
+        public Transform MainboardHolder => Mainboard != null ? Mainboard : transform;
+        public Transform CardPoolHolder => CardPool != null ? CardPool : transform;
 
         #endregion
 
         #region Public API — Initialization
 
         /// <summary>Initializes the board with LevelData. Clears old tiles if present.</summary>
-        public void Init(LevelData levelData)
+        public void Init(GameplayControl gameplayControl)
         {
-            Debug.Log($"[Gameboard] Init — cols={levelData.boardCols} rows={levelData.boardRows}");
 
-            _levelData = levelData;
-            _cols = levelData.boardCols;
-            _rows = levelData.boardRows;
+            if (gameplayControl == null) return;
+            _gameplayControl = gameplayControl;
+            _levelData = gameplayControl.LevelData;
+            _cols = gameplayControl.LevelData.boardCols;
+            _rows = gameplayControl.LevelData.boardRows;
+
+            ResolveHierarchyHolders();
 
             stampDetector.Init(this);
             gravitySystem.Init(this);
@@ -88,9 +110,9 @@ namespace StampJourney.Gameplay
             if (!_levelData.useAuthoredLayout)
                 queueSystem?.PrepareGeneratedLevel(_cols, _rows);
             FillBoardInitial();
-
-            await StartupEffectAsync();
             queueSystem?.SetupInitialQueues();
+            await StartupEffectAsync();
+
 
             // Rebuild groups + edges after initial fill
             stampDetector?.RebuildGroups();
@@ -291,9 +313,10 @@ namespace StampJourney.Gameplay
         }
 
         /// <summary>
-        /// World-space bounds occupied by the playable board and, optionally, its waiting queues.
+        /// World-space bounds occupied by the playable board. The waiting queue is positioned
+        /// independently relative to the HUD header and is intentionally excluded.
         /// </summary>
-        public Bounds GetGameplayBounds(bool includeQueues = true)
+        public Bounds GetGameplayBounds()
         {
             if (_cols <= 0 || _rows <= 0)
                 return new Bounds(transform.position, Vector3.zero);
@@ -308,23 +331,6 @@ namespace StampJourney.Gameplay
             float maxX = Mathf.Max(firstCard.x, lastCard.x) + halfCardWidth;
             float minY = Mathf.Min(firstCard.y, lastCard.y) - halfCardHeight;
             float maxY = Mathf.Max(firstCard.y, lastCard.y) + halfCardHeight;
-
-            if (includeQueues && queueSystem != null && _levelData != null)
-            {
-                for (int col = 0; col < _cols; col++)
-                {
-                    int queueCardCount = queueSystem.GetQueueCount(col);
-
-                    for (int queueIndex = 0; queueIndex < queueCardCount; queueIndex++)
-                    {
-                        Vector2 queuePosition = queueSystem.GetQueueWorldPosition(col, queueIndex);
-                        minX = Mathf.Min(minX, queuePosition.x - halfCardWidth);
-                        maxX = Mathf.Max(maxX, queuePosition.x + halfCardWidth);
-                        minY = Mathf.Min(minY, queuePosition.y - halfCardHeight);
-                        maxY = Mathf.Max(maxY, queuePosition.y + halfCardHeight);
-                    }
-                }
-            }
 
             Vector3 center = new((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, transform.position.z);
             Vector3 size = new(maxX - minX, maxY - minY, 0f);
@@ -484,7 +490,7 @@ namespace StampJourney.Gameplay
             {
                 for (int c = 0; c < _cols; c++)
                 {
-                    var newTile = Instantiate(tilePrefab, transform);
+                    var newTile = Instantiate(tilePrefab, TilesHolder);
                     newTile.gameObject.SetActive(true);
                     newTile.Init(c, r, this);
                     newTile.transform.position = GetWorldPosition(c, r);
@@ -493,22 +499,55 @@ namespace StampJourney.Gameplay
             }
         }
 
+        private void ResolveHierarchyHolders()
+        {
+            if (Tiles == null)
+                Tiles = transform.Find("TilesHolder");
+
+            if (queue == null)
+                queue = transform.Find("Queue");
+
+            if (queue == null && queueSystem != null)
+                queue = queueSystem.transform;
+
+            if (Mainboard == null)
+                Mainboard = transform.Find("Mainboard");
+
+            if (CardPool == null)
+                CardPool = transform.Find("CardPool");
+        }
+
         private async UniTask StartupEffectAsync()
         {
             var droppedCards = new List<CardModel>();
+            var startupCards = new CardModel[_cols, _rows];
 
-            // Drop cards row by row from bottom to top
+            // Remove every board-bound card from the queue before fitting the camera. The queue
+            // bounds now represent only the real waiting cards, so framing does not change after
+            // the startup animation completes.
             for (int r = _rows - 1; r >= 0; r--)
             {
                 for (int c = 0; c < _cols; c++)
                 {
-                    if (queueSystem.GetQueueCount(c) > 0)
-                    {
-                        var model = queueSystem.PopCard(c);
-                        _tiles[c, r].SetCard(model);
+                    if (queueSystem.GetQueueCount(c) == 0) continue;
+
+                    CardModel model = queueSystem.PopCard(c);
+                    _tiles[c, r].SetCard(model);
+                    startupCards[c, r] = model;
+                    droppedCards.Add(model);
+                }
+            }
+
+            _gameplayControl.FitGameplayCamera();
+
+            // Play the same bottom-to-top drop after the final camera position is established.
+            for (int r = _rows - 1; r >= 0; r--)
+            {
+                for (int c = 0; c < _cols; c++)
+                {
+                    CardModel model = startupCards[c, r];
+                    if (model != null)
                         cardFactory.AnimateDropOnly(model, c, r);
-                        droppedCards.Add(model);
-                    }
                 }
                 await UniTask.Delay(TimeSpan.FromSeconds(0.1f));
             }

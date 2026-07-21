@@ -338,7 +338,7 @@ namespace StampJourney.Gameplay
             Vector2 maxPos = _board.GetWorldPosition(group.MaxCol, group.MinRow); // top-right
             Vector2 center = (minPos + maxPos) / 2f;
 
-            group.transform.SetParent(_board.transform, false);
+            group.transform.SetParent(_board.MainboardHolder, false);
             group.transform.DOKill();
 
             // Temporarily unparent children so moving the group doesn't shift them
@@ -448,7 +448,7 @@ namespace StampJourney.Gameplay
 
             foreach (var child in children)
             {
-                child.SetParent(_board.transform, true);
+                child.SetParent(_board.MainboardHolder, true);
                 child.localScale = Vector3.one;
                 child.localRotation = Quaternion.identity;
             }

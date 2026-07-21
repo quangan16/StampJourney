@@ -31,9 +31,6 @@ namespace StampJourney.Gameplay
         [Min(0f)][SerializeField] private float topPaddingPixels = 16f;
         [BoxGroup("Camera Framing")]
         [Min(0f)][SerializeField] private float botPaddingPixels = 16f;
-        [BoxGroup("Camera Framing")]
-        [SerializeField] private bool includeWaitingQueue = true;
-
         #endregion
 
         #region Runtime State
@@ -104,21 +101,23 @@ namespace StampJourney.Gameplay
                 return;
             }
             OnTimeChanged?.Invoke(_remainingTime);
+
         }
 
         private void LateUpdate()
         {
             if (_levelData == null) return;
 
-            RectTransform header = gameplayUI != null ? gameplayUI.HeaderArea : null;
-            RectTransform footer = gameplayUI != null ? gameplayUI.FooterArea : null;
-            bool screenChanged = _lastScreenSize.x != Screen.width || _lastScreenSize.y != Screen.height || _lastSafeArea != Screen.safeArea;
-            bool uiChanged = (header != null && header.hasChanged) || (footer != null && footer.hasChanged);
-            if (!screenChanged && !uiChanged) return;
+            // RectTransform header = gameplayUI != null ? gameplayUI.HeaderArea : null;
+            // RectTransform footer = gameplayUI != null ? gameplayUI.FooterArea : null;
+            // bool screenChanged = _lastScreenSize.x != Screen.width || _lastScreenSize.y != Screen.height || _lastSafeArea != Screen.safeArea;
+            // bool uiChanged = (header != null && header.hasChanged) || (footer != null && footer.hasChanged);
 
-            FitGameplayCamera();
-            if (header != null) header.hasChanged = false;
-            if (footer != null) footer.hasChanged = false;
+            // if (!screenChanged && !uiChanged) return;
+            // FitGameplayCamera();
+
+            // if (header != null) header.hasChanged = false;
+            // if (footer != null) footer.hasChanged = false;
         }
 
         #endregion
@@ -133,7 +132,7 @@ namespace StampJourney.Gameplay
                 return;
             }
             _levelData = levelData;
-            gameboard.Init(_levelData);
+            gameboard.Init(this);
         }
 
         public async UniTask SetupAsync()
@@ -169,8 +168,11 @@ namespace StampJourney.Gameplay
             if (_hasTimeLimit) OnTimeChanged?.Invoke(_remainingTime);
 
             // Init UI after everything is ready — deterministic order
-            await gameboard.SetupAsync();
+            Camera targetCamera = gameplayCamera != null ? gameplayCamera : Camera.main;
+            Canvas.ForceUpdateCanvases();
             FitGameplayCamera();
+            ConfigureQueueHeaderAnchor(targetCamera, false);
+            await gameboard.SetupAsync();
         }
 
         private void SubscribeToBoard()
@@ -189,7 +191,7 @@ namespace StampJourney.Gameplay
             gameboard.OnBoardSettled -= HandleBoardSettled;
         }
 
-        /// <summary>Fits the board and waiting queue inside the safe screen area between the HUD header and footer.</summary>
+        /// <summary>Fits only the playable board inside the safe area between the HUD header and footer.</summary>
         public void FitGameplayCamera()
         {
             Camera targetCamera = gameplayCamera != null ? gameplayCamera : Camera.main;
@@ -197,6 +199,7 @@ namespace StampJourney.Gameplay
                 return;
 
             Canvas.ForceUpdateCanvases();
+            ConfigureQueueHeaderAnchor(targetCamera, false);
             Rect availableScreenRect = GetAvailableGameplayRect(targetCamera);
             if (availableScreenRect.width <= 1f || availableScreenRect.height <= 1f)
             {
@@ -204,16 +207,39 @@ namespace StampJourney.Gameplay
                 return;
             }
 
-            Bounds contentBounds = gameboard.GetGameplayBounds(includeWaitingQueue);
+            Bounds contentBounds = gameboard.GetGameplayBounds();
             if (contentBounds.size.x <= 0f || contentBounds.size.y <= 0f) return;
 
             Rect cameraPixelRect = targetCamera.pixelRect;
             float sizeForWidth = contentBounds.size.x * cameraPixelRect.height / (2f * availableScreenRect.width);
-            float sizeForHeight = contentBounds.size.y * cameraPixelRect.height / (2f * availableScreenRect.height);
+            float queueReservedWorldHeight = gameboard.queueSystem != null
+                ? gameboard.queueSystem.GetHeaderReservedWorldHeight()
+                : 0f;
+            float sizeForHeight = (contentBounds.size.y + queueReservedWorldHeight) *
+                                  cameraPixelRect.height /
+                                  (2f * availableScreenRect.height);
             targetCamera.orthographicSize = Mathf.Max(sizeForWidth, sizeForHeight);
 
-            float normalizedCenterX = (availableScreenRect.center.x - cameraPixelRect.xMin) / cameraPixelRect.width;
-            float normalizedCenterY = (availableScreenRect.center.y - cameraPixelRect.yMin) / cameraPixelRect.height;
+            // Measure the queue after choosing the final camera size. Its pixel rect becomes
+            // additional top padding, keeping the board below the lowest waiting card.
+            ConfigureQueueHeaderAnchor(targetCamera, false);
+            Rect boardScreenRect = availableScreenRect;
+            if (gameboard.queueSystem != null &&
+                gameboard.queueSystem.TryGetQueueScreenRect(targetCamera, out Rect queueScreenRect))
+            {
+                boardScreenRect.yMax = Mathf.Min(
+                    boardScreenRect.yMax,
+                    queueScreenRect.yMin - topPaddingPixels);
+            }
+
+            if (boardScreenRect.width <= 1f || boardScreenRect.height <= 1f)
+            {
+                Debug.LogWarning("[Gameplay Camera] Queue and HUD leave no usable area for the board.", this);
+                return;
+            }
+
+            float normalizedCenterX = (boardScreenRect.center.x - cameraPixelRect.xMin) / cameraPixelRect.width;
+            float normalizedCenterY = (boardScreenRect.center.y - cameraPixelRect.yMin) / cameraPixelRect.height;
             float visibleWorldHeight = targetCamera.orthographicSize * 2f;
             float visibleWorldWidth = visibleWorldHeight * targetCamera.aspect;
 
@@ -221,6 +247,10 @@ namespace StampJourney.Gameplay
             cameraPosition.x = contentBounds.center.x - (normalizedCenterX - 0.5f) * visibleWorldWidth;
             cameraPosition.y = contentBounds.center.y - (normalizedCenterY - 0.5f) * visibleWorldHeight;
             targetCamera.transform.position = cameraPosition;
+
+            // Camera movement changes screen-to-world conversion. Resolve the queue again so
+            // its upper edge remains attached to the header on every aspect ratio.
+            ConfigureQueueHeaderAnchor(targetCamera, true);
 
             _lastScreenSize = new Vector2Int(Screen.width, Screen.height);
             _lastSafeArea = Screen.safeArea;
@@ -242,7 +272,6 @@ namespace StampJourney.Gameplay
             RectTransform footer = gameplayUI != null ? gameplayUI.FooterArea : null;
             if (footer != null && footer.gameObject.activeInHierarchy)
                 bottom = Mathf.Max(bottom, GetScreenRect(footer).yMax + botPaddingPixels);
-
             return Rect.MinMaxRect(left, bottom, right, top);
         }
 
@@ -271,6 +300,26 @@ namespace StampJourney.Gameplay
             }
 
             return Rect.MinMaxRect(minX, minY, maxX, maxY);
+        }
+
+        private void ConfigureQueueHeaderAnchor(Camera targetCamera, bool refreshVisuals)
+        {
+            if (gameboard == null || gameboard.queueSystem == null) return;
+
+            RectTransform header = gameplayUI != null ? gameplayUI.HeaderArea : null;
+            if (header != null && header.gameObject.activeInHierarchy)
+            {
+                gameboard.queueSystem.SetHeaderScreenAnchor(
+                    targetCamera,
+                    GetScreenRect(header).yMin);
+            }
+            else
+            {
+                gameboard.queueSystem.ClearHeaderScreenAnchor();
+            }
+
+            if (refreshVisuals)
+                gameboard.queueSystem.RefreshQueueVisuals();
         }
 
         #endregion
@@ -357,5 +406,7 @@ namespace StampJourney.Gameplay
         }
 
         #endregion
+
     }
+
 }

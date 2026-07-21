@@ -16,7 +16,7 @@ namespace StampJourney.Gameplay
         #region Inspector
 
         [BoxGroup("Visuals")]
-        [LabelText("Space Between Board and Queue")]
+        [LabelText("Space Below UI Header")]
         public float queueSpacing = 0.5f;
 
         [BoxGroup("Visuals")]
@@ -32,6 +32,9 @@ namespace StampJourney.Gameplay
 
         private Gameboard _gameboard;
         private LevelData _levelData;
+        private Camera _queueCamera;
+        private float _headerBottomScreenY;
+        private bool _hasHeaderAnchor;
         private readonly List<CardModel> _generatedInitialCards = new();
         private readonly List<GeneratedContent> _generatedAvailableContent = new();
 
@@ -184,6 +187,11 @@ namespace StampJourney.Gameplay
             _columnQueues[col].Add(model);
             int queueIndex = _columnQueues[col].Count - 1;
             _gameboard.cardFactory.SpawnCardInQueue(model, col, queueIndex);
+
+            // A header-anchored stack keeps its top fixed, so adding a card also moves the
+            // cards already waiting in this column.
+            if (_hasHeaderAnchor)
+                RefreshColumnVisualsImmediate(col);
         }
 
         public CardModel PopCard(int col)
@@ -367,18 +375,109 @@ namespace StampJourney.Gameplay
 
         #region World Position
 
+        public float GetHeaderReservedWorldHeight()
+        {
+            if (_columnQueues == null) return 0f;
+
+            int largestQueueCount = 0;
+            for (int col = 0; col < _columnQueues.Length; col++)
+                largestQueueCount = Mathf.Max(largestQueueCount, _columnQueues[col].Count);
+
+            if (largestQueueCount == 0) return 0f;
+
+            var config = GameManager.Instance.GameConfig;
+            float stackHeight = Mathf.Abs(stackOffset.y) * (largestQueueCount - 1);
+            return Mathf.Max(0f, queueSpacing) + config.cardHeight + stackHeight;
+        }
+
+        public bool TryGetQueueScreenRect(Camera targetCamera, out Rect screenRect)
+        {
+            screenRect = default;
+            if (targetCamera == null || _columnQueues == null) return false;
+
+            var config = GameManager.Instance.GameConfig;
+            float halfWidth = config.cardWidth * 0.5f;
+            float halfHeight = config.cardHeight * 0.5f;
+            bool hasCard = false;
+            float minX = float.MaxValue;
+            float maxX = float.MinValue;
+            float minY = float.MaxValue;
+            float maxY = float.MinValue;
+
+            for (int col = 0; col < _columnQueues.Length; col++)
+            {
+                for (int index = 0; index < _columnQueues[col].Count; index++)
+                {
+                    Vector2 center = GetQueueWorldPosition(col, index);
+                    Vector3 bottomLeft = targetCamera.WorldToScreenPoint(
+                        new Vector3(center.x - halfWidth, center.y - halfHeight, _gameboard.transform.position.z));
+                    Vector3 topRight = targetCamera.WorldToScreenPoint(
+                        new Vector3(center.x + halfWidth, center.y + halfHeight, _gameboard.transform.position.z));
+
+                    minX = Mathf.Min(minX, bottomLeft.x, topRight.x);
+                    maxX = Mathf.Max(maxX, bottomLeft.x, topRight.x);
+                    minY = Mathf.Min(minY, bottomLeft.y, topRight.y);
+                    maxY = Mathf.Max(maxY, bottomLeft.y, topRight.y);
+                    hasCard = true;
+                }
+            }
+
+            if (!hasCard) return false;
+            screenRect = Rect.MinMaxRect(minX, minY, maxX, maxY);
+            return true;
+        }
+
+        public void SetHeaderScreenAnchor(Camera queueCamera, float headerBottomScreenY)
+        {
+            _queueCamera = queueCamera;
+            _headerBottomScreenY = headerBottomScreenY;
+            _hasHeaderAnchor = queueCamera != null;
+        }
+
+        public void ClearHeaderScreenAnchor()
+        {
+            _queueCamera = null;
+            _hasHeaderAnchor = false;
+        }
+
         /// <summary>
-        /// Gets the world position for a card in the queue above the board.
+        /// Gets the queue position aligned to its board column and vertically anchored below
+        /// the HUD header. Falls back to the legacy board-relative position when no header exists.
         /// </summary>
         public Vector2 GetQueueWorldPosition(int col, int queueIndex)
         {
             Vector2 topRowPos = _gameboard.GetWorldPosition(col, 0);
-
             var config = GameManager.Instance.GameConfig;
+
+            if (_hasHeaderAnchor && _queueCamera != null)
+            {
+                float worldDepth = Mathf.Abs(
+                    _gameboard.transform.position.z - _queueCamera.transform.position.z);
+                Vector3 headerBottomWorld = _queueCamera.ScreenToWorldPoint(
+                    new Vector3(0f, _headerBottomScreenY, worldDepth));
+
+                float topCardY = headerBottomWorld.y - queueSpacing - config.cardHeight * 0.5f;
+                int lastQueueIndex = Mathf.Max(0, GetQueueCount(col) - 1);
+                float firstCardY = topCardY - stackOffset.y * lastQueueIndex;
+
+                return new Vector2(
+                    topRowPos.x + stackOffset.x * queueIndex,
+                    firstCardY + stackOffset.y * queueIndex);
+            }
+
             float strideY = config.cardHeight + config.cardGap;
             Vector2 basePos = topRowPos + Vector2.up * (strideY + queueSpacing);
 
             return basePos + stackOffset * queueIndex;
+        }
+
+        private void RefreshColumnVisualsImmediate(int col)
+        {
+            for (int index = 0; index < GetQueueCount(col); index++)
+            {
+                CardModel model = _columnQueues[col][index];
+                _gameboard.cardFactory.SetQueuePositionImmediate(model, col, index);
+            }
         }
 
         #endregion

@@ -271,7 +271,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 145042872}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -472,6 +472,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 192604004}
   m_CullTransparentMesh: 1
+--- !u!1 &207584120
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 207584121}
+  m_Layer: 0
+  m_Name: TilesHolder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &207584121
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 207584120}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 506723100}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &302016796
 GameObject:
   m_ObjectHideFlags: 0
@@ -1110,7 +1141,6 @@ GameObject:
   - component: {fileID: 506723103}
   - component: {fileID: 506723104}
   - component: {fileID: 506723105}
-  - component: {fileID: 506723106}
   - component: {fileID: 506723107}
   m_Layer: 0
   m_Name: Gameboard
@@ -1131,7 +1161,11 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 207584121}
+  - {fileID: 754721047}
+  - {fileID: 1660658340}
+  - {fileID: 1681594018}
   m_Father: {fileID: 7556886}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &506723101
@@ -1159,8 +1193,12 @@ MonoBehaviour:
   gravitySystem: {fileID: 506723103}
   cardFactory: {fileID: 506723105}
   tilePrefab: {fileID: 7070226932243602147, guid: 36a16ab14fd52564d83b79c236cae372, type: 3}
-  queueSystem: {fileID: 506723106}
+  queueSystem: {fileID: 754721048}
   boosterController: {fileID: 506723107}
+  queue: {fileID: 754721047}
+  Mainboard: {fileID: 1660658340}
+  Tiles: {fileID: 207584121}
+  CardPool: {fileID: 1681594018}
 --- !u!114 &506723103
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1226,29 +1264,6 @@ MonoBehaviour:
   dropSortingOrder: 50
   completeBackgroundFadeDuration: 0.1
   completeBackgroundHoldDuration: 0.2
---- !u!114 &506723106
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 506723099}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d14495784a5cbf1408403e966e0733ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Gameplay.QueueSystem
-  serializationData:
-    SerializedFormat: 2
-    SerializedBytes: 
-    ReferencedUnityObjects: []
-    SerializedBytesString: 
-    Prefab: {fileID: 0}
-    PrefabModificationsReferencedUnityObjects: []
-    PrefabModifications: []
-    SerializationNodes: []
-  queueSpacing: 0.5
-  stackOffset: {x: 0, y: 0.15}
 --- !u!114 &506723107
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2145,6 +2160,61 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 688165352}
   m_CullTransparentMesh: 1
+--- !u!1 &754721046
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 754721047}
+  - component: {fileID: 754721048}
+  m_Layer: 0
+  m_Name: Queue
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &754721047
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 754721046}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 506723100}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &754721048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 754721046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d14495784a5cbf1408403e966e0733ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StampJourney.Gameplay.QueueSystem
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  queueSpacing: -0.3
+  stackOffset: {x: 0, y: 0.15}
 --- !u!1 &1163214776
 GameObject:
   m_ObjectHideFlags: 0
@@ -2192,10 +2262,9 @@ MonoBehaviour:
   gameboard: {fileID: 506723101}
   gameplayUI: {fileID: 1854424274}
   gameplayCamera: {fileID: 519420031}
-  horizontalPaddingPixels: 40
-  topPaddingPixels: 16
-  botPaddingPixels: 16
-  includeWaitingQueue: 1
+  horizontalPaddingPixels: 20
+  topPaddingPixels: 0
+  botPaddingPixels: 100
 --- !u!1 &1177589716
 GameObject:
   m_ObjectHideFlags: 0
@@ -2848,6 +2917,68 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1535096834}
   m_CullTransparentMesh: 1
+--- !u!1 &1660658339
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1660658340}
+  m_Layer: 0
+  m_Name: Mainboard
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1660658340
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1660658339}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 506723100}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1681594017
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1681594018}
+  m_Layer: 0
+  m_Name: CardPool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1681594018
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1681594017}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 506723100}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1723089536
 GameObject:
   m_ObjectHideFlags: 0
@@ -3232,7 +3363,7 @@ MonoBehaviour:
   timerText: {fileID: 1960307148}
   ReplayBtn: {fileID: 621319389}
   PauseBtn: {fileID: 0}
-  headerArea: {fileID: 0}
+  headerArea: {fileID: 427805624}
   footerArea: {fileID: 0}
   gameplayPanel: {fileID: 1854424269}
   winPanel: {fileID: 1723089536}

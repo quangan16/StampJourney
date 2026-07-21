@@ -123,7 +123,7 @@ namespace StampJourney.Gameplay.Boosters
         {
             List<CardModel> cardList = cards.ToList();
             var groupObject = new GameObject($"Auto Merge - {cardList[0].Topic.TopicName}");
-            groupObject.transform.SetParent(board.transform, true);
+            groupObject.transform.SetParent(board.MainboardHolder, true);
             groupObject.transform.position = center;
 
             var group = groupObject.AddComponent<CardGroup>();
@@ -149,7 +149,7 @@ namespace StampJourney.Gameplay.Boosters
                 if (view == null) continue;
 
                 view.transform.DOKill();
-                view.transform.SetParent(board.transform, true);
+                view.transform.SetParent(board.MainboardHolder, true);
                 view.SetSortingOrder(view.completeSortingOrder);
 
                 Vector3 target = center + new Vector3(
