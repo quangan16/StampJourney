@@ -59,6 +59,7 @@ MonoBehaviour:
     - {fileID: -3464096822603222336, guid: 2c806cd8bac20824aa7bf901319b89fd, type: 3}
     - {fileID: 1254743690004795209, guid: 0e75536c49ce95849bdadc0356cabbe0, type: 3}
   useAuthoredLayout: 0
+  hardMode: 0
   boardLayout:
   - stamp:
       stampId: 3
@@ -306,3 +307,4 @@ MonoBehaviour:
     row: -1
     order: 0
   authoredQueueRows: 1
+  icedCards: []

@@ -144,6 +144,7 @@ namespace StampJourney.Card
         public static bool AreMatchingNeighbors(CardModel a, CardModel b)
         {
             if (a == null || b == null) return false;
+            if (a.IsIced || b.IsIced) return false;
             if (a.Topic.TopicId != b.Topic.TopicId) return false;
 
             int dBoardCol = b.BoardCol - a.BoardCol;
@@ -159,6 +160,7 @@ namespace StampJourney.Card
         public static bool CanFormTopicSquareGroup(IReadOnlyCollection<CardModel> members, CardModel candidate)
         {
             if (candidate == null || members == null || members.Count == 0) return false;
+            if (candidate.IsIced || members.Any(member => member == null || member.IsIced)) return false;
             if (members.Count >= StampData.RequiredItemCount) return false;
 
             bool isAdjacent = false;

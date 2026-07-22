@@ -233,7 +233,7 @@ namespace StampJourney.Gameplay
                 for (int c = 0; c < _board.Cols; c++)
                 {
                     var card = _board.GetCard(c, r);
-                    if (card == null || visited.Contains(card)) continue;
+                    if (card == null || card.IsIced || visited.Contains(card)) continue;
 
                     var groupMembers = new List<CardModel>();
                     var queue = new Queue<CardModel>();

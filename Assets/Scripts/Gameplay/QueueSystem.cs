@@ -137,6 +137,12 @@ namespace StampJourney.Gameplay
 
             Shuffle(topics);
 
+            if (_levelData.hardMode)
+            {
+                PrepareHardModeGeneratedLevel(topics, boardCols, boardRows);
+                return;
+            }
+
             // Build the one-time content pool in randomized topic order. Keeping each topic's
             // four items together here guarantees that the first four initial cards form one
             // complete solvable set; the final board positions are randomized afterwards.
@@ -163,6 +169,68 @@ namespace StampJourney.Gameplay
             // duplicated, and partial topics created by odd board sizes can be completed later.
             for (int contentIndex = boardCapacity; contentIndex < allContent.Count; contentIndex++)
                 _generatedAvailableContent.Add(allContent[contentIndex]);
+            Shuffle(_generatedAvailableContent);
+        }
+
+        private void PrepareHardModeGeneratedLevel(
+            IReadOnlyList<StampData> topics,
+            int boardCols,
+            int boardRows)
+        {
+            int boardCapacity = boardCols * boardRows;
+            int maximumHardBoardCapacity =
+                StampData.RequiredItemCount +
+                (topics.Count - 1) * (StampData.RequiredItemCount - 1);
+
+            if (boardCapacity > maximumHardBoardCapacity)
+            {
+                int requiredTopics = Mathf.CeilToInt((boardCapacity - 1) / 3f);
+                Debug.LogError(
+                    $"[QueueSystem] Hard mode needs at least {requiredTopics} topics for a " +
+                    $"{boardCols}x{boardRows} board. Only {topics.Count} are configured.");
+                return;
+            }
+
+            int remainingBoardSlots = boardCapacity;
+            var initialContent = new List<GeneratedContent>(boardCapacity);
+
+            for (int topicIndex = 0; topicIndex < topics.Count; topicIndex++)
+            {
+                StampData topic = topics[topicIndex];
+                var topicContent = new List<GeneratedContent>(StampData.RequiredItemCount);
+                for (int itemIndex = 0; itemIndex < StampData.RequiredItemCount; itemIndex++)
+                    topicContent.Add(new GeneratedContent(topic, itemIndex));
+                Shuffle(topicContent);
+
+                // The first topic is the one initial solution. Every other topic is capped at
+                // three board items so it cannot also be solvable.
+                int topicBoardLimit = topicIndex == 0
+                    ? StampData.RequiredItemCount
+                    : StampData.RequiredItemCount - 1;
+                int boardItemCount = Mathf.Min(topicBoardLimit, remainingBoardSlots);
+
+                for (int itemIndex = 0; itemIndex < topicContent.Count; itemIndex++)
+                {
+                    if (itemIndex < boardItemCount)
+                        initialContent.Add(topicContent[itemIndex]);
+                    else
+                        _generatedAvailableContent.Add(topicContent[itemIndex]);
+                }
+
+                remainingBoardSlots -= boardItemCount;
+            }
+
+            if (remainingBoardSlots > 0)
+            {
+                Debug.LogError("[QueueSystem] Hard mode could not fill every initial board cell.");
+                _generatedAvailableContent.Clear();
+                return;
+            }
+
+            foreach (GeneratedContent content in initialContent)
+                _generatedInitialCards.Add(new CardModel(content.Topic, content.ItemIndex));
+
+            ShuffleInitialCards(boardCols, boardRows);
             Shuffle(_generatedAvailableContent);
         }
 
@@ -211,44 +279,46 @@ namespace StampJourney.Gameplay
         {
             if (_columnQueues == null || emptyCellsByColumn == null) return 0;
 
-            int availableSpaces = 0;
+            var droppableCards = new List<CardModel>();
             for (int column = 0; column < _columnQueues.Length; column++)
-            {
-                availableSpaces += Mathf.Min(
-                    Mathf.Max(0, emptyCellsByColumn[column]),
-                    GetQueueCount(column));
-            }
-
-            int releaseCount = Mathf.Min(
-                requestedCount,
-                Mathf.Min(_generatedAvailableContent.Count, availableSpaces));
-            if (releaseCount <= 0) return 0;
-
-            List<GeneratedContent> selectedContent = ChooseGeneratedContent(releaseCount);
-            Shuffle(selectedContent);
-
-            int contentIndex = 0;
-            for (int column = 0; column < _columnQueues.Length && contentIndex < releaseCount; column++)
             {
                 int droppableCount = Mathf.Min(
                     Mathf.Max(0, emptyCellsByColumn[column]),
                     GetQueueCount(column));
-
-                for (int queueIndex = 0;
-                     queueIndex < droppableCount && contentIndex < releaseCount;
-                     queueIndex++)
-                {
-                    CardModel queueCard = _columnQueues[column][queueIndex];
-                    GeneratedContent content = selectedContent[contentIndex++];
-                    _gameboard.cardFactory.AssignGeneratedContent(
-                        queueCard,
-                        content.Topic,
-                        content.ItemIndex);
-                    _generatedAvailableContent.Remove(content);
-                }
+                for (int queueIndex = 0; queueIndex < droppableCount; queueIndex++)
+                    droppableCards.Add(_columnQueues[column][queueIndex]);
             }
 
-            return contentIndex;
+            int releaseCount = Mathf.Min(
+                requestedCount,
+                Mathf.Min(_generatedAvailableContent.Count, droppableCards.Count));
+            if (releaseCount <= 0) return 0;
+
+            List<CardModel> releaseTargets = droppableCards.Take(releaseCount).ToList();
+            int unicedDropSlots = releaseTargets.Count(card => !card.IsIced);
+            List<GeneratedContent> selectedContent = _levelData.hardMode
+                ? ChooseHardModeGeneratedContent(releaseCount, unicedDropSlots)
+                : ChooseGeneratedContent(releaseCount, unicedDropSlots);
+            releaseCount = selectedContent.Count;
+            if (releaseCount == 0) return 0;
+
+            // Solution contents are selected first. Put them into unfrozen cards first so ice
+            // cannot hide the guaranteed playable topic after the cards land.
+            List<CardModel> assignmentTargets = releaseTargets
+                .OrderBy(card => card.IsIced ? 1 : 0)
+                .ToList();
+            for (int contentIndex = 0; contentIndex < releaseCount; contentIndex++)
+            {
+                CardModel queueCard = assignmentTargets[contentIndex];
+                GeneratedContent content = selectedContent[contentIndex];
+                _gameboard.cardFactory.AssignGeneratedContent(
+                    queueCard,
+                    content.Topic,
+                    content.ItemIndex);
+                _generatedAvailableContent.Remove(content);
+            }
+
+            return releaseCount;
         }
 
         /// <summary>
@@ -256,7 +326,7 @@ namespace StampJourney.Gameplay
         /// When the board is already solvable, content is spread across topics to reduce
         /// automatic links. Otherwise, the missing items of one topic are selected first.
         /// </summary>
-        private List<GeneratedContent> ChooseGeneratedContent(int releaseCount)
+        private List<GeneratedContent> ChooseGeneratedContent(int releaseCount, int unicedDropSlots)
         {
             var boardItems = new Dictionary<StampData, HashSet<int>>();
             for (int column = 0; column < _gameboard.Cols; column++)
@@ -264,7 +334,7 @@ namespace StampJourney.Gameplay
                 for (int row = 0; row < _gameboard.Rows; row++)
                 {
                     CardModel card = _gameboard.GetCard(column, row);
-                    if (card == null || !card.HasAssignedContent) continue;
+                    if (card == null || card.IsIced || !card.HasAssignedContent) continue;
                     if (!boardItems.TryGetValue(card.Topic, out HashSet<int> items))
                     {
                         items = new HashSet<int>();
@@ -290,7 +360,8 @@ namespace StampJourney.Gameplay
                             ? items.Count
                             : 0;
                         return boardCount + group.Count() >= StampData.RequiredItemCount &&
-                               group.Count() <= releaseCount;
+                               group.Count() <= releaseCount &&
+                               group.Count() <= unicedDropSlots;
                     })
                     .Select(group => group.ToList())
                     .ToList();
@@ -303,6 +374,9 @@ namespace StampJourney.Gameplay
                         .ToList();
                     selected.AddRange(bestTopics[Random.Range(0, bestTopics.Count)]);
                 }
+
+                if (selected.Count == 0)
+                    return selected;
             }
 
             // Fill spare drop slots round-robin across random topics. This keeps the result
@@ -337,6 +411,135 @@ namespace StampJourney.Gameplay
             return selected;
         }
 
+        /// <summary>
+        /// Selects one and only one complete topic for the post-drop board. Other topics may
+        /// receive filler items, but are capped at three distinct board items.
+        /// </summary>
+        private List<GeneratedContent> ChooseHardModeGeneratedContent(int releaseCount, int unicedDropSlots)
+        {
+            var boardItems = new Dictionary<StampData, HashSet<int>>();
+            for (int column = 0; column < _gameboard.Cols; column++)
+            {
+                for (int row = 0; row < _gameboard.Rows; row++)
+                {
+                    CardModel card = _gameboard.GetCard(column, row);
+                    if (card == null || card.IsIced || !card.HasAssignedContent) continue;
+
+                    if (!boardItems.TryGetValue(card.Topic, out HashSet<int> items))
+                    {
+                        items = new HashSet<int>();
+                        boardItems.Add(card.Topic, items);
+                    }
+                    items.Add(card.ItemIndex);
+                }
+            }
+
+            List<StampData> completeBoardTopics = boardItems
+                .Where(pair => pair.Key.HasCompleteItemSet(pair.Value))
+                .Select(pair => pair.Key)
+                .ToList();
+            if (completeBoardTopics.Count > 1)
+            {
+                Debug.LogError("[QueueSystem] Hard mode board already contains multiple solvable topics.");
+                return new List<GeneratedContent>();
+            }
+
+            List<List<GeneratedContent>> availableGroups = _generatedAvailableContent
+                .GroupBy(content => content.Topic)
+                .Select(group => group.ToList())
+                .ToList();
+            foreach (List<GeneratedContent> group in availableGroups)
+                Shuffle(group);
+
+            var selected = new List<GeneratedContent>(releaseCount);
+
+            if (completeBoardTopics.Count == 0)
+            {
+                List<List<GeneratedContent>> feasibleSolutions = availableGroups
+                    .Where(candidate =>
+                    {
+                        int boardCount = boardItems.TryGetValue(candidate[0].Topic, out HashSet<int> items)
+                            ? items.Count
+                            : 0;
+                        if (boardCount + candidate.Count != StampData.RequiredItemCount ||
+                            candidate.Count > releaseCount ||
+                            candidate.Count > unicedDropSlots)
+                            return false;
+
+                        int fillerCapacity = availableGroups
+                            .Where(group => group != candidate)
+                            .Sum(group =>
+                            {
+                                int otherBoardCount = boardItems.TryGetValue(group[0].Topic, out HashSet<int> otherItems)
+                                    ? otherItems.Count
+                                    : 0;
+                                int safeCount = Mathf.Max(
+                                    0,
+                                    StampData.RequiredItemCount - 1 - otherBoardCount);
+                                return Mathf.Min(group.Count, safeCount);
+                            });
+                        return candidate.Count + fillerCapacity >= releaseCount;
+                    })
+                    .ToList();
+
+                if (feasibleSolutions.Count == 0)
+                {
+                    Debug.LogError(
+                        "[QueueSystem] Hard mode cannot create exactly one solvable topic with this queue release.");
+                    return selected;
+                }
+
+                List<GeneratedContent> solution =
+                    feasibleSolutions[Random.Range(0, feasibleSolutions.Count)];
+                selected.AddRange(solution);
+            }
+
+            List<List<GeneratedContent>> fillerGroups = availableGroups
+                .Select(group => group.Except(selected).ToList())
+                .Where(group => group.Count > 0)
+                .ToList();
+            Shuffle(fillerGroups);
+
+            while (selected.Count < releaseCount && fillerGroups.Count > 0)
+            {
+                for (int groupIndex = fillerGroups.Count - 1;
+                     groupIndex >= 0 && selected.Count < releaseCount;
+                     groupIndex--)
+                {
+                    List<GeneratedContent> group = fillerGroups[groupIndex];
+                    StampData topic = group[0].Topic;
+                    int boardCount = boardItems.TryGetValue(topic, out HashSet<int> items)
+                        ? items.Count
+                        : 0;
+                    int alreadySelected = selected.Count(content => content.Topic == topic);
+                    int safeSelectionCount = Mathf.Max(
+                        0,
+                        StampData.RequiredItemCount - 1 - boardCount);
+
+                    if (alreadySelected >= safeSelectionCount)
+                    {
+                        fillerGroups.RemoveAt(groupIndex);
+                        continue;
+                    }
+
+                    selected.Add(group[group.Count - 1]);
+                    group.RemoveAt(group.Count - 1);
+                    if (group.Count == 0)
+                        fillerGroups.RemoveAt(groupIndex);
+                }
+                Shuffle(fillerGroups);
+            }
+
+            if (selected.Count != releaseCount)
+            {
+                Debug.LogError(
+                    $"[QueueSystem] Hard mode found only {selected.Count} safe contents for a {releaseCount}-card release.");
+                selected.Clear();
+            }
+
+            return selected;
+        }
+
         public void RefreshQueueVisuals()
         {
             for (int column = 0; column < _columnQueues.Length; column++)
@@ -353,6 +556,32 @@ namespace StampJourney.Gameplay
         {
             if (GetQueueCount(col) <= index) return null;
             return _columnQueues[col][index];
+        }
+
+        public IEnumerable<CardModel> GetAllCards()
+        {
+            if (_columnQueues == null) yield break;
+            foreach (List<CardModel> columnQueue in _columnQueues)
+                foreach (CardModel card in columnQueue)
+                    if (card != null)
+                        yield return card;
+        }
+
+        public bool TryGetCardPosition(CardModel target, out int column, out int queueIndex)
+        {
+            column = -1;
+            queueIndex = -1;
+            if (target == null || _columnQueues == null) return false;
+
+            for (int col = 0; col < _columnQueues.Length; col++)
+            {
+                int index = _columnQueues[col].IndexOf(target);
+                if (index < 0) continue;
+                column = col;
+                queueIndex = index;
+                return true;
+            }
+            return false;
         }
 
         public int GetQueueCount(int col)

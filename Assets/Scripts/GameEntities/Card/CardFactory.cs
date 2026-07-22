@@ -164,6 +164,12 @@ namespace StampJourney.Card
             view.RefreshVisual();
         }
 
+        public void RefreshIceVisual(CardModel model, bool animate)
+        {
+            if (model == null || !_activeCards.TryGetValue(model.TileId, out CardView view)) return;
+            view.RefreshIceVisual(animate);
+        }
+
         /// <summary>Animates a tile dropping to a new position (called by GravitySystem).</summary>
         public void AnimateTileDrop(CardModel model, Vector2 targetWorldPos, float duration)
         {

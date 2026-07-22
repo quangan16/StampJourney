@@ -70,6 +70,18 @@ public class GameplayUI : MonoBehaviour, IScreen
     [FoldoutGroup("Completed Topic")]
     [MinValue(20f)] public float completedTopicSlideDistance = 420f;
 
+    // ---- Development level cheat ----
+    [FoldoutGroup("Debug Level Cheat")]
+    [Tooltip("Shows a level-loading panel in the Editor and Development Builds.")]
+    [SerializeField] private bool enableLevelCheat = true;
+    [FoldoutGroup("Debug Level Cheat")]
+    [Tooltip("Optional authored panel. Leave these references empty to create a simple runtime panel.")]
+    [SerializeField] private RectTransform levelCheatPanel;
+    [FoldoutGroup("Debug Level Cheat")]
+    [SerializeField] private TMP_InputField levelCheatInput;
+    [FoldoutGroup("Debug Level Cheat")]
+    [SerializeField] private Button levelCheatLoadButton;
+
     private CanvasGroup _completedTopicCanvasGroup;
     private Sequence _completedTopicSequence;
     private Vector2 _completedTopicRestPosition;
@@ -106,6 +118,7 @@ public class GameplayUI : MonoBehaviour, IScreen
         SubscribeToGameplay();
         UpdateHudVisibility();
         Show();
+        SetupLevelCheat();
     }
 
     private void SubscribeToGameplay()
@@ -156,7 +169,220 @@ public class GameplayUI : MonoBehaviour, IScreen
         UnsubscribeFromGameplay();
         if (nextBtn != null) nextBtn.onClick.RemoveListener(OnNextLevelClicked);
         if (ReplayBtn != null) ReplayBtn.onClick.RemoveListener(OnRestartClicked);
+        if (levelCheatLoadButton != null)
+            levelCheatLoadButton.onClick.RemoveListener(LoadCheatLevel);
+        if (levelCheatInput != null)
+            levelCheatInput.onSubmit.RemoveListener(LoadCheatLevel);
         _completedTopicSequence?.Kill();
+    }
+
+    private void SetupLevelCheat()
+    {
+        bool isAllowed = enableLevelCheat && (Application.isEditor || Debug.isDebugBuild);
+        if (!isAllowed)
+        {
+            if (levelCheatPanel != null)
+                levelCheatPanel.gameObject.SetActive(false);
+            return;
+        }
+
+        ResolveOrCreateLevelCheatPanel();
+        if (levelCheatPanel == null || levelCheatInput == null || levelCheatLoadButton == null)
+        {
+            Debug.LogWarning("[GameplayUI] Could not create the level cheat panel.");
+            return;
+        }
+
+        levelCheatInput.contentType = TMP_InputField.ContentType.IntegerNumber;
+        levelCheatInput.SetTextWithoutNotify(
+            GameManager.Instance != null && GameManager.Instance.LevelSystem != null
+                ? GameManager.Instance.LevelSystem.CurrentLevel.ToString()
+                : "1");
+
+        levelCheatLoadButton.onClick.RemoveListener(LoadCheatLevel);
+        levelCheatLoadButton.onClick.AddListener(LoadCheatLevel);
+        levelCheatInput.onSubmit.RemoveListener(LoadCheatLevel);
+        levelCheatInput.onSubmit.AddListener(LoadCheatLevel);
+
+        levelCheatPanel.gameObject.SetActive(true);
+        levelCheatPanel.SetAsLastSibling();
+    }
+
+    private void ResolveOrCreateLevelCheatPanel()
+    {
+        if (levelCheatPanel != null)
+        {
+            if (levelCheatInput == null)
+                levelCheatInput = levelCheatPanel.GetComponentInChildren<TMP_InputField>(true);
+            if (levelCheatLoadButton == null)
+                levelCheatLoadButton = levelCheatPanel.GetComponentInChildren<Button>(true);
+        }
+
+        if (levelCheatPanel != null && levelCheatInput != null && levelCheatLoadButton != null)
+            return;
+
+        if (levelCheatPanel != null)
+            levelCheatPanel.gameObject.SetActive(false);
+
+        Transform parent = gameplayPanel != null ? gameplayPanel.transform : transform;
+        GameObject panelObject = new(
+            "Level Cheat Panel",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(Image));
+        levelCheatPanel = panelObject.GetComponent<RectTransform>();
+        levelCheatPanel.SetParent(parent, false);
+        levelCheatPanel.anchorMin = Vector2.one;
+        levelCheatPanel.anchorMax = Vector2.one;
+        levelCheatPanel.pivot = Vector2.one;
+        levelCheatPanel.anchoredPosition = new Vector2(-20f, -160f);
+        levelCheatPanel.sizeDelta = new Vector2(330f, 84f);
+
+        Image panelImage = panelObject.GetComponent<Image>();
+        panelImage.color = new Color(0.05f, 0.07f, 0.1f, 0.92f);
+
+        CreateCheatLabel(levelCheatPanel, "LEVEL", new Vector2(12f, -8f), new Vector2(306f, 24f),
+            TextAlignmentOptions.Left, 18f);
+        levelCheatInput = CreateCheatInput(levelCheatPanel);
+        levelCheatLoadButton = CreateCheatButton(levelCheatPanel);
+    }
+
+    private static TMP_InputField CreateCheatInput(RectTransform parent)
+    {
+        GameObject inputObject = new(
+            "Level Input",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(Image),
+            typeof(TMP_InputField));
+        RectTransform inputRect = inputObject.GetComponent<RectTransform>();
+        inputRect.SetParent(parent, false);
+        inputRect.anchorMin = new Vector2(0f, 1f);
+        inputRect.anchorMax = new Vector2(0f, 1f);
+        inputRect.pivot = new Vector2(0f, 1f);
+        inputRect.anchoredPosition = new Vector2(12f, -36f);
+        inputRect.sizeDelta = new Vector2(190f, 38f);
+        inputObject.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.14f);
+
+        GameObject viewportObject = new("Text Area", typeof(RectTransform), typeof(RectMask2D));
+        RectTransform viewport = viewportObject.GetComponent<RectTransform>();
+        viewport.SetParent(inputRect, false);
+        viewport.anchorMin = Vector2.zero;
+        viewport.anchorMax = Vector2.one;
+        viewport.offsetMin = new Vector2(10f, 2f);
+        viewport.offsetMax = new Vector2(-10f, -2f);
+
+        TextMeshProUGUI inputText = CreateCheatLabel(
+            viewport,
+            string.Empty,
+            Vector2.zero,
+            Vector2.zero,
+            TextAlignmentOptions.MidlineLeft,
+            22f,
+            true);
+        TextMeshProUGUI placeholder = CreateCheatLabel(
+            viewport,
+            "Level ID",
+            Vector2.zero,
+            Vector2.zero,
+            TextAlignmentOptions.MidlineLeft,
+            20f,
+            true);
+        placeholder.color = new Color(1f, 1f, 1f, 0.45f);
+
+        TMP_InputField input = inputObject.GetComponent<TMP_InputField>();
+        input.targetGraphic = inputObject.GetComponent<Image>();
+        input.textViewport = viewport;
+        input.textComponent = inputText;
+        input.placeholder = placeholder;
+        input.contentType = TMP_InputField.ContentType.IntegerNumber;
+        return input;
+    }
+
+    private static Button CreateCheatButton(RectTransform parent)
+    {
+        GameObject buttonObject = new(
+            "Load Level Button",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(Image),
+            typeof(Button));
+        RectTransform buttonRect = buttonObject.GetComponent<RectTransform>();
+        buttonRect.SetParent(parent, false);
+        buttonRect.anchorMin = new Vector2(1f, 1f);
+        buttonRect.anchorMax = new Vector2(1f, 1f);
+        buttonRect.pivot = new Vector2(1f, 1f);
+        buttonRect.anchoredPosition = new Vector2(-12f, -36f);
+        buttonRect.sizeDelta = new Vector2(108f, 38f);
+        buttonObject.GetComponent<Image>().color = new Color(0.24f, 0.55f, 0.95f, 1f);
+
+        CreateCheatLabel(buttonRect, "LOAD", Vector2.zero, Vector2.zero,
+            TextAlignmentOptions.Center, 20f, true);
+        return buttonObject.GetComponent<Button>();
+    }
+
+    private static TextMeshProUGUI CreateCheatLabel(
+        RectTransform parent,
+        string value,
+        Vector2 anchoredPosition,
+        Vector2 size,
+        TextAlignmentOptions alignment,
+        float fontSize,
+        bool stretch = false)
+    {
+        GameObject labelObject = new("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+        labelRect.SetParent(parent, false);
+        if (stretch)
+        {
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+        }
+        else
+        {
+            labelRect.anchorMin = new Vector2(0f, 1f);
+            labelRect.anchorMax = new Vector2(0f, 1f);
+            labelRect.pivot = new Vector2(0f, 1f);
+            labelRect.anchoredPosition = anchoredPosition;
+            labelRect.sizeDelta = size;
+        }
+
+        TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
+        label.text = value;
+        label.fontSize = fontSize;
+        label.alignment = alignment;
+        label.color = Color.white;
+        label.raycastTarget = false;
+        return label;
+    }
+
+    private void LoadCheatLevel() =>
+        LoadCheatLevel(levelCheatInput != null ? levelCheatInput.text : string.Empty);
+
+    private void LoadCheatLevel(string enteredLevel)
+    {
+        if (!int.TryParse(enteredLevel, out int levelId) || levelId < 1)
+        {
+            Debug.LogWarning($"[GameplayUI] '{enteredLevel}' is not a valid level ID.");
+            return;
+        }
+
+        GameManager gameManager = GameManager.Instance;
+        if (gameManager == null || gameManager.LevelSystem == null)
+        {
+            Debug.LogError("[GameplayUI] Cannot load cheat level because GameManager or LevelSystem is missing.");
+            return;
+        }
+
+        if (!gameManager.LevelSystem.HasLevel(levelId))
+        {
+            Debug.LogWarning($"[GameplayUI] Level ID {levelId} is not authored or loaded.");
+            return;
+        }
+
+        gameManager.StartGameplayLevel(levelId);
     }
 
     // ========================================================

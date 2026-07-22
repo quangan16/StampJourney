@@ -316,6 +316,14 @@ namespace StampJourney.EditorTools
                     "Use authored layout",
                     "Enabled: use this tool's exact board and queue layout. Disabled: runtime generates the layout from the configured topics."),
                 config.useAuthoredLayout);
+            using (new EditorGUI.DisabledScope(config.useAuthoredLayout))
+            {
+                config.hardMode = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "Hard mode",
+                        "Generated layouts only: exactly one topic has all four items on the board initially and after each queue release."),
+                    config.hardMode);
+            }
             if (EditorGUI.EndChangeCheck())
             {
                 TrimInvalidSlots(config);
@@ -325,8 +333,54 @@ namespace StampJourney.EditorTools
             EditorGUILayout.HelpBox(
                 config.useAuthoredLayout
                     ? "This level will use the exact board and queue below. Drag cards to move or swap them. Right-click any card to remove it."
-                    : "This level will ignore the board and queue below at runtime. Gameplay will generate one four-item set from each configured topic.",
+                    : config.hardMode
+                        ? "Hard generated mode: exactly one complete topic is available on the board at a time. Queue releases preserve that rule."
+                        : "This level will ignore the board and queue below at runtime. Gameplay will generate one four-item set from each configured topic.",
                 MessageType.None);
+
+            if (!config.useAuthoredLayout && config.hardMode)
+            {
+                int topicCount = config.stamps?.Count(topic => topic != null) ?? 0;
+                int requiredTopics = Mathf.CeilToInt((config.boardCols * config.boardRows - 1) / 3f);
+                if (topicCount < requiredTopics)
+                {
+                    EditorGUILayout.HelpBox(
+                        $"Hard mode needs at least {requiredTopics} topics to fill this board while keeping only one complete topic. Currently configured: {topicCount}.",
+                        MessageType.Warning);
+                }
+            }
+
+            EditorGUILayout.Space(4f);
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.LabelField("ICED CARDS", EditorStyles.boldLabel);
+            config.icedCards ??= new List<IcedCardConfig>();
+            for (int index = 0; index < config.icedCards.Count; index++)
+            {
+                config.icedCards[index] ??= new IcedCardConfig();
+                EditorGUILayout.BeginHorizontal();
+                config.icedCards[index].breakCount = Mathf.Max(
+                    1,
+                    EditorGUILayout.IntField(
+                        $"Ice {index + 1} break count",
+                        config.icedCards[index].breakCount));
+                if (GUILayout.Button("Remove", GUILayout.Width(70f)))
+                {
+                    config.icedCards.RemoveAt(index);
+                    index--;
+                    GUI.changed = true;
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+            if (GUILayout.Button("Add iced card"))
+            {
+                config.icedCards.Add(new IcedCardConfig());
+                GUI.changed = true;
+            }
+            if (EditorGUI.EndChangeCheck())
+            {
+                EditorUtility.SetDirty(config);
+                MarkDirty();
+            }
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space(8);
         }

@@ -4,6 +4,7 @@ using DG.Tweening;
 using Sirenix.OdinInspector;
 using StampJourney.Core;
 using StampJourney.Gameplay;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
@@ -35,6 +36,13 @@ namespace StampJourney.Card
         public CardEdgeRenderer cardEdgeRenderer;
         [BoxGroup("Visuals")]
         public SortingGroup sortingGroup;
+
+        [BoxGroup("Ice Obstacle")]
+        [Tooltip("Optional authored ice overlay. A fallback overlay is created at runtime when empty.")]
+        public SpriteRenderer iceOverlay;
+        [BoxGroup("Ice Obstacle")]
+        [Tooltip("Optional authored counter label. A fallback label is created at runtime when empty.")]
+        public TMP_Text iceCountText;
 
         #endregion
 
@@ -155,6 +163,7 @@ namespace StampJourney.Card
 
             _originPos = transform.position;
             SetSortingOrder(baseSortingOrder);
+            EnsureIceVisuals();
             RefreshVisual();
 
             if (cardEdgeRenderer != null)
@@ -175,6 +184,81 @@ namespace StampJourney.Card
             pressEffect.SetActive(false);
             if (contentImg.sprite != null)
                 FitSpriteContent(1, 1);
+            RefreshIceVisual(false);
+        }
+
+        public void RefreshIceVisual(bool animate)
+        {
+            EnsureIceVisuals();
+            bool showIce = _model != null && _model.IsIced;
+
+            if (iceCountText != null)
+            {
+                iceCountText.text = showIce ? _model.IceCount.ToString() : string.Empty;
+                iceCountText.gameObject.SetActive(showIce);
+            }
+
+            if (iceOverlay == null) return;
+            iceOverlay.DOKill();
+
+            if (!showIce)
+            {
+                if (animate && iceOverlay.gameObject.activeSelf)
+                {
+                    iceOverlay.DOFade(0f, 0.2f).SetEase(Ease.OutQuad).OnComplete(() =>
+                    {
+                        if (iceOverlay != null)
+                            iceOverlay.gameObject.SetActive(false);
+                    });
+                }
+                else
+                {
+                    iceOverlay.gameObject.SetActive(false);
+                }
+                return;
+            }
+
+            iceOverlay.gameObject.SetActive(true);
+            Color iceColor = iceOverlay.color;
+            iceColor.a = 0.72f;
+            iceOverlay.color = iceColor;
+            if (animate)
+                iceOverlay.transform.DOPunchScale(Vector3.one * 0.08f, 0.22f, 5, 0.5f);
+        }
+
+        private void EnsureIceVisuals()
+        {
+            if (iceOverlay == null)
+            {
+                var overlayObject = new GameObject("Ice Overlay");
+                overlayObject.transform.SetParent(transform, false);
+                iceOverlay = overlayObject.AddComponent<SpriteRenderer>();
+                if (backGroundImg != null)
+                {
+                    iceOverlay.sprite = backGroundImg.sprite;
+                    iceOverlay.drawMode = backGroundImg.drawMode;
+                    iceOverlay.size = backGroundImg.size;
+                    iceOverlay.sortingLayerID = backGroundImg.sortingLayerID;
+                    iceOverlay.sortingOrder = backGroundImg.sortingOrder + 20;
+                }
+                iceOverlay.color = new Color(0.55f, 0.9f, 1f, 0.72f);
+            }
+
+            if (iceCountText == null)
+            {
+                var textObject = new GameObject("Ice Count");
+                textObject.transform.SetParent(transform, false);
+                textObject.transform.localPosition = new Vector3(0f, 0f, -0.05f);
+                var label = textObject.AddComponent<TextMeshPro>();
+                label.alignment = TextAlignmentOptions.Center;
+                label.fontSize = 4f;
+                label.fontStyle = FontStyles.Bold;
+                label.color = new Color(0.03f, 0.2f, 0.35f, 1f);
+                label.rectTransform.sizeDelta = Vector2.one;
+                label.renderer.sortingLayerID = iceOverlay.sortingLayerID;
+                label.renderer.sortingOrder = iceOverlay.sortingOrder + 1;
+                iceCountText = label;
+            }
         }
 
         #endregion
@@ -302,7 +386,8 @@ namespace StampJourney.Card
         {
             if (eventData.button != PointerEventData.InputButton.Left) return;
             if (_activeDragView != null && _activeDragView != this) return;
-            if (_model == null || _model.IsAnimating || _isSnapping || !_model.CanDrag || _model.FlipState == FlipState.Down) return;
+            // Iced cards are locked obstacles: they cannot initiate a drag or swap.
+            if (_model == null || _model.IsIced || _model.IsAnimating || _isSnapping || !_model.CanDrag || _model.FlipState == FlipState.Down) return;
             if (_model.Group != null && _model.Group.IsTopicComplete) return;
 
             // A targeted booster gets first use of the card press. While a booster is executing,

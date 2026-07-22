@@ -37,6 +37,9 @@ public class LevelData : ScriptableObject
     [Tooltip("Enabled: use the exact Level Designer board and queues. Disabled: generate one complete four-item set per configured topic and show every topic once.")]
     public bool useAuthoredLayout;
 
+    [Tooltip("Generated layouts only. Keeps exactly one complete four-item topic on the board initially and after each queue release.")]
+    public bool hardMode;
+
     [Tooltip("One entry for each occupied board cell. Rows are top-down, columns are left-right.")]
     public System.Collections.Generic.List<CardPlacement> boardLayout = new();
 
@@ -46,6 +49,10 @@ public class LevelData : ScriptableObject
     [MinValue(0)]
     [Tooltip("Number of queue rows shown by the authored level editor, including empty rows.")]
     public int authoredQueueRows = 1;
+
+    [Header("Obstacles")]
+    [Tooltip("Each entry creates one iced card. Its counter decreases whenever another topic is completed.")]
+    public System.Collections.Generic.List<IcedCardConfig> icedCards = new();
 
     public bool TryGetBoardCard(int col, int row, out CardPlacement placement)
     {
@@ -69,6 +76,14 @@ public class LevelData : ScriptableObject
 
     /// <summary>Total number of cells on the board.</summary>
     public int TotalCells => boardCols * boardRows;
+}
+
+[System.Serializable]
+public class IcedCardConfig
+{
+    [MinValue(1)]
+    [LabelText("Break Count")]
+    public int breakCount = 1;
 }
 
 /// <summary>One authored item positioned on the playable board.</summary>

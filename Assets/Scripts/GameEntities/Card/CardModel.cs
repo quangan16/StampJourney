@@ -43,6 +43,9 @@ namespace StampJourney.Card
 
         public bool CanDrag { get; set; } = true;
 
+        public int IceCount { get; private set; }
+        public bool IsIced => IceCount > 0;
+
         public FlipState FlipState;
 
         /// <summary>Group this card belongs to. Null if standalone.</summary>
@@ -75,6 +78,18 @@ namespace StampJourney.Card
 
             Topic = topic;
             ItemIndex = itemIndex;
+        }
+
+        public void SetIce(int breakCount)
+        {
+            IceCount = System.Math.Max(0, breakCount);
+        }
+
+        public bool ReduceIce(int amount = 1)
+        {
+            if (!IsIced || amount <= 0) return false;
+            IceCount = System.Math.Max(0, IceCount - amount);
+            return true;
         }
 
         #endregion

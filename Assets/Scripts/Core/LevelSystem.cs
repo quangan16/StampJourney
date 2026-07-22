@@ -21,6 +21,18 @@ namespace StampJourney.Core
         [Required]
         [SerializeField] private Dictionary<int, LevelData> levels = new();
 
+        [BoxGroup("Cheat")]
+        [MinValue(1)]
+        [SerializeField] private int cheatLevel = 1;
+
+        [BoxGroup("Cheat")]
+        [Button("Load Level (Play Mode)")]
+        [EnableIf("@UnityEngine.Application.isPlaying")]
+        private void LoadCheatLevelFromInspector()
+        {
+            StartLevel(cheatLevel).Forget();
+        }
+
         #endregion
 
         #region Properties
@@ -84,9 +96,9 @@ namespace StampJourney.Core
                 return null;
             }
 
-            if (targetLevel <= 0 || targetLevel > TotalLevelCount)
+            if (!HasLevel(targetLevel))
             {
-                Debug.LogWarning($"[LevelSystem] Level {targetLevel} out of range (max={TotalLevelCount}).");
+                Debug.LogWarning($"[LevelSystem] Level ID {targetLevel} does not exist.");
                 return null;
             }
 
@@ -107,8 +119,11 @@ namespace StampJourney.Core
             return targetLevelData;
         }
 
-        public LevelData GetLevelData(int index) =>
-            index > 0 && index <= TotalLevelCount ? levels[index] : null;
+        public bool HasLevel(int levelId) =>
+            levels != null && levels.ContainsKey(levelId);
+
+        public LevelData GetLevelData(int levelId) =>
+            HasLevel(levelId) ? levels[levelId] : null;
 
         public bool IsLevelUnlocked(int index)
         {
@@ -125,9 +140,9 @@ namespace StampJourney.Core
 
         public async UniTaskVoid StartLevel(int targetLevel)
         {
-            if (targetLevel <= 0 || targetLevel > TotalLevelCount)
+            if (!HasLevel(targetLevel))
             {
-                Debug.LogError($"[LevelSystem] Invalid level index: {targetLevel}");
+                Debug.LogError($"[LevelSystem] Invalid level ID: {targetLevel}");
                 return;
             }
 

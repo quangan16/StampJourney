@@ -191,6 +191,7 @@ namespace StampJourney.Gameplay
             if (clearedCards == null || clearedCards.Count == 0) return;
 
             var cards = new List<CardModel>(clearedCards);
+            ReduceIceObstacles(1);
             OnStampCleared?.Invoke(cards);
             await gravitySystem.ApplyGravityAsync();
             await FillEmptyCellsAsync(cards.Count);
@@ -209,13 +210,34 @@ namespace StampJourney.Gameplay
             // Cache members BEFORE RebuildGroups — Rebuild will Disband the old group
             var cachedMembers = new List<CardModel>(group.Members);
 
+            // Ice is a locked obstacle. Reject the move if an iced member somehow reaches
+            // this API or any destination cell contains an iced card outside the group.
+            if (cachedMembers.Any(member => member == null || member.IsIced))
+            {
+                await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
+                return;
+            }
+
+            var memberIds = new HashSet<int>(cachedMembers.Select(member => member.TileId));
+            foreach (var member in cachedMembers)
+            {
+                CardModel destination = GetCard(
+                    member.BoardCol + deltaCol,
+                    member.BoardRow + deltaRow);
+                if (destination != null && destination.IsIced && !memberIds.Contains(destination.TileId))
+                {
+                    await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
+                    return;
+                }
+            }
+
             // Reject if any target column is busy (cards are dropping)
             foreach (var member in cachedMembers)
             {
                 int newCol = member.BoardCol + deltaCol;
                 if (IsColumnBusy(newCol))
                 {
-                    AnimateAllTilesToGridPositions(0.18f);
+                    await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
                     return;
                 }
             }
@@ -235,7 +257,7 @@ namespace StampJourney.Gameplay
             else
             {
                 // Snap back all members
-                AnimateAllTilesToGridPositions(0.18f);
+                await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
                 stampDetector.RebuildGroups();
                 UpdateAllEdges();
             }
@@ -246,6 +268,11 @@ namespace StampJourney.Gameplay
         public async UniTask TrySwapSingleGridAsync(CardModel card, int deltaCol, int deltaRow)
         {
             if (card == null || (deltaCol == 0 && deltaRow == 0)) return;
+            if (card.IsIced)
+            {
+                await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
+                return;
+            }
 
             int newCol = card.BoardCol + deltaCol;
             int newRow = card.BoardRow + deltaRow;
@@ -253,17 +280,23 @@ namespace StampJourney.Gameplay
             // Reject if target column is busy
             if (IsColumnBusy(newCol))
             {
-                AnimateAllTilesToGridPositions(0.18f);
+                await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
                 return;
             }
 
             if (!IsInBounds(newCol, newRow))
             {
-                AnimateAllTilesToGridPositions(0.18f);
+                await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
                 return;
             }
 
             var targetCard = GetCard(newCol, newRow);
+            if (targetCard != null && targetCard.IsIced)
+            {
+                await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
+                return;
+            }
+
             int origCol = card.BoardCol;
             int origRow = card.BoardRow;
 
@@ -539,6 +572,7 @@ namespace StampJourney.Gameplay
             }
 
             _gameplayControl.FitGameplayCamera();
+            ApplyConfiguredIceObstacles();
 
             // Play the same bottom-to-top drop after the final camera position is established.
             for (int r = _rows - 1; r >= 0; r--)
@@ -590,6 +624,7 @@ namespace StampJourney.Gameplay
 
                 if (anyCleared)
                 {
+                    ReduceIceObstacles(matches.Count);
                     var clearAnimations = new List<UniTask>(matches.Count);
                     var clearedCardBatches = new List<List<CardModel>>(matches.Count);
 
@@ -647,6 +682,107 @@ namespace StampJourney.Gameplay
             } while (anyCleared);
 
             OnBoardSettled?.Invoke();
+        }
+
+        private void ApplyConfiguredIceObstacles()
+        {
+            List<IcedCardConfig> iceConfigs = _levelData.icedCards?
+                .Where(config => config != null && config.breakCount > 0)
+                .ToList();
+            if (iceConfigs == null || iceConfigs.Count == 0) return;
+
+            List<CardModel> boardCards = new();
+            for (int col = 0; col < _cols; col++)
+                for (int row = 0; row < _rows; row++)
+                {
+                    CardModel card = GetCard(col, row);
+                    if (card != null) boardCards.Add(card);
+                }
+
+            // Reserve one complete topic so obstacles can never remove the initial solution.
+            List<CardModel> reservedSolution = boardCards
+                .Where(card => card.HasAssignedContent)
+                .GroupBy(card => card.Topic)
+                .Where(group => group.Select(card => card.ItemIndex).Distinct().Count() == StampData.RequiredItemCount)
+                .OrderBy(_ => UnityEngine.Random.value)
+                .Select(group => group.ToList())
+                .FirstOrDefault();
+
+            if (reservedSolution == null)
+            {
+                Debug.LogError("[Gameboard] Iced cards require at least one complete topic on the initial board.");
+                return;
+            }
+
+            var reservedIds = new HashSet<int>(reservedSolution.Select(card => card.TileId));
+            List<CardModel> candidates = boardCards
+                .Concat(queueSystem != null ? queueSystem.GetAllCards() : Enumerable.Empty<CardModel>())
+                .Where(card => card != null && !reservedIds.Contains(card.TileId))
+                .OrderBy(_ => UnityEngine.Random.value)
+                .ToList();
+
+            var icedQueueSlots = new HashSet<(int Column, int Index)>();
+            int placedObstacleCount = 0;
+            foreach (IcedCardConfig config in iceConfigs)
+            {
+                int candidateIndex = candidates.FindIndex(card =>
+                {
+                    if (queueSystem == null ||
+                        !queueSystem.TryGetCardPosition(card, out int column, out int queueIndex))
+                        return true;
+
+                    // A 2x2 clear releases two cards per affected column. Keeping consecutive
+                    // queue positions from both being iced guarantees an unfrozen release slot.
+                    return !icedQueueSlots.Contains((column, queueIndex - 1)) &&
+                           !icedQueueSlots.Contains((column, queueIndex + 1));
+                });
+                if (candidateIndex < 0) break;
+
+                CardModel card = candidates[candidateIndex];
+                candidates.RemoveAt(candidateIndex);
+                card.SetIce(config.breakCount);
+                cardFactory.RefreshIceVisual(card, false);
+                placedObstacleCount++;
+
+                if (queueSystem != null &&
+                    queueSystem.TryGetCardPosition(card, out int column, out int queueIndex))
+                    icedQueueSlots.Add((column, queueIndex));
+            }
+
+            if (placedObstacleCount < iceConfigs.Count)
+            {
+                Debug.LogWarning(
+                    $"[Gameboard] Only {placedObstacleCount} of {iceConfigs.Count} iced cards can be placed " +
+                    "while preserving the initial solution and safe queue releases.");
+            }
+        }
+
+        /// <summary>
+        /// Lets an invalid drag visibly return to its logical grid position before CardView's
+        /// final safety cleanup force-aligns the card.
+        /// </summary>
+        private async UniTask AnimateAllTilesToGridPositionsAndWaitAsync(float duration)
+        {
+            AnimateAllTilesToGridPositions(duration);
+            await UniTask.Delay(TimeSpan.FromSeconds(duration));
+        }
+
+        private void ReduceIceObstacles(int solvedTopicCount)
+        {
+            if (solvedTopicCount <= 0) return;
+
+            IEnumerable<CardModel> boardCards = Enumerable.Range(0, _cols)
+                .SelectMany(col => Enumerable.Range(0, _rows).Select(row => GetCard(col, row)))
+                .Where(card => card != null);
+            IEnumerable<CardModel> queueCards = queueSystem != null
+                ? queueSystem.GetAllCards()
+                : Enumerable.Empty<CardModel>();
+
+            foreach (CardModel card in boardCards.Concat(queueCards).Distinct())
+            {
+                if (!card.ReduceIce(solvedTopicCount)) continue;
+                cardFactory.RefreshIceVisual(card, true);
+            }
         }
 
         private void ApplyRippleEffect(CardGroup clearedGroup, Vector2 gridCenter)
