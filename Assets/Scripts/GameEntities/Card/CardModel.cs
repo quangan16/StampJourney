@@ -46,6 +46,10 @@ namespace StampJourney.Card
         public int IceCount { get; private set; }
         public bool IsIced => IceCount > 0;
 
+        public bool HasDirectionRestriction { get; private set; }
+        public RestrictedMoveAxis MoveRestrictionAxis { get; private set; }
+        public bool CanBeGuaranteedSolutionCard => !IsIced && !HasDirectionRestriction;
+
         public FlipState FlipState;
 
         /// <summary>Group this card belongs to. Null if standalone.</summary>
@@ -70,6 +74,17 @@ namespace StampJourney.Card
             FlipState = FlipState.Down;
         }
 
+        public CardModel(CardPlacement placement)
+            : this(placement?.stamp, placement?.itemIndex ?? -1)
+        {
+            if (placement == null) return;
+
+            if (placement.hasAuthoredIce)
+                SetIce(placement.authoredIceBreakCount);
+            else if (placement.hasAuthoredDirectionRestriction)
+                SetDirectionRestriction(placement.authoredAllowedDirection);
+        }
+
         /// <summary>Assigns content to an undecided generated queue card immediately before drop.</summary>
         public void AssignContent(StampData topic, int itemIndex)
         {
@@ -90,6 +105,22 @@ namespace StampJourney.Card
             if (!IsIced || amount <= 0) return false;
             IceCount = System.Math.Max(0, IceCount - amount);
             return true;
+        }
+
+        public void SetDirectionRestriction(RestrictedMoveAxis allowedDirection)
+        {
+            HasDirectionRestriction = true;
+            MoveRestrictionAxis = allowedDirection;
+        }
+
+        /// <summary>Checks only player-driven movement. Gravity and queue drops are unrestricted.</summary>
+        public bool AllowsPlayerMove(int deltaCol, int deltaRow)
+        {
+            if (!HasDirectionRestriction) return true;
+
+            return MoveRestrictionAxis == RestrictedMoveAxis.Horizontal
+                ? deltaCol != 0 && deltaRow == 0
+                : deltaRow != 0 && deltaCol == 0;
         }
 
         #endregion

@@ -76,7 +76,7 @@ namespace StampJourney.Gameplay
                 for (int c = 0; c < cols; c++)
                 {
                     foreach (var card in _levelData.GetQueueCards(c))
-                        AddCardToQueue(c, new CardModel(card.stamp, card.itemIndex));
+                        AddCardToQueue(c, new CardModel(card));
                 }
                 return;
             }
@@ -143,32 +143,63 @@ namespace StampJourney.Gameplay
                 return;
             }
 
-            // Build the one-time content pool in randomized topic order. Keeping each topic's
-            // four items together here guarantees that the first four initial cards form one
-            // complete solvable set; the final board positions are randomized afterwards.
-            var allContent = new List<GeneratedContent>(availableCardCount);
+            int maximumSingleSolutionCapacity =
+                StampData.RequiredItemCount +
+                (topics.Count - 1) * (StampData.RequiredItemCount - 1);
+            if (boardCapacity > maximumSingleSolutionCapacity)
+            {
+                int requiredTopics = Mathf.CeilToInt((boardCapacity - 1) / 3f);
+                Debug.LogError(
+                    $"[QueueSystem] Normal mode needs at least {requiredTopics} topics to fill the " +
+                    $"{boardCols}x{boardRows} board while keeping non-solution topics incomplete. " +
+                    $"Only {topics.Count} are configured.");
+                return;
+            }
+
+            // Normal mode starts with one guaranteed complete topic. Every other topic
+            // contributes at most three cards, so the rest of the board is playable filler
+            // instead of a collection of immediately solvable four-card sets.
+            var topicContentSets = new List<List<GeneratedContent>>(topics.Count);
             foreach (StampData topic in topics)
             {
                 var topicContent = new List<GeneratedContent>(StampData.RequiredItemCount);
                 for (int itemIndex = 0; itemIndex < StampData.RequiredItemCount; itemIndex++)
                     topicContent.Add(new GeneratedContent(topic, itemIndex));
                 Shuffle(topicContent);
-                allContent.AddRange(topicContent);
+                topicContentSets.Add(topicContent);
             }
 
-            // Fill every board cell, including any remainder after complete four-card sets.
-            // Example: a 3x3 board receives two full topics plus one item from the next topic.
-            for (int contentIndex = 0; contentIndex < boardCapacity; contentIndex++)
+            int remainingBoardSlots = boardCapacity;
+            for (int topicIndex = 0; topicIndex < topicContentSets.Count; topicIndex++)
             {
-                GeneratedContent content = allContent[contentIndex];
-                _generatedInitialCards.Add(new CardModel(content.Topic, content.ItemIndex));
-            }
-            ShuffleInitialCards(boardCols, boardRows);
+                List<GeneratedContent> topicContent = topicContentSets[topicIndex];
+                int boardItemLimit = topicIndex == 0
+                    ? StampData.RequiredItemCount
+                    : StampData.RequiredItemCount - 1;
+                int boardItemCount = Mathf.Min(boardItemLimit, remainingBoardSlots);
 
-            // Every unused authored item becomes late-bound queue content. No topic or item is
-            // duplicated, and partial topics created by odd board sizes can be completed later.
-            for (int contentIndex = boardCapacity; contentIndex < allContent.Count; contentIndex++)
-                _generatedAvailableContent.Add(allContent[contentIndex]);
+                for (int itemIndex = 0; itemIndex < topicContent.Count; itemIndex++)
+                {
+                    GeneratedContent content = topicContent[itemIndex];
+                    if (itemIndex < boardItemCount)
+                        _generatedInitialCards.Add(
+                            new CardModel(content.Topic, content.ItemIndex));
+                    else
+                        _generatedAvailableContent.Add(content);
+                }
+
+                remainingBoardSlots -= boardItemCount;
+            }
+
+            if (remainingBoardSlots > 0)
+            {
+                Debug.LogError("[QueueSystem] Normal mode could not fill every initial board cell.");
+                _generatedInitialCards.Clear();
+                _generatedAvailableContent.Clear();
+                return;
+            }
+
+            ShuffleInitialCards(boardCols, boardRows);
             Shuffle(_generatedAvailableContent);
         }
 
@@ -295,17 +326,18 @@ namespace StampJourney.Gameplay
             if (releaseCount <= 0) return 0;
 
             List<CardModel> releaseTargets = droppableCards.Take(releaseCount).ToList();
-            int unicedDropSlots = releaseTargets.Count(card => !card.IsIced);
+            int unrestrictedDropSlots =
+                releaseTargets.Count(card => card.CanBeGuaranteedSolutionCard);
             List<GeneratedContent> selectedContent = _levelData.hardMode
-                ? ChooseHardModeGeneratedContent(releaseCount, unicedDropSlots)
-                : ChooseGeneratedContent(releaseCount, unicedDropSlots);
+                ? ChooseHardModeGeneratedContent(releaseCount, unrestrictedDropSlots)
+                : ChooseGeneratedContent(releaseCount, unrestrictedDropSlots);
             releaseCount = selectedContent.Count;
             if (releaseCount == 0) return 0;
 
-            // Solution contents are selected first. Put them into unfrozen cards first so ice
-            // cannot hide the guaranteed playable topic after the cards land.
+            // Solution contents are selected first. Put them into unrestricted cards first so
+            // obstacles cannot hide the guaranteed playable topic after the cards land.
             List<CardModel> assignmentTargets = releaseTargets
-                .OrderBy(card => card.IsIced ? 1 : 0)
+                .OrderBy(card => card.CanBeGuaranteedSolutionCard ? 0 : 1)
                 .ToList();
             for (int contentIndex = 0; contentIndex < releaseCount; contentIndex++)
             {
@@ -326,7 +358,9 @@ namespace StampJourney.Gameplay
         /// When the board is already solvable, content is spread across topics to reduce
         /// automatic links. Otherwise, the missing items of one topic are selected first.
         /// </summary>
-        private List<GeneratedContent> ChooseGeneratedContent(int releaseCount, int unicedDropSlots)
+        private List<GeneratedContent> ChooseGeneratedContent(
+            int releaseCount,
+            int unrestrictedDropSlots)
         {
             var boardItems = new Dictionary<StampData, HashSet<int>>();
             for (int column = 0; column < _gameboard.Cols; column++)
@@ -334,7 +368,10 @@ namespace StampJourney.Gameplay
                 for (int row = 0; row < _gameboard.Rows; row++)
                 {
                     CardModel card = _gameboard.GetCard(column, row);
-                    if (card == null || card.IsIced || !card.HasAssignedContent) continue;
+                    if (card == null ||
+                        !card.CanBeGuaranteedSolutionCard ||
+                        !card.HasAssignedContent)
+                        continue;
                     if (!boardItems.TryGetValue(card.Topic, out HashSet<int> items))
                     {
                         items = new HashSet<int>();
@@ -361,7 +398,7 @@ namespace StampJourney.Gameplay
                             : 0;
                         return boardCount + group.Count() >= StampData.RequiredItemCount &&
                                group.Count() <= releaseCount &&
-                               group.Count() <= unicedDropSlots;
+                               group.Count() <= unrestrictedDropSlots;
                     })
                     .Select(group => group.ToList())
                     .ToList();
@@ -415,7 +452,9 @@ namespace StampJourney.Gameplay
         /// Selects one and only one complete topic for the post-drop board. Other topics may
         /// receive filler items, but are capped at three distinct board items.
         /// </summary>
-        private List<GeneratedContent> ChooseHardModeGeneratedContent(int releaseCount, int unicedDropSlots)
+        private List<GeneratedContent> ChooseHardModeGeneratedContent(
+            int releaseCount,
+            int unrestrictedDropSlots)
         {
             var boardItems = new Dictionary<StampData, HashSet<int>>();
             for (int column = 0; column < _gameboard.Cols; column++)
@@ -423,7 +462,10 @@ namespace StampJourney.Gameplay
                 for (int row = 0; row < _gameboard.Rows; row++)
                 {
                     CardModel card = _gameboard.GetCard(column, row);
-                    if (card == null || card.IsIced || !card.HasAssignedContent) continue;
+                    if (card == null ||
+                        !card.CanBeGuaranteedSolutionCard ||
+                        !card.HasAssignedContent)
+                        continue;
 
                     if (!boardItems.TryGetValue(card.Topic, out HashSet<int> items))
                     {
@@ -463,7 +505,7 @@ namespace StampJourney.Gameplay
                             : 0;
                         if (boardCount + candidate.Count != StampData.RequiredItemCount ||
                             candidate.Count > releaseCount ||
-                            candidate.Count > unicedDropSlots)
+                            candidate.Count > unrestrictedDropSlots)
                             return false;
 
                         int fillerCapacity = availableGroups

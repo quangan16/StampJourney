@@ -44,6 +44,10 @@ namespace StampJourney.Card
         [Tooltip("Optional authored counter label. A fallback label is created at runtime when empty.")]
         public TMP_Text iceCountText;
 
+        [BoxGroup("Direction Restriction")]
+        [Tooltip("Optional authored direction label. A fallback label is created at runtime when empty.")]
+        public TMP_Text directionRestrictionText;
+
         #endregion
 
         #region Inspector — Settings
@@ -185,6 +189,7 @@ namespace StampJourney.Card
             if (contentImg.sprite != null)
                 FitSpriteContent(1, 1);
             RefreshIceVisual(false);
+            RefreshDirectionRestrictionVisual();
         }
 
         public void RefreshIceVisual(bool animate)
@@ -259,6 +264,46 @@ namespace StampJourney.Card
                 label.renderer.sortingOrder = iceOverlay.sortingOrder + 1;
                 iceCountText = label;
             }
+        }
+
+        public void RefreshDirectionRestrictionVisual()
+        {
+            bool showRestriction = _model != null && _model.HasDirectionRestriction;
+            if (!showRestriction)
+            {
+                if (directionRestrictionText != null)
+                    directionRestrictionText.gameObject.SetActive(false);
+                return;
+            }
+
+            EnsureDirectionRestrictionVisual();
+            if (directionRestrictionText == null) return;
+            directionRestrictionText.gameObject.SetActive(true);
+            directionRestrictionText.text =
+                _model.MoveRestrictionAxis == RestrictedMoveAxis.Horizontal ? "↔" : "↕";
+        }
+
+        private void EnsureDirectionRestrictionVisual()
+        {
+            if (directionRestrictionText != null) return;
+
+            var textObject = new GameObject("Direction Restriction");
+            Transform visualParent = sortingGroup != null ? sortingGroup.transform : transform;
+            textObject.transform.SetParent(visualParent, false);
+            textObject.transform.localPosition = new Vector3(0f, 0f, -0.06f);
+
+            var label = textObject.AddComponent<TextMeshPro>();
+            label.alignment = TextAlignmentOptions.Center;
+            label.fontSize = 3.4f;
+            label.fontStyle = FontStyles.Bold;
+            label.color = new Color(1f, 0.62f, 0.12f, 1f);
+            label.rectTransform.sizeDelta = Vector2.one;
+            if (backGroundImg != null)
+            {
+                label.renderer.sortingLayerID = backGroundImg.sortingLayerID;
+                label.renderer.sortingOrder = backGroundImg.sortingOrder + 22;
+            }
+            directionRestrictionText = label;
         }
 
         #endregion
@@ -436,7 +481,8 @@ namespace StampJourney.Card
             if (eventData.pointerId != _activePointerId) return;
             if (!_isDragging || _isSnapping) return;
             if (_model.Group != null && _model.Group.HasCardAnimating) return;
-            _dragTargetPosition = ScreenToWorld(eventData.position) + _dragOffset;
+            Vector3 pointerTarget = ScreenToWorld(eventData.position) + _dragOffset;
+            _dragTargetPosition = ConstrainDragTarget(pointerTarget);
         }
 
         public void OnPointerUp(PointerEventData eventData)
@@ -617,6 +663,34 @@ namespace StampJourney.Card
             Vector3 worldPosition = _mainCamera.ScreenToWorldPoint(screenPosition);
             worldPosition.z = _board != null ? _board.transform.position.z : 0f;
             return worldPosition;
+        }
+
+        private Vector3 ConstrainDragTarget(Vector3 target)
+        {
+            bool lockHorizontalPosition = false;
+            bool lockVerticalPosition = false;
+
+            if (_dragGroup != null && _dragGroup.Count > 1)
+            {
+                foreach (CardModel member in _dragGroup.Members)
+                {
+                    if (member == null || !member.HasDirectionRestriction) continue;
+                    lockHorizontalPosition |= member.MoveRestrictionAxis == RestrictedMoveAxis.Vertical;
+                    lockVerticalPosition |= member.MoveRestrictionAxis == RestrictedMoveAxis.Horizontal;
+                }
+            }
+            else if (_model != null && _model.HasDirectionRestriction)
+            {
+                lockHorizontalPosition = _model.MoveRestrictionAxis == RestrictedMoveAxis.Vertical;
+                lockVerticalPosition = _model.MoveRestrictionAxis == RestrictedMoveAxis.Horizontal;
+            }
+
+            Vector2 origin = _dragGroup != null && _dragGroup.Count > 1
+                ? _groupDragOriginPos
+                : _originPos;
+            if (lockHorizontalPosition) target.x = origin.x;
+            if (lockVerticalPosition) target.y = origin.y;
+            return target;
         }
 
         private void ForceCompletePendingTweens()

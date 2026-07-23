@@ -54,6 +54,9 @@ public class LevelData : ScriptableObject
     [Tooltip("Each entry creates one iced card. Its counter decreases whenever another topic is completed.")]
     public System.Collections.Generic.List<IcedCardConfig> icedCards = new();
 
+    [Tooltip("Each entry creates one card that can only be moved along the selected axis.")]
+    public System.Collections.Generic.List<DirectionalCardConfig> directionalCards = new();
+
     public bool TryGetBoardCard(int col, int row, out CardPlacement placement)
     {
         placement = boardLayout?.Find(card => card != null && card.column == col && card.row == row);
@@ -84,6 +87,34 @@ public class IcedCardConfig
     [MinValue(1)]
     [LabelText("Break Count")]
     public int breakCount = 1;
+
+    [LabelText("Placement")]
+    public ObstacleSpawnLocation spawnLocation = ObstacleSpawnLocation.Random;
+}
+
+[System.Serializable]
+public class DirectionalCardConfig
+{
+    [LabelText("Allowed Direction")]
+    public RestrictedMoveAxis allowedDirection = RestrictedMoveAxis.Horizontal;
+
+    [LabelText("Placement")]
+    public ObstacleSpawnLocation spawnLocation = ObstacleSpawnLocation.Random;
+}
+
+public enum RestrictedMoveAxis
+{
+    Horizontal = 0,
+    Vertical = 1
+}
+
+public enum ObstacleSpawnLocation
+{
+    // Keep Random at zero so obstacle entries authored before this field existed retain
+    // their original board-or-queue behavior.
+    Random = 0,
+    InitialBoard = 1,
+    Queue = 2
 }
 
 /// <summary>One authored item positioned on the playable board.</summary>
@@ -95,9 +126,24 @@ public class CardPlacement
     [MinValue(0)] public int itemIndex;
     [HideInInspector] public int column;
     [HideInInspector] public int row;
+    [HideInInspector] public bool hasAuthoredIce;
+    [HideInInspector] public int authoredIceBreakCount = 1;
+    [HideInInspector] public bool hasAuthoredDirectionRestriction;
+    [HideInInspector] public RestrictedMoveAxis authoredAllowedDirection =
+        RestrictedMoveAxis.Horizontal;
 
     public bool IsValid => stamp != null && stamp.IsValidItemIndex(itemIndex);
-    public CardPlacement Clone() => new CardPlacement { stamp = stamp, itemIndex = itemIndex, column = column, row = row };
+    public CardPlacement Clone() => new CardPlacement
+    {
+        stamp = stamp,
+        itemIndex = itemIndex,
+        column = column,
+        row = row,
+        hasAuthoredIce = hasAuthoredIce,
+        authoredIceBreakCount = authoredIceBreakCount,
+        hasAuthoredDirectionRestriction = hasAuthoredDirectionRestriction,
+        authoredAllowedDirection = authoredAllowedDirection
+    };
 }
 
 /// <summary>One authored item in a queue above a board column. Lower order drops first.</summary>
@@ -112,6 +158,10 @@ public class QueueCardPlacement : CardPlacement
         itemIndex = itemIndex,
         column = column,
         row = -1,
-        order = order
+        order = order,
+        hasAuthoredIce = hasAuthoredIce,
+        authoredIceBreakCount = authoredIceBreakCount,
+        hasAuthoredDirectionRestriction = hasAuthoredDirectionRestriction,
+        authoredAllowedDirection = authoredAllowedDirection
     };
 }

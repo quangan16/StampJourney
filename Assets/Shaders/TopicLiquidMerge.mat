@@ -29,7 +29,7 @@ Material:
     - _CenterOffset: 1.03
     - _EdgeSoftness: 0.001
     - _MaxSmooth: 1
-    - _Progress: 0.07
+    - _Progress: 0
     - _Radius: 0.9
     - _Wobble: 0
     m_Colors:

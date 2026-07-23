@@ -483,9 +483,12 @@ namespace StampJourney.Gameplay
                 else
                 {
                     bool placed = false;
-                    foreach (var (oc, or) in oldGroupPositions)
+                    foreach (var (oc, or) in oldGroupPositions.ToList())
                     {
-                        if (_board.GetCard(oc, or) == null)
+                        int moveCol = oc - origCol;
+                        int moveRow = or - origRow;
+                        if (_board.GetCard(oc, or) == null &&
+                            tile.AllowsPlayerMove(moveCol, moveRow))
                         {
                             _board.SetTile(oc, or, tile);
                             oldGroupPositions.Remove((oc, or));

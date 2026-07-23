@@ -60,7 +60,10 @@ namespace StampJourney.Gameplay.Boosters
                 for (int row = 0; row < board.Rows; row++)
                 {
                     CardModel card = board.GetCard(column, row);
-                    if (card == null || card.IsIced || !card.HasAssignedContent) continue;
+                    if (card == null ||
+                        !card.CanBeGuaranteedSolutionCard ||
+                        !card.HasAssignedContent)
+                        continue;
 
                     int topicId = card.Topic.TopicId;
                     if (!cardsByTopic.TryGetValue(topicId, out List<CardModel> topicCards))

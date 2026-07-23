@@ -170,6 +170,12 @@ namespace StampJourney.Card
             view.RefreshIceVisual(animate);
         }
 
+        public void RefreshDirectionRestrictionVisual(CardModel model)
+        {
+            if (model == null || !_activeCards.TryGetValue(model.TileId, out CardView view)) return;
+            view.RefreshDirectionRestrictionVisual();
+        }
+
         /// <summary>Animates a tile dropping to a new position (called by GravitySystem).</summary>
         public void AnimateTileDrop(CardModel model, Vector2 targetWorldPos, float duration)
         {

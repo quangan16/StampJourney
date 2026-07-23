@@ -217,6 +217,11 @@ namespace StampJourney.Gameplay
                 await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
                 return;
             }
+            if (cachedMembers.Any(member => !member.AllowsPlayerMove(deltaCol, deltaRow)))
+            {
+                await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
+                return;
+            }
 
             var memberIds = new HashSet<int>(cachedMembers.Select(member => member.TileId));
             foreach (var member in cachedMembers)
@@ -224,7 +229,9 @@ namespace StampJourney.Gameplay
                 CardModel destination = GetCard(
                     member.BoardCol + deltaCol,
                     member.BoardRow + deltaRow);
-                if (destination != null && destination.IsIced && !memberIds.Contains(destination.TileId))
+                if (destination != null &&
+                    !memberIds.Contains(destination.TileId) &&
+                    (destination.IsIced || !destination.AllowsPlayerMove(-deltaCol, -deltaRow)))
                 {
                     await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
                     return;
@@ -273,6 +280,11 @@ namespace StampJourney.Gameplay
                 await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
                 return;
             }
+            if (!card.AllowsPlayerMove(deltaCol, deltaRow))
+            {
+                await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
+                return;
+            }
 
             int newCol = card.BoardCol + deltaCol;
             int newRow = card.BoardRow + deltaRow;
@@ -291,7 +303,8 @@ namespace StampJourney.Gameplay
             }
 
             var targetCard = GetCard(newCol, newRow);
-            if (targetCard != null && targetCard.IsIced)
+            if (targetCard != null &&
+                (targetCard.IsIced || !targetCard.AllowsPlayerMove(-deltaCol, -deltaRow)))
             {
                 await AnimateAllTilesToGridPositionsAndWaitAsync(0.18f);
                 return;
@@ -468,7 +481,7 @@ namespace StampJourney.Gameplay
                 for (int r = _rows - 1; r >= 0; r--)
                 {
                     if (!_levelData.TryGetBoardCard(c, r, out var card)) continue;
-                    queueSystem.AddCardToQueue(c, new CardModel(card.stamp, card.itemIndex));
+                    queueSystem.AddCardToQueue(c, new CardModel(card));
                 }
             }
         }
@@ -573,6 +586,7 @@ namespace StampJourney.Gameplay
 
             _gameplayControl.FitGameplayCamera();
             ApplyConfiguredIceObstacles();
+            ApplyConfiguredDirectionRestrictions();
 
             // Play the same bottom-to-top drop after the final camera position is established.
             for (int r = _rows - 1; r >= 0; r--)
@@ -686,6 +700,9 @@ namespace StampJourney.Gameplay
 
         private void ApplyConfiguredIceObstacles()
         {
+            // Authored cards already carry their exact obstacle state.
+            if (_levelData.useAuthoredLayout) return;
+
             List<IcedCardConfig> iceConfigs = _levelData.icedCards?
                 .Where(config => config != null && config.breakCount > 0)
                 .ToList();
@@ -723,10 +740,16 @@ namespace StampJourney.Gameplay
 
             var icedQueueSlots = new HashSet<(int Column, int Index)>();
             int placedObstacleCount = 0;
-            foreach (IcedCardConfig config in iceConfigs)
+            // Place explicit board/queue requests before Random entries so a random
+            // obstacle cannot consume the last card required by a fixed placement.
+            foreach (IcedCardConfig config in iceConfigs.OrderBy(config =>
+                         config.spawnLocation == ObstacleSpawnLocation.Random ? 1 : 0))
             {
                 int candidateIndex = candidates.FindIndex(card =>
                 {
+                    if (!MatchesObstacleSpawnLocation(card, config.spawnLocation))
+                        return false;
+
                     if (queueSystem == null ||
                         !queueSystem.TryGetCardPosition(card, out int column, out int queueIndex))
                         return true;
@@ -736,7 +759,7 @@ namespace StampJourney.Gameplay
                     return !icedQueueSlots.Contains((column, queueIndex - 1)) &&
                            !icedQueueSlots.Contains((column, queueIndex + 1));
                 });
-                if (candidateIndex < 0) break;
+                if (candidateIndex < 0) continue;
 
                 CardModel card = candidates[candidateIndex];
                 candidates.RemoveAt(candidateIndex);
@@ -753,8 +776,95 @@ namespace StampJourney.Gameplay
             {
                 Debug.LogWarning(
                     $"[Gameboard] Only {placedObstacleCount} of {iceConfigs.Count} iced cards can be placed " +
-                    "while preserving the initial solution and safe queue releases.");
+                    "while respecting placement requirements, the initial solution, and safe queue releases.");
             }
+        }
+
+        private void ApplyConfiguredDirectionRestrictions()
+        {
+            // Authored cards already carry their exact obstacle state.
+            if (_levelData.useAuthoredLayout) return;
+
+            List<DirectionalCardConfig> directionConfigs = _levelData.directionalCards?
+                .Where(config => config != null)
+                .ToList();
+            if (directionConfigs == null || directionConfigs.Count == 0) return;
+
+            List<CardModel> boardCards = new();
+            for (int col = 0; col < _cols; col++)
+                for (int row = 0; row < _rows; row++)
+                {
+                    CardModel card = GetCard(col, row);
+                    if (card != null) boardCards.Add(card);
+                }
+
+            // Keep one complete, obstacle-free topic available to the player.
+            List<CardModel> reservedSolution = boardCards
+                .Where(card => card.HasAssignedContent && !card.IsIced)
+                .GroupBy(card => card.Topic)
+                .Where(group =>
+                    group.All(card => !card.IsIced) &&
+                    group.Select(card => card.ItemIndex).Distinct().Count() == StampData.RequiredItemCount)
+                .OrderBy(_ => UnityEngine.Random.value)
+                .Select(group => group.ToList())
+                .FirstOrDefault();
+
+            if (reservedSolution == null)
+            {
+                Debug.LogError(
+                    "[Gameboard] Direction restricted cards require one obstacle-free complete topic on the initial board.");
+                return;
+            }
+
+            var reservedIds = new HashSet<int>(reservedSolution.Select(card => card.TileId));
+            List<CardModel> candidates = boardCards
+                .Concat(queueSystem != null ? queueSystem.GetAllCards() : Enumerable.Empty<CardModel>())
+                .Where(card =>
+                    card != null &&
+                    !card.IsIced &&
+                    !card.HasDirectionRestriction &&
+                    !reservedIds.Contains(card.TileId))
+                .OrderBy(_ => UnityEngine.Random.value)
+                .ToList();
+
+            int placedObstacleCount = 0;
+            // Place explicit board/queue requests before Random entries so a random
+            // obstacle cannot consume the last card required by a fixed placement.
+            foreach (DirectionalCardConfig config in directionConfigs.OrderBy(config =>
+                         config.spawnLocation == ObstacleSpawnLocation.Random ? 1 : 0))
+            {
+                int candidateIndex = candidates.FindIndex(card =>
+                    MatchesObstacleSpawnLocation(card, config.spawnLocation));
+                if (candidateIndex < 0) continue;
+
+                CardModel card = candidates[candidateIndex];
+                candidates.RemoveAt(candidateIndex);
+                card.SetDirectionRestriction(config.allowedDirection);
+                cardFactory.RefreshDirectionRestrictionVisual(card);
+                placedObstacleCount++;
+            }
+
+            if (placedObstacleCount < directionConfigs.Count)
+            {
+                Debug.LogWarning(
+                    $"[Gameboard] Only {placedObstacleCount} of {directionConfigs.Count} direction restricted cards " +
+                    "can be placed while respecting placement requirements, ice overlap, and the reserved solution.");
+            }
+        }
+
+        private bool MatchesObstacleSpawnLocation(
+            CardModel card,
+            ObstacleSpawnLocation spawnLocation)
+        {
+            bool isInQueue = queueSystem != null &&
+                             queueSystem.TryGetCardPosition(card, out _, out _);
+
+            return spawnLocation switch
+            {
+                ObstacleSpawnLocation.InitialBoard => !isInQueue,
+                ObstacleSpawnLocation.Queue => isInQueue,
+                _ => true
+            };
         }
 
         /// <summary>

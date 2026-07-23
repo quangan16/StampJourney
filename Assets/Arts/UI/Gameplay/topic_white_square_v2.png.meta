@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 6ade6a4175fca644e8bdf25a272be2a4
+guid: f8bb6d21dfa0c6640a5535985a9aeca7
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5849327742388092083
-    second: topic_white_square_0
+      213: 2095743321294558977
+    second: topic_white_square_v2_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -48,11 +48,11 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 1251
-  spriteBorder: {x: 399, y: 399, z: 399, w: 399}
+  spritePixelsToUnits: 1009
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: topic_white_square_0
+      name: topic_white_square_v2_0
       rect:
         serializedVersion: 2
-        x: 96
-        y: 96
-        width: 1062
-        height: 1062
+        x: 124
+        y: 120
+        width: 1003
+        height: 1009
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3bc31e3379cfc2150800000000000000
-      internalID: 5849327742388092083
+      spriteID: 107d82e6273951d10800000000000000
+      internalID: 2095743321294558977
       vertices: []
       indices: 
       edges: []
@@ -151,8 +151,8 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
-    internalID: 1537655665
+    spriteID: 11dcbb7c882f92646aa70b2c97656e1a
+    internalID: 0
     vertices: []
     indices: 
     edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      topic_white_square_0: 5849327742388092083
+      topic_white_square_v2_0: 2095743321294558977
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

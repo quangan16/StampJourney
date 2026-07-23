@@ -18,9 +18,9 @@ namespace StampJourney.EditorTools
         private IList<LevelData> cachedEditorLevelData;
         private int _currentLevelID;
 
-        private const float CardWidth = 100;
-        private const float CardHeight = 100f;
-        private const float CardGap = 10f;
+        private const float PreferredCardSize = 110f;
+        private const float MinCardSize = 72f;
+        private const float MaxCardGap = 10f;
         private const float PaletteItemSize = 64f;
         private const float PaletteCardWidth = 286f;
         private const string DragTitle = "Stamp card";
@@ -29,10 +29,10 @@ namespace StampJourney.EditorTools
         private const string LevelDataAddressableLabel = "level_data";
         private static readonly System.Random LayoutRandom = new();
 
-        private static readonly Color HeaderColor = new(0.10f, 0.17f, 0.28f);
         private static readonly Color QueueColor = new(0.17f, 0.41f, 0.65f);
         private static readonly Color BoardColor = new(0.21f, 0.63f, 0.43f);
         private static readonly Color AccentColor = new(0.16f, 0.55f, 0.95f);
+        private static readonly Color SaveLevelColor = new(0.95f, 0.48f, 0.12f);
         private static readonly Color EmptySlotColor = new(0.14f, 0.16f, 0.20f, 0.12f);
 
         private enum SlotKind { Board, Queue }
@@ -93,11 +93,15 @@ namespace StampJourney.EditorTools
         private string[] _splitTypes = Array.Empty<string>();
         private int _selectedSplitIndex = 0;
         private Sprite[] _topicSprites = Array.Empty<Sprite>();
-        private Vector2 _windowScroll;
+        private Vector2 _layoutScroll;
+        private Vector2 _settingsScroll;
         private Vector2 _libraryScroll;
         private readonly Dictionary<LayoutSlot, Rect> _slotRects = new();
         private readonly List<PaletteHit> _paletteHits = new();
         private readonly DragState _drag = new();
+        private float _layoutCardSize = PreferredCardSize;
+        private float _layoutCardGap = MaxCardGap;
+        private float _contentViewportTop = 110f;
         private string _validationMessage = "Choose a level, then build its board and queues.";
 
         [MenuItem("Tools/Stamp Journey/Level Designer %g")]
@@ -129,53 +133,115 @@ namespace StampJourney.EditorTools
 
         private void OnGUI()
         {
-            DrawHeader();
+            DrawToolbar();
             if (!TryGetConfig(out LevelData config)) return;
 
             EnsureCollections(config);
             _paletteHits.Clear();
-            _windowScroll = EditorGUILayout.BeginScrollView(_windowScroll);
 
-            EditorGUILayout.BeginHorizontal();
+            float usableWindowWidth = Mathf.Max(400f, position.width - 24f);
+            const float scrollbarWidth = 18f;
+            float preferredLayoutWidth =
+                CalculatePreferredLayoutWidth(config) + scrollbarWidth;
+            const float minimumSettingsWidth = 400f;
+            const float columnGap = 16f;
+            float maximumLayoutWidth = Mathf.Max(
+                320f,
+                usableWindowWidth - minimumSettingsWidth - columnGap);
+            float layoutColumnWidth = Mathf.Min(preferredLayoutWidth, maximumLayoutWidth);
+            float settingsColumnWidth =
+                Mathf.Max(280f, usableWindowWidth - layoutColumnWidth - columnGap);
+            Rect contentStart = EditorGUILayout.GetControlRect(false, 0f);
+            if (Event.current.type == EventType.Repaint)
+                _contentViewportTop = contentStart.y;
+            float contentViewportHeight = Mathf.Max(
+                240f,
+                position.height - _contentViewportTop - 12f);
 
-            // First Column
-            EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            UpdateResponsiveLayoutSizes(
+                config,
+                Mathf.Max(280f, layoutColumnWidth - scrollbarWidth));
+
+            EditorGUILayout.BeginHorizontal(
+                GUILayout.Width(usableWindowWidth),
+                GUILayout.Height(contentViewportHeight));
+
+            _layoutScroll = EditorGUILayout.BeginScrollView(
+                _layoutScroll,
+                false,
+                true,
+                GUILayout.Width(layoutColumnWidth),
+                GUILayout.Height(contentViewportHeight));
             DrawLayoutCanvas(config);
-            EditorGUILayout.EndVertical();
+            GUILayout.Space(24f);
+            EditorGUILayout.EndScrollView();
 
-            GUILayout.Space(16);
+            GUILayout.Space(columnGap);
 
-            // Second Column
-            EditorGUILayout.BeginVertical();
-            DrawLevelSettings(config);
-            DrawStampLibrary(config);
-            DrawFooter(config);
-            EditorGUILayout.EndVertical();
+            _settingsScroll = EditorGUILayout.BeginScrollView(
+                _settingsScroll,
+                false,
+                true,
+                GUILayout.Width(settingsColumnWidth),
+                GUILayout.Height(contentViewportHeight));
+            DrawSettingsColumn(config, settingsColumnWidth - scrollbarWidth);
+            GUILayout.Space(24f);
+            EditorGUILayout.EndScrollView();
 
             EditorGUILayout.EndHorizontal();
 
-            // Slot rectangles and Event.mousePosition are both relative to the scroll content here.
-            // Keep drag hit-testing inside this scope (as ToolChangeBoxOrder does).
+            // Slots and palette items live in independent scroll views, so their
+            // hit rectangles are stored in screen space before pointer handling.
             HandlePointerInput(config, Event.current);
 
             if (_drag.IsActive && Event.current.type == EventType.Repaint)
                 DrawFloatingCard(Event.current.mousePosition);
+        }
 
-            EditorGUILayout.EndScrollView();
+        private void DrawSettingsColumn(LevelData config, float width)
+        {
+            EditorGUILayout.BeginVertical(GUILayout.Width(width));
+            DrawLevelSettings(config, width);
+            DrawStampLibrary(config, width);
+            EditorGUILayout.EndVertical();
+        }
+
+        private void UpdateResponsiveLayoutSizes(
+            LevelData config,
+            float layoutWidth)
+        {
+            int columnCount = Mathf.Max(1, config.boardCols);
+            _layoutCardGap = Mathf.Clamp(PreferredCardSize * 0.1f, 4f, MaxCardGap);
+            float availableCardWidth = layoutWidth - 24f - _layoutCardGap * (columnCount - 1);
+            float widthBasedSize = availableCardWidth / columnCount;
+
+            _layoutCardSize = Mathf.Clamp(
+                Mathf.Min(widthBasedSize, PreferredCardSize),
+                MinCardSize,
+                PreferredCardSize);
+            _layoutCardGap = Mathf.Clamp(_layoutCardSize * 0.1f, 4f, MaxCardGap);
+        }
+
+        private static float CalculatePreferredLayoutWidth(LevelData config)
+        {
+            int columnCount = Mathf.Max(1, config.boardCols);
+            float cardGap = Mathf.Clamp(PreferredCardSize * 0.1f, 4f, MaxCardGap);
+            return 24f +
+                   columnCount * PreferredCardSize +
+                   (columnCount - 1) * cardGap;
         }
 
         #region Header and settings
 
-        private void DrawHeader()
+        private void DrawToolbar()
         {
-            Rect headerRect = GUILayoutUtility.GetRect(1, 58, GUILayout.ExpandWidth(true));
-            EditorGUI.DrawRect(headerRect, HeaderColor);
-            GUI.Label(new Rect(headerRect.x + 18, headerRect.y + 8, 330, 22), "STAMP JOURNEY", TitleStyle(18, Color.white));
-            GUI.Label(new Rect(headerRect.x + 18, headerRect.y + 31, 390, 18), "VISUAL LEVEL DESIGNER", LabelStyle(10, new Color(0.66f, 0.78f, 0.96f), FontStyle.Bold));
-
-            float right = headerRect.xMax - 12;
-            if (DrawHeaderButton(new Rect(right - 96, headerRect.y + 15, 96, 28), "Save Scene", AccentColor)) SaveScene();
-            if (DrawHeaderButton(new Rect(right - 190, headerRect.y + 15, 84, 28), "Refresh", QueueColor)) RefreshTopicSprites();
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(64f)))
+                RefreshTopicSprites();
+            if (GUILayout.Button("Save Scene", EditorStyles.toolbarButton, GUILayout.Width(78f)))
+                SaveScene();
+            EditorGUILayout.EndHorizontal();
         }
 
         private bool TryGetConfig(out LevelData config)
@@ -193,14 +259,28 @@ namespace StampJourney.EditorTools
             }
 
 
-            EditorGUILayout.BeginHorizontal();
             _currentLevelID = EditorGUILayout.IntField("Level ID", _currentLevelID);
-
             LevelData level = _currentLevelID > 0 ? FindLevelData(_currentLevelID) : null;
+
+            if (level != null)
+            {
+                EditorGUILayout.BeginHorizontal();
+                DrawLevelActionButtons(level);
+                EditorGUILayout.EndHorizontal();
+            }
+
             if (_currentLevelID > 0)
             {
                 string actionLabel = level == null ? "Create Level" : "Save Level";
-                if (GUILayout.Button(actionLabel, GUILayout.Width(110f)))
+                Color previousBackgroundColor = GUI.backgroundColor;
+                GUI.backgroundColor = SaveLevelColor;
+                bool saveLevelClicked = GUILayout.Button(
+                    actionLabel,
+                    GUILayout.ExpandWidth(true),
+                    GUILayout.Height(38f));
+                GUI.backgroundColor = previousBackgroundColor;
+
+                if (saveLevelClicked)
                 {
                     if (level == null)
                         level = CreateLevelData(_currentLevelID);
@@ -208,7 +288,15 @@ namespace StampJourney.EditorTools
                         SaveLevelData(level);
                 }
             }
-            EditorGUILayout.EndHorizontal();
+
+            if (level != null)
+            {
+                EditorGUILayout.HelpBox(
+                    _validationMessage,
+                    _validationMessage.StartsWith("Solvable")
+                        ? MessageType.Info
+                        : MessageType.None);
+            }
 
             if (_currentLevelID <= 0)
             {
@@ -299,7 +387,7 @@ namespace StampJourney.EditorTools
             AssetDatabase.CreateFolder(parentFolder, folderName);
         }
 
-        private void DrawLevelSettings(LevelData config)
+        private void DrawLevelSettings(LevelData config, float settingsColumnWidth)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField("LEVEL SETUP", EditorStyles.boldLabel);
@@ -332,7 +420,7 @@ namespace StampJourney.EditorTools
             }
             EditorGUILayout.HelpBox(
                 config.useAuthoredLayout
-                    ? "This level will use the exact board and queue below. Drag cards to move or swap them. Right-click any card to remove it."
+                    ? "This level uses the exact board and queue below. Drag cards to move or swap them. Right-click a card to assign obstacles or remove it."
                     : config.hardMode
                         ? "Hard generated mode: exactly one complete topic is available on the board at a time. Queue releases preserve that rule."
                         : "This level will ignore the board and queue below at runtime. Gameplay will generate one four-item set from each configured topic.",
@@ -350,26 +438,64 @@ namespace StampJourney.EditorTools
                 }
             }
 
-            EditorGUILayout.Space(4f);
+            if (config.useAuthoredLayout)
+            {
+                IEnumerable<CardPlacement> authoredCards = config.boardLayout
+                    .Cast<CardPlacement>()
+                    .Concat(config.queueLayout)
+                    .Where(card => card != null);
+                int authoredIceCount = authoredCards.Count(card => card.hasAuthoredIce);
+                int authoredDirectionCount = authoredCards.Count(
+                    card => card.hasAuthoredDirectionRestriction);
+
+                EditorGUILayout.Space(6f);
+                EditorGUILayout.LabelField("AUTHORED OBSTACLES", EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox(
+                    "Right-click any occupied board or queue card, then choose its Ice or Directional obstacle. Authored obstacles stay attached when the card is moved or swapped.",
+                    MessageType.Info);
+                EditorGUILayout.LabelField(
+                    $"Placed: {authoredIceCount} iced, {authoredDirectionCount} directional",
+                    EditorStyles.miniLabel);
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space(8f);
+                return;
+            }
+
+            EditorGUILayout.Space(6f);
+            EditorGUILayout.LabelField("GENERATED OBSTACLES", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
+            float obstacleColumnWidth = Mathf.Max(170f, (settingsColumnWidth - 24f) * 0.5f);
+
+            EditorGUILayout.BeginVertical(GUILayout.Width(obstacleColumnWidth));
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.LabelField("ICED CARDS", EditorStyles.boldLabel);
             config.icedCards ??= new List<IcedCardConfig>();
             for (int index = 0; index < config.icedCards.Count; index++)
             {
                 config.icedCards[index] ??= new IcedCardConfig();
+                IcedCardConfig icedCard = config.icedCards[index];
+
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 EditorGUILayout.BeginHorizontal();
-                config.icedCards[index].breakCount = Mathf.Max(
+                EditorGUILayout.LabelField($"Ice {index + 1}", EditorStyles.boldLabel);
+                bool removeIcedCard = GUILayout.Button("Remove", GUILayout.Width(70f));
+                EditorGUILayout.EndHorizontal();
+
+                icedCard.breakCount = Mathf.Max(
                     1,
-                    EditorGUILayout.IntField(
-                        $"Ice {index + 1} break count",
-                        config.icedCards[index].breakCount));
-                if (GUILayout.Button("Remove", GUILayout.Width(70f)))
+                    EditorGUILayout.IntField("Break count", icedCard.breakCount));
+                icedCard.spawnLocation =
+                    (ObstacleSpawnLocation)EditorGUILayout.EnumPopup(
+                        "Placement",
+                        icedCard.spawnLocation);
+                EditorGUILayout.EndVertical();
+
+                if (removeIcedCard)
                 {
                     config.icedCards.RemoveAt(index);
                     index--;
                     GUI.changed = true;
                 }
-                EditorGUILayout.EndHorizontal();
             }
             if (GUILayout.Button("Add iced card"))
             {
@@ -382,6 +508,55 @@ namespace StampJourney.EditorTools
                 MarkDirty();
             }
             EditorGUILayout.EndVertical();
+
+            GUILayout.Space(6f);
+
+            EditorGUILayout.BeginVertical(GUILayout.Width(obstacleColumnWidth));
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.LabelField("DIRECTIONAL CARDS", EditorStyles.boldLabel);
+            config.directionalCards ??= new List<DirectionalCardConfig>();
+            for (int index = 0; index < config.directionalCards.Count; index++)
+            {
+                config.directionalCards[index] ??= new DirectionalCardConfig();
+                DirectionalCardConfig directionalCard = config.directionalCards[index];
+
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"Card {index + 1}", EditorStyles.boldLabel);
+                bool removeDirectionalCard = GUILayout.Button("Remove", GUILayout.Width(70f));
+                EditorGUILayout.EndHorizontal();
+
+                directionalCard.allowedDirection =
+                    (RestrictedMoveAxis)EditorGUILayout.EnumPopup(
+                        "Allowed direction",
+                        directionalCard.allowedDirection);
+                directionalCard.spawnLocation =
+                    (ObstacleSpawnLocation)EditorGUILayout.EnumPopup(
+                        "Placement",
+                        directionalCard.spawnLocation);
+                EditorGUILayout.EndVertical();
+
+                if (removeDirectionalCard)
+                {
+                    config.directionalCards.RemoveAt(index);
+                    index--;
+                    GUI.changed = true;
+                }
+            }
+            if (GUILayout.Button("Add directional card"))
+            {
+                config.directionalCards.Add(new DirectionalCardConfig());
+                GUI.changed = true;
+            }
+            if (EditorGUI.EndChangeCheck())
+            {
+                EditorUtility.SetDirty(config);
+                MarkDirty();
+            }
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
             EditorGUILayout.Space(8);
         }
 
@@ -389,7 +564,7 @@ namespace StampJourney.EditorTools
 
         #region Topic item palette
 
-        private void DrawStampLibrary(LevelData config)
+        private void DrawStampLibrary(LevelData config, float availableWidth)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField("TOPIC IMAGE LIBRARY", EditorStyles.boldLabel);
@@ -428,12 +603,62 @@ namespace StampJourney.EditorTools
                 EditorGUILayout.EndHorizontal();
             }
 
-            _libraryScroll = EditorGUILayout.BeginScrollView(_libraryScroll, GUILayout.Height(104));
-            EditorGUILayout.BeginHorizontal();
-            foreach (Sprite sprite in _topicSprites)
-                DrawTopicImageButton(config, sprite);
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.EndScrollView();
+            if (_topicSprites.Length > 0)
+            {
+                const int maximumVisibleRows = 3;
+                const float libraryCellWidth = 92f;
+                const float libraryCellHeight = 108f;
+                const float libraryCellGap = 4f;
+                float gridWidth = availableWidth - 12f;
+                int libraryColumns = Mathf.Max(
+                    1,
+                    Mathf.FloorToInt(
+                        (gridWidth + libraryCellGap) /
+                        (libraryCellWidth + libraryCellGap)));
+                int libraryRows = Mathf.CeilToInt(
+                    _topicSprites.Length / (float)libraryColumns);
+
+                // A vertical scrollbar consumes some grid width. Recalculate once so
+                // the final thumbnail column never gets clipped behind that scrollbar.
+                if (libraryRows > maximumVisibleRows)
+                {
+                    gridWidth -= 18f;
+                    libraryColumns = Mathf.Max(
+                        1,
+                        Mathf.FloorToInt(
+                            (gridWidth + libraryCellGap) /
+                            (libraryCellWidth + libraryCellGap)));
+                    libraryRows = Mathf.CeilToInt(
+                        _topicSprites.Length / (float)libraryColumns);
+                }
+
+                int visibleRows = Mathf.Min(maximumVisibleRows, libraryRows);
+                float scrollHeight = visibleRows * libraryCellHeight;
+
+                _libraryScroll = EditorGUILayout.BeginScrollView(
+                    _libraryScroll,
+                    false,
+                    false,
+                    GUILayout.Height(scrollHeight));
+                for (int row = 0; row < libraryRows; row++)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    for (int column = 0; column < libraryColumns; column++)
+                    {
+                        int spriteIndex = row * libraryColumns + column;
+                        if (spriteIndex >= _topicSprites.Length) break;
+
+                        DrawTopicImageButton(config, _topicSprites[spriteIndex]);
+                        if (column < libraryColumns - 1)
+                            GUILayout.Space(libraryCellGap);
+                    }
+                    GUILayout.FlexibleSpace();
+                    EditorGUILayout.EndHorizontal();
+                    if (row < libraryRows - 1)
+                        GUILayout.Space(libraryCellGap);
+                }
+                EditorGUILayout.EndScrollView();
+            }
 
             if (_selectedTopicIndex > 0 && _topicSprites.Length > 0 &&
                 GUILayout.Button($"Add all visible items to {_topicTypes[_selectedTopicIndex]}", GUILayout.Height(24)))
@@ -452,7 +677,9 @@ namespace StampJourney.EditorTools
             {
                 EditorGUILayout.Space(4);
                 EditorGUILayout.LabelField("TOPIC ITEM PALETTE", EditorStyles.boldLabel);
-                int itemsPerRow = 6;
+                int itemsPerRow = Mathf.Max(
+                    1,
+                    Mathf.FloorToInt((availableWidth - 12f) / (PaletteCardWidth + 4f)));
                 StampData[] stamps = config.stamps.ToArray();
                 int numRows = Mathf.CeilToInt((float)stamps.Length / itemsPerRow);
 
@@ -482,6 +709,7 @@ namespace StampJourney.EditorTools
 
         private void DrawTopicImageButton(LevelData config, Sprite sprite)
         {
+            const float holderSize = 86f;
             EditorGUILayout.BeginVertical(GUILayout.Width(92));
             bool isAlreadyAdded = IsSpriteAlreadyInPalette(config, sprite);
             string tooltip = isAlreadyAdded
@@ -490,10 +718,14 @@ namespace StampJourney.EditorTools
 
             // AssetPreview is generated asynchronously and can temporarily return null during
             // repaints. Drawing from sprite.rect keeps sub-sprite thumbnails stable on every frame.
-            Rect thumbnailRect = GUILayoutUtility.GetRect(86, 62, GUILayout.Width(86), GUILayout.Height(62));
+            Rect thumbnailRect = GUILayoutUtility.GetRect(
+                holderSize,
+                holderSize,
+                GUILayout.Width(holderSize),
+                GUILayout.Height(holderSize));
             bool clicked = GUI.Button(thumbnailRect, new GUIContent(string.Empty, tooltip), GUIStyle.none);
             GUI.Box(thumbnailRect, GUIContent.none);
-            DrawSprite(thumbnailRect, sprite, 1f, 3f);
+            DrawSpriteAspectFit(thumbnailRect, sprite, 1f, 3f);
             EditorGUIUtility.AddCursorRect(thumbnailRect, MouseCursor.Link);
             if (clicked)
                 AddItemToLevel(config, sprite);
@@ -527,7 +759,7 @@ namespace StampJourney.EditorTools
                     itemRect,
                     new GUIContent(string.Empty, $"{stamp.GetItemSprite(itemIndex)?.name}\nRight-click to remove from {stamp.stampName}."),
                     GUIStyle.none);
-                _paletteHits.Add(new PaletteHit(itemRect, item));
+                _paletteHits.Add(new PaletteHit(ToScreenRect(itemRect), item));
                 EditorGUIUtility.AddCursorRect(itemRect, MouseCursor.Link);
             }
 
@@ -573,6 +805,21 @@ namespace StampJourney.EditorTools
             EditorGUILayout.LabelField("Queue cards are stacked above their column. The NEXT row (closest to the board) drops first.", EditorStyles.miniLabel);
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
+            int requiredQueueRows = GetRequiredQueueRowCount(config);
+            bool hasRedundantQueueRows = GetQueueRowCount(config) > requiredQueueRows;
+            using (new EditorGUI.DisabledScope(!hasRedundantQueueRows))
+            {
+                if (GUILayout.Button("- Remove empty layers", GUILayout.Width(150), GUILayout.Height(24)))
+                {
+                    Undo.RecordObject(config, "Remove empty authored queue rows");
+                    int removedRowCount = config.authoredQueueRows - requiredQueueRows;
+                    config.authoredQueueRows = requiredQueueRows;
+                    EditorUtility.SetDirty(config);
+                    MarkDirty();
+                    _validationMessage =
+                        $"Removed {removedRowCount} empty queue layer{(removedRowCount == 1 ? string.Empty : "s")}.";
+                }
+            }
             if (GUILayout.Button("+ Add queue row", GUILayout.Width(150), GUILayout.Height(24)))
             {
                 Undo.RecordObject(config, "Add authored queue row");
@@ -611,10 +858,14 @@ namespace StampJourney.EditorTools
             for (int column = 0; column < config.boardCols; column++)
             {
                 LayoutSlot slot = new(kind, column, index);
-                Rect rect = GUILayoutUtility.GetRect(CardWidth, CardHeight, GUILayout.Width(CardWidth), GUILayout.Height(CardHeight));
-                _slotRects[slot] = rect;
+                Rect rect = GUILayoutUtility.GetRect(
+                    _layoutCardSize,
+                    _layoutCardSize,
+                    GUILayout.Width(_layoutCardSize),
+                    GUILayout.Height(_layoutCardSize));
+                _slotRects[slot] = ToScreenRect(rect);
                 DrawSlot(config, slot, rect);
-                GUILayout.Space(CardGap);
+                GUILayout.Space(_layoutCardGap);
             }
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
@@ -645,10 +896,45 @@ namespace StampJourney.EditorTools
             Rect imageRect = new(rect.x + 7, rect.y + 10, rect.width - 14, rect.width - 14);
             DrawPiece(imageRect, card, 1f, 0f);
             DrawGreenBadge(new Rect(rect.x - 7, rect.y - 7, 25, 25), badge);
+            DrawAuthoredObstacleBadge(rect, card);
 
             Rect caption = new(rect.x + 6, rect.yMax - 25, rect.width - 12, 20);
             GUI.Label(caption, card.stamp.stampName, LabelStyle(10, new Color(.12f, .16f, .24f), FontStyle.Bold));
             GUI.Label(new Rect(rect.x + 6, rect.yMax - 12, rect.width - 12, 11), $"Item {card.itemIndex + 1}/{card.stamp.TotalItems}", LabelStyle(8, new Color(.34f, .39f, .47f)));
+        }
+
+        private static void DrawAuthoredObstacleBadge(
+            Rect cardRect,
+            CardPlacement card)
+        {
+            if (card == null) return;
+
+            const float badgeWidth = 46f;
+            const float badgeHeight = 18f;
+            Rect badgeRect = new(
+                cardRect.xMax - badgeWidth - 3f,
+                cardRect.y + 3f,
+                badgeWidth,
+                badgeHeight);
+
+            if (card.hasAuthoredIce)
+            {
+                EditorGUI.DrawRect(badgeRect, new Color(.20f, .65f, .95f, .95f));
+                GUI.Label(
+                    badgeRect,
+                    $"ICE {Mathf.Max(1, card.authoredIceBreakCount)}",
+                    LabelStyle(9, Color.white, FontStyle.Bold));
+            }
+            else if (card.hasAuthoredDirectionRestriction)
+            {
+                EditorGUI.DrawRect(badgeRect, new Color(.95f, .52f, .16f, .95f));
+                GUI.Label(
+                    badgeRect,
+                    card.authoredAllowedDirection == RestrictedMoveAxis.Horizontal
+                        ? "H ONLY"
+                        : "V ONLY",
+                    LabelStyle(9, Color.white, FontStyle.Bold));
+            }
         }
 
         private void DrawEmptySlot(Rect rect, LayoutSlot slot)
@@ -668,7 +954,11 @@ namespace StampJourney.EditorTools
 
         private void DrawFloatingCard(Vector2 mousePosition)
         {
-            Rect rect = new(mousePosition.x - CardWidth * .5f, mousePosition.y - CardHeight * .5f, CardWidth, CardHeight);
+            Rect rect = new(
+                mousePosition.x - _layoutCardSize * .5f,
+                mousePosition.y - _layoutCardSize * .5f,
+                _layoutCardSize,
+                _layoutCardSize);
             DrawCard(rect, _drag.Card, _drag.Source.HasValue ? GetSlotBadge(_drag.Source.Value) : "NEW", true);
         }
 
@@ -691,6 +981,37 @@ namespace StampJourney.EditorTools
             GUI.color = new Color(1f, 1f, 1f, alpha);
             GUI.DrawTextureWithTexCoords(new Rect(rect.x + padding, rect.y + padding, rect.width - padding * 2f, rect.height - padding * 2f), sprite.texture, uv);
             GUI.color = old;
+        }
+
+        private static void DrawSpriteAspectFit(
+            Rect rect,
+            Sprite sprite,
+            float alpha,
+            float padding)
+        {
+            if (sprite == null || sprite.texture == null) return;
+
+            Rect innerRect = new(
+                rect.x + padding,
+                rect.y + padding,
+                Mathf.Max(0f, rect.width - padding * 2f),
+                Mathf.Max(0f, rect.height - padding * 2f));
+            float spriteAspect = sprite.rect.width / sprite.rect.height;
+            float holderAspect = innerRect.width / innerRect.height;
+
+            Rect fittedRect = innerRect;
+            if (spriteAspect > holderAspect)
+            {
+                fittedRect.height = innerRect.width / spriteAspect;
+                fittedRect.y += (innerRect.height - fittedRect.height) * 0.5f;
+            }
+            else
+            {
+                fittedRect.width = innerRect.height * spriteAspect;
+                fittedRect.x += (innerRect.width - fittedRect.width) * 0.5f;
+            }
+
+            DrawSprite(fittedRect, sprite, alpha, 0f);
         }
 
         private static void DrawOutline(Rect rect, Color color, float width)
@@ -748,10 +1069,18 @@ namespace StampJourney.EditorTools
                         input.Use();
                         Repaint();
                     }
-                    else if (TryFindSlot(input.mousePosition, out LayoutSlot removeSlot) && GetCard(config, removeSlot) != null)
+                    else if (TryFindSlot(input.mousePosition, out LayoutSlot removeSlot) &&
+                             GetCard(config, removeSlot) is CardPlacement slotCard)
                     {
-                        ClearSlot(config, removeSlot);
-                        MarkDirty();
+                        if (config.useAuthoredLayout)
+                            ShowAuthoredCardMenu(config, removeSlot, slotCard);
+                        else
+                        {
+                            Undo.RecordObject(config, "Remove generated preview card");
+                            ClearSlot(config, removeSlot);
+                            EditorUtility.SetDirty(config);
+                            MarkDirty();
+                        }
                         input.Use();
                     }
                     break;
@@ -808,9 +1137,10 @@ namespace StampJourney.EditorTools
 
         private bool TryFindSlot(Vector2 mousePosition, out LayoutSlot slot)
         {
+            Vector2 screenMousePosition = GUIUtility.GUIToScreenPoint(mousePosition);
             foreach ((LayoutSlot key, Rect rect) in _slotRects)
             {
-                if (rect.Contains(mousePosition)) { slot = key; return true; }
+                if (rect.Contains(screenMousePosition)) { slot = key; return true; }
             }
             slot = default;
             return false;
@@ -818,12 +1148,20 @@ namespace StampJourney.EditorTools
 
         private bool TryFindPalettePiece(Vector2 mousePosition, out CardPlacement card)
         {
+            Vector2 screenMousePosition = GUIUtility.GUIToScreenPoint(mousePosition);
             foreach (PaletteHit hit in _paletteHits)
             {
-                if (hit.Rect.Contains(mousePosition)) { card = hit.Card; return true; }
+                if (hit.Rect.Contains(screenMousePosition)) { card = hit.Card; return true; }
             }
             card = null;
             return false;
+        }
+
+        private static Rect ToScreenRect(Rect guiRect)
+        {
+            Vector2 min = GUIUtility.GUIToScreenPoint(guiRect.min);
+            Vector2 max = GUIUtility.GUIToScreenPoint(guiRect.max);
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
         }
 
         #endregion
@@ -872,15 +1210,140 @@ namespace StampJourney.EditorTools
                     itemIndex = card.itemIndex,
                     column = slot.Column,
                     row = -1,
-                    order = slot.Index
+                    order = slot.Index,
+                    hasAuthoredIce = card.hasAuthoredIce,
+                    authoredIceBreakCount = card.authoredIceBreakCount,
+                    hasAuthoredDirectionRestriction =
+                        card.hasAuthoredDirectionRestriction,
+                    authoredAllowedDirection = card.authoredAllowedDirection
                 });
             }
         }
 
+        private void ShowAuthoredCardMenu(
+            LevelData config,
+            LayoutSlot slot,
+            CardPlacement card)
+        {
+            var menu = new GenericMenu();
+            for (int breakCount = 1; breakCount <= 5; breakCount++)
+            {
+                int selectedBreakCount = breakCount;
+                menu.AddItem(
+                    new GUIContent($"Ice/Break Count {selectedBreakCount}"),
+                    card.hasAuthoredIce &&
+                    card.authoredIceBreakCount == selectedBreakCount,
+                    () => SetAuthoredIce(config, slot, selectedBreakCount));
+            }
+
+            menu.AddSeparator(string.Empty);
+            menu.AddItem(
+                new GUIContent("Directional/Horizontal Only"),
+                card.hasAuthoredDirectionRestriction &&
+                card.authoredAllowedDirection == RestrictedMoveAxis.Horizontal,
+                () => SetAuthoredDirection(
+                    config,
+                    slot,
+                    RestrictedMoveAxis.Horizontal));
+            menu.AddItem(
+                new GUIContent("Directional/Vertical Only"),
+                card.hasAuthoredDirectionRestriction &&
+                card.authoredAllowedDirection == RestrictedMoveAxis.Vertical,
+                () => SetAuthoredDirection(
+                    config,
+                    slot,
+                    RestrictedMoveAxis.Vertical));
+
+            menu.AddSeparator(string.Empty);
+            if (card.hasAuthoredIce || card.hasAuthoredDirectionRestriction)
+            {
+                menu.AddItem(
+                    new GUIContent("Remove Obstacle"),
+                    false,
+                    () => ClearAuthoredObstacle(config, slot));
+            }
+            else
+            {
+                menu.AddDisabledItem(new GUIContent("Remove Obstacle"));
+            }
+
+            menu.AddItem(
+                new GUIContent("Remove Card"),
+                false,
+                () => RemoveAuthoredCard(config, slot));
+            menu.ShowAsContext();
+        }
+
+        private void SetAuthoredIce(
+            LevelData config,
+            LayoutSlot slot,
+            int breakCount)
+        {
+            CardPlacement card = GetCard(config, slot);
+            if (card == null) return;
+
+            Undo.RecordObject(config, "Set authored ice obstacle");
+            card.hasAuthoredIce = true;
+            card.authoredIceBreakCount = Mathf.Max(1, breakCount);
+            card.hasAuthoredDirectionRestriction = false;
+            SaveAuthoredObstacleChange(config);
+        }
+
+        private void SetAuthoredDirection(
+            LevelData config,
+            LayoutSlot slot,
+            RestrictedMoveAxis direction)
+        {
+            CardPlacement card = GetCard(config, slot);
+            if (card == null) return;
+
+            Undo.RecordObject(config, "Set authored direction obstacle");
+            card.hasAuthoredIce = false;
+            card.hasAuthoredDirectionRestriction = true;
+            card.authoredAllowedDirection = direction;
+            SaveAuthoredObstacleChange(config);
+        }
+
+        private void ClearAuthoredObstacle(
+            LevelData config,
+            LayoutSlot slot)
+        {
+            CardPlacement card = GetCard(config, slot);
+            if (card == null) return;
+
+            Undo.RecordObject(config, "Remove authored obstacle");
+            card.hasAuthoredIce = false;
+            card.hasAuthoredDirectionRestriction = false;
+            SaveAuthoredObstacleChange(config);
+        }
+
+        private void RemoveAuthoredCard(LevelData config, LayoutSlot slot)
+        {
+            Undo.RecordObject(config, "Remove authored card");
+            ClearSlot(config, slot);
+            SaveAuthoredObstacleChange(config);
+        }
+
+        private void SaveAuthoredObstacleChange(LevelData config)
+        {
+            EditorUtility.SetDirty(config);
+            MarkDirty();
+            Repaint();
+        }
+
         private static int GetQueueRowCount(LevelData config)
         {
-            int highest = config.queueLayout.Count == 0 ? 0 : config.queueLayout.Where(card => card != null).DefaultIfEmpty().Max(card => card?.order ?? 0);
-            return Mathf.Max(1, config.authoredQueueRows, highest + 1);
+            return Mathf.Max(config.authoredQueueRows, GetRequiredQueueRowCount(config));
+        }
+
+        private static int GetRequiredQueueRowCount(LevelData config)
+        {
+            int highestOccupiedOrder = config.queueLayout
+                .Where(card => card != null)
+                .Select(card => card.order)
+                .DefaultIfEmpty(-1)
+                .Max();
+            return Mathf.Max(1, highestOccupiedOrder + 1);
         }
 
         private static string GetSlotBadge(LayoutSlot slot) => slot.Kind == SlotKind.Queue ? $"Q{slot.Index + 1}" : $"{slot.Column + 1}:{slot.Index + 1}";
@@ -1017,30 +1480,41 @@ namespace StampJourney.EditorTools
 
         #region Generation, validation, and persistence
 
-        private void DrawFooter(LevelData config)
+        private void DrawLevelActionButtons(LevelData config)
         {
-            EditorGUILayout.Space(8);
-            EditorGUILayout.BeginHorizontal();
-            if (DrawActionButton("Auto-arrange solvable", BoardColor)) GenerateGuaranteedSolvableLayout(config);
-            if (DrawActionButton("Validate layout", QueueColor)) Validate(config);
-            if (DrawActionButton("Clear layout", new Color(.78f, .30f, .30f)))
+            if (DrawActionButton(
+                    IsHardGeneratedMode(config)
+                        ? "Auto-arrange Hard"
+                        : "Auto-arrange Normal",
+                    BoardColor,
+                    150f))
+                GenerateRuntimeLayoutPreview(config);
+            if (DrawActionButton("Validate layout", QueueColor, 110f))
+                Validate(config);
+            if (DrawActionButton(
+                    "Clear layout",
+                    new Color(.78f, .30f, .30f),
+                    100f))
             {
+                Undo.RecordObject(config, "Clear authored level layout");
                 config.boardLayout.Clear();
                 config.queueLayout.Clear();
                 config.authoredQueueRows = 1;
                 EditorUtility.SetDirty(config);
                 MarkDirty();
             }
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.HelpBox(_validationMessage, _validationMessage.StartsWith("Solvable") ? MessageType.Info : MessageType.None);
         }
 
-        private void GenerateGuaranteedSolvableLayout(LevelData config)
+        private void GenerateRuntimeLayoutPreview(LevelData config)
         {
             EnsureCollections(config);
-            Undo.RecordObject(config, "Generate solvable stamp layout");
+            Undo.RecordObject(config, "Generate runtime level layout preview");
             ReassignContinuousTopicIds(config.stamps);
-            if (!TryBuildGuaranteedLayout(config, out List<CardPlacement> board, out List<QueueCardPlacement> queue, out string error))
+            if (!TryBuildGeneratedLayoutPreview(
+                    config,
+                    out List<CardPlacement> board,
+                    out List<QueueCardPlacement> queue,
+                    out string error))
             {
                 _validationMessage = error;
                 EditorUtility.SetDirty(config);
@@ -1051,7 +1525,16 @@ namespace StampJourney.EditorTools
             config.queueLayout = queue;
             config.authoredQueueRows = Mathf.Max(1, Mathf.CeilToInt(queue.Count / (float)config.boardCols));
             EditorUtility.SetDirty(config);
-            Validate(config);
+            int completeTopicCount = board
+                .GroupBy(card => card.stamp)
+                .Count(group =>
+                    group.Select(card => card.itemIndex).Distinct().Count() ==
+                    StampData.RequiredItemCount);
+            string modeName = IsHardGeneratedMode(config) ? "Hard" : "Normal";
+            _validationMessage =
+                $"{modeName} generated preview: {completeTopicCount} complete topic" +
+                $"{(completeTopicCount == 1 ? string.Empty : "s")} on the initial board. " +
+                "Generated runtime queue identities remain late-bound until their columns can drop.";
             MarkDirty();
         }
 
@@ -1062,7 +1545,7 @@ namespace StampJourney.EditorTools
                 topic.stampId = nextId++;
         }
 
-        private static bool TryBuildGuaranteedLayout(
+        private static bool TryBuildGeneratedLayoutPreview(
             LevelData config,
             out List<CardPlacement> boardLayout,
             out List<QueueCardPlacement> queueLayout,
@@ -1092,7 +1575,7 @@ namespace StampJourney.EditorTools
                 return false;
             }
 
-            int boardCardCount = config.boardCols * config.boardRows;
+            int boardCapacity = config.boardCols * config.boardRows;
 
             IGrouping<int, StampData> duplicateIdGroup = eligible.GroupBy(stamp => stamp.stampId).FirstOrDefault(group => group.Count() > 1);
             if (duplicateIdGroup != null)
@@ -1101,76 +1584,99 @@ namespace StampJourney.EditorTools
                 return false;
             }
 
-            List<List<CardPlacement>> completeSets = BuildPaletteSetsForBottomPackedQueue(eligible, boardCardCount);
-            int totalCardCount = completeSets.Sum(set => set.Count);
-            int queueCardCount = totalCardCount - boardCardCount;
-            if (queueCardCount < 0)
+            if (boardCapacity < StampData.RequiredItemCount)
             {
-                error = $"The level has {totalCardCount} authored items but needs at least {boardCardCount} to fill the board. Add more items; the generator does not duplicate authored pictures.";
+                error =
+                    $"The board needs at least {StampData.RequiredItemCount} cells and one valid topic.";
                 return false;
             }
 
-            for (int attempt = 0; attempt < 512; attempt++)
+            int availableCardCount = eligible.Count * StampData.RequiredItemCount;
+            if (availableCardCount < boardCapacity)
             {
-                List<List<CardPlacement>> shuffledSets = completeSets.ToList();
-                Shuffle(shuffledSets);
-
-                List<CardPlacement> boardPieces = new(boardCardCount);
-                List<CardPlacement> remainingPieces = new(totalCardCount);
-                foreach (List<CardPlacement> set in shuffledSets)
-                {
-                    if (boardPieces.Count + set.Count <= boardCardCount)
-                        boardPieces.AddRange(set);
-                    else
-                        remainingPieces.AddRange(set);
-                }
-
-                Shuffle(remainingPieces);
-                int partialBoardCount = boardCardCount - boardPieces.Count;
-                boardPieces.AddRange(remainingPieces.Take(partialBoardCount));
-                List<CardPlacement> queuePieces = remainingPieces.Skip(partialBoardCount).ToList();
-                Shuffle(boardPieces);
-                Shuffle(queuePieces);
-
-                List<CardPlacement> candidateBoard = CreateBoardLayout(boardPieces, config.boardCols, config.boardRows);
-                List<QueueCardPlacement> candidateQueue = CreateBottomPackedQueueLayout(queuePieces, config.boardCols);
-                if (ContainsCompletedStamp(candidateBoard, config.boardCols, config.boardRows))
-                    continue;
-
-                if (!CanSolveLayout(candidateBoard, candidateQueue, config.boardCols, config.boardRows, out _))
-                    continue;
-
-                boardLayout = candidateBoard;
-                queueLayout = candidateQueue;
-                return true;
+                error =
+                    $"Cannot fill the {config.boardCols}x{config.boardRows} board without duplicating items. " +
+                    $"The configured topics provide {availableCardCount} unique cards, but the board needs {boardCapacity}.";
+                return false;
             }
 
-            error = "Could not find a solvable bottom-packed queue after 512 attempts. Try adding more four-item topics or increasing the board.";
-            return false;
+            Shuffle(eligible);
+            var initialCards = new List<CardPlacement>(boardCapacity);
+            var queueCards = new List<CardPlacement>(
+                availableCardCount - boardCapacity);
+
+            bool hardMode = IsHardGeneratedMode(config);
+            int maximumSingleSolutionCapacity =
+                StampData.RequiredItemCount +
+                (eligible.Count - 1) * (StampData.RequiredItemCount - 1);
+            if (boardCapacity > maximumSingleSolutionCapacity)
+            {
+                int requiredTopics = Mathf.CeilToInt((boardCapacity - 1) / 3f);
+                error =
+                    $"{(hardMode ? "Hard" : "Normal")} mode needs at least {requiredTopics} topics " +
+                    $"for a {config.boardCols}x{config.boardRows} board while keeping non-solution " +
+                    $"topics incomplete. Only {eligible.Count} are configured.";
+                return false;
+            }
+
+            int remainingBoardSlots = boardCapacity;
+            for (int topicIndex = 0; topicIndex < eligible.Count; topicIndex++)
+            {
+                List<CardPlacement> topicCards =
+                    BuildShuffledCompleteTopicSet(eligible[topicIndex]);
+                int topicBoardLimit = topicIndex == 0
+                    ? StampData.RequiredItemCount
+                    : StampData.RequiredItemCount - 1;
+                int boardItemCount = Mathf.Min(
+                    topicBoardLimit,
+                    remainingBoardSlots);
+
+                initialCards.AddRange(topicCards.Take(boardItemCount));
+                queueCards.AddRange(topicCards.Skip(boardItemCount));
+                remainingBoardSlots -= boardItemCount;
+            }
+
+            if (remainingBoardSlots > 0)
+            {
+                error =
+                    $"{(hardMode ? "Hard" : "Normal")} mode could not fill every initial board cell.";
+                return false;
+            }
+
+            ShuffleGeneratedInitialCards(
+                initialCards,
+                config.boardCols,
+                config.boardRows);
+            Shuffle(queueCards);
+
+            boardLayout = CreateGeneratedBoardLayout(
+                initialCards,
+                config.boardCols,
+                config.boardRows);
+            queueLayout = CreateBottomPackedQueueLayout(
+                queueCards,
+                config.boardCols);
+            return true;
         }
 
-        private static List<List<CardPlacement>> BuildPaletteSetsForBottomPackedQueue(
-            IReadOnlyList<StampData> stamps,
-            int boardCardCount)
+        private static bool IsHardGeneratedMode(LevelData config)
         {
-            List<List<CardPlacement>> result = new();
-            // Each authored item is unique in a level; do not silently duplicate pictures.
-            foreach (StampData topic in stamps)
-                result.Add(BuildCompleteStampSet(topic));
-
-            return result;
+            return !config.useAuthoredLayout && config.hardMode;
         }
 
-        private static List<CardPlacement> CreateBoardLayout(
+        private static List<CardPlacement> CreateGeneratedBoardLayout(
             IReadOnlyList<CardPlacement> items,
             int boardCols,
             int boardRows)
         {
             List<CardPlacement> result = new(boardCols * boardRows);
-            int index = 0;
-            for (int row = 0; row < boardRows; row++)
-                for (int col = 0; col < boardCols; col++)
-                    result.Add(CopyPlacement(items[index++], col, row));
+            for (int index = 0; index < items.Count; index++)
+            {
+                int column = index % boardCols;
+                int queueIndex = index / boardCols;
+                int row = boardRows - 1 - queueIndex;
+                result.Add(CopyPlacement(items[index], column, row));
+            }
             return result;
         }
 
@@ -1200,10 +1706,12 @@ namespace StampJourney.EditorTools
             return result;
         }
 
-        private static List<CardPlacement> BuildCompleteStampSet(StampData stamp)
+        private static List<CardPlacement> BuildShuffledCompleteTopicSet(
+            StampData stamp)
         {
             List<CardPlacement> result = new(stamp.TotalItems);
             AddCompleteStampSet(result, stamp);
+            Shuffle(result);
             return result;
         }
 
@@ -1218,37 +1726,89 @@ namespace StampJourney.EditorTools
             };
         }
 
-        private static bool ContainsCompletedStamp(IReadOnlyList<CardPlacement> boardLayout, int boardCols, int boardRows)
+        private static void ShuffleGeneratedInitialCards(
+            List<CardPlacement> initialCards,
+            int boardCols,
+            int boardRows)
         {
-            CardPlacement[,] board = new CardPlacement[boardCols, boardRows];
-            foreach (CardPlacement card in boardLayout)
-                board[card.column, card.row] = card;
+            const int attempts = 256;
+            var bestLayout = new List<CardPlacement>(initialCards);
+            int bestScore = int.MaxValue;
+            int equalBestCount = 0;
 
-            for (int row = 0; row < boardRows - 1; row++)
+            for (int attempt = 0; attempt < attempts; attempt++)
             {
-                for (int col = 0; col < boardCols - 1; col++)
+                Shuffle(initialCards);
+                int score = ScoreGeneratedInitialLayout(
+                    initialCards,
+                    boardCols,
+                    boardRows);
+
+                if (score < bestScore)
                 {
-                    CardPlacement topLeft = board[col, row];
-                    CardPlacement topRight = board[col + 1, row];
-                    CardPlacement bottomLeft = board[col, row + 1];
-                    CardPlacement bottomRight = board[col + 1, row + 1];
-                    if (topLeft == null || topRight == null || bottomLeft == null || bottomRight == null) continue;
+                    bestScore = score;
+                    equalBestCount = 1;
+                    bestLayout.Clear();
+                    bestLayout.AddRange(initialCards);
+                }
+                else if (score == bestScore)
+                {
+                    equalBestCount++;
+                    if (LayoutRandom.Next(equalBestCount) == 0)
+                    {
+                        bestLayout.Clear();
+                        bestLayout.AddRange(initialCards);
+                    }
+                }
 
-                    int topicId = topLeft.stamp.stampId;
-                    if (topRight.stamp.stampId != topicId ||
-                        bottomLeft.stamp.stampId != topicId ||
-                        bottomRight.stamp.stampId != topicId) continue;
+                if (bestScore == 0) break;
+            }
 
-                    if (topLeft.stamp.HasCompleteItemSet(new[]
-                        {
-                            topLeft.itemIndex, topRight.itemIndex,
-                            bottomLeft.itemIndex, bottomRight.itemIndex
-                        }))
-                        return true;
+            initialCards.Clear();
+            initialCards.AddRange(bestLayout);
+        }
+
+        private static int ScoreGeneratedInitialLayout(
+            IReadOnlyList<CardPlacement> initialCards,
+            int boardCols,
+            int boardRows)
+        {
+            var topics = new StampData[boardCols, boardRows];
+            for (int index = 0; index < initialCards.Count; index++)
+            {
+                int column = index % boardCols;
+                int queueIndex = index / boardCols;
+                int row = boardRows - 1 - queueIndex;
+                if (row >= 0)
+                    topics[column, row] = initialCards[index].stamp;
+            }
+
+            int linkedEdges = 0;
+            int completedSquares = 0;
+            for (int column = 0; column < boardCols; column++)
+            {
+                for (int row = 0; row < boardRows; row++)
+                {
+                    StampData topic = topics[column, row];
+                    if (topic == null) continue;
+
+                    if (column + 1 < boardCols &&
+                        topics[column + 1, row] == topic)
+                        linkedEdges++;
+                    if (row + 1 < boardRows &&
+                        topics[column, row + 1] == topic)
+                        linkedEdges++;
+
+                    if (column + 1 < boardCols &&
+                        row + 1 < boardRows &&
+                        topics[column + 1, row] == topic &&
+                        topics[column, row + 1] == topic &&
+                        topics[column + 1, row + 1] == topic)
+                        completedSquares++;
                 }
             }
 
-            return false;
+            return linkedEdges + completedSquares * 1000;
         }
 
         private static void AddCompleteStampSet(ICollection<CardPlacement> result, StampData stamp)
@@ -1611,7 +2171,8 @@ namespace StampJourney.EditorTools
         {
             if (_gameManager.LevelSystem == null) return;
             EditorUtility.SetDirty(_gameManager.LevelSystem);
-            if (_gameManager.LevelSystem.gameObject.scene.IsValid())
+            if (!EditorApplication.isPlaying &&
+                _gameManager.LevelSystem.gameObject.scene.IsValid())
                 EditorSceneManager.MarkSceneDirty(_gameManager.LevelSystem.gameObject.scene);
         }
 
@@ -1625,20 +2186,17 @@ namespace StampJourney.EditorTools
 
         #region Styling helpers
 
-        private static bool DrawHeaderButton(Rect rect, string text, Color color)
+        private static bool DrawActionButton(
+            string text,
+            Color color,
+            float width)
         {
             Color old = GUI.backgroundColor;
             GUI.backgroundColor = color;
-            bool clicked = GUI.Button(rect, text);
-            GUI.backgroundColor = old;
-            return clicked;
-        }
-
-        private static bool DrawActionButton(string text, Color color)
-        {
-            Color old = GUI.backgroundColor;
-            GUI.backgroundColor = color;
-            bool clicked = GUILayout.Button(text, GUILayout.Height(30));
+            bool clicked = GUILayout.Button(
+                text,
+                GUILayout.Width(width),
+                GUILayout.Height(24f));
             GUI.backgroundColor = old;
             return clicked;
         }
@@ -1650,13 +2208,6 @@ namespace StampJourney.EditorTools
             fontStyle = style,
             normal = { textColor = color },
             clipping = TextClipping.Clip
-        };
-
-        private static GUIStyle TitleStyle(int size, Color color) => new(GUI.skin.label)
-        {
-            fontSize = size,
-            fontStyle = FontStyle.Bold,
-            normal = { textColor = color }
         };
 
         #endregion
